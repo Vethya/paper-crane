@@ -12,7 +12,8 @@
     "lint": "next lint",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
-    "postinstall": "cp node_modules/swiftlatex/dist/swift*.js node_modules/swiftlatex/dist/*.wasm public"
+    "postinstall": "cp node_modules/swiftlatex/dist/swift*.js node_modules/swiftlatex/dist/*.wasm public",
+    "postinstall:windows": "copy .\\node_modules\\swiftlatex\\dist\\swift*.js .\\public\\ && copy .\\node_modules\\swiftlatex\\dist\\*.wasm .\\public\\"
   },
   "dependencies": {
     "archiver": "^5.3.1",
