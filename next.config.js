@@ -7,6 +7,16 @@ const NextConfig = {
   compiler: {
     styledComponents: true
   },
+  // Handle canvas dependency for react-pdf
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        canvas: false,
+      }
+    }
+    return config
+  },
 }
 
 module.exports = NextConfig

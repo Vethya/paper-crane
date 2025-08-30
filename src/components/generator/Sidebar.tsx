@@ -1,5 +1,7 @@
+'use client'
+
 import Link from 'next/link'
-import { useRouter } from 'next/router'
+import { useSearchParams } from 'next/navigation'
 import styled from 'styled-components'
 import { MdDragIndicator } from 'react-icons/md'
 
@@ -34,8 +36,8 @@ const StyledLink = styled(Link)<{ $active: boolean }>`
 `
 
 export function Sidebar() {
-  const router = useRouter()
-  const { section: currSection = 'basics' } = router.query
+  const searchParams = useSearchParams()
+  const currSection = searchParams.get('section') || 'basics'
 
   const sectionLinks = [
     { label: 'Templates', section: 'templates' },

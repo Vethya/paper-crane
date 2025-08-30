@@ -1,12 +1,15 @@
+'use client'
+
+import dynamic from 'next/dynamic'
 import { useAtom } from 'jotai'
-import { useState, useCallback } from 'react'
-import { pdfjs, Document, Page } from 'react-pdf'
-import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api'
+import { useState, useCallback, useEffect } from 'react'
 import styled from 'styled-components'
+
 import { resumeAtom } from '../../atoms/resume'
 
-const workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`
-pdfjs.GlobalWorkerOptions.workerSrc = workerSrc
+// Dynamic import for react-pdf components
+const Document = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Document })), { ssr: false })
+const Page = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Page })), { ssr: false })
 
 const Output = styled.output`
   grid-area: preview;
@@ -41,8 +44,33 @@ export function Preview() {
   const [pageNumber] = useState(1)
   const [scale] = useState(document.body.clientWidth > 1440 ? 1.75 : 1)
 
-  const handleDocumentLoadSuccess = useCallback((pdf: PDFDocumentProxy) => {
+  useEffect(() => {
+    const setupWorker = async () => {
+      try {
+        const { pdfjs } = await import('react-pdf')
+        const workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
+
+        const testResponse = await fetch(workerSrc, { method: 'HEAD' })
+        if (testResponse.ok) {
+          pdfjs.GlobalWorkerOptions.workerSrc = workerSrc
+        } else {
+          const fallbackSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
+          pdfjs.GlobalWorkerOptions.workerSrc = fallbackSrc
+        }
+      } catch (error) {
+        console.warn('Failed to setup PDF.js worker, PDF preview may not work:', error)
+      }
+    }
+
+    setupWorker()
+  }, [])
+
+  const handleDocumentLoadSuccess = useCallback((pdf: any) => {
     setPageCount(pdf.numPages)
+  }, [])
+
+  const handleDocumentLoadError = useCallback((error: Error) => {
+    console.warn('Failed to load PDF document:', error)
   }, [])
 
   return (
@@ -52,6 +80,7 @@ export function Preview() {
         <ResumeDocument
           file={resume.url || '/blank.pdf'}
           onLoadSuccess={handleDocumentLoadSuccess}
+          onLoadError={handleDocumentLoadError}
           loading=""
         >
           <ResumePage

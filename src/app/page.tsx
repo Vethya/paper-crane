@@ -1,6 +1,8 @@
+'use client'
+
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useRouter } from 'next/router'
 import styled from 'styled-components'
 import { lighten, darken } from 'polished'
 

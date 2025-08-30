@@ -1,3 +1,5 @@
+'use client'
+
 import { createGlobalStyle } from 'styled-components'
 import cssReset from 'styled-reset'
 import { colors } from '../../theme'

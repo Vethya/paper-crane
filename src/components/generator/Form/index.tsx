@@ -1,5 +1,7 @@
+'use client'
+
 import { useCallback, useEffect } from 'react'
-import { useRouter } from 'next/router'
+import { useSearchParams } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useAtom } from 'jotai'
 import styled from 'styled-components'
@@ -34,8 +36,8 @@ const initialFormValues: FormValues = {
 }
 
 export function Form() {
-  const router = useRouter()
-  const { section: currSection = 'basics' } = router.query
+  const searchParams = useSearchParams()
+  const currSection = searchParams.get('section') || 'basics'
 
   const [resume, setResume] = useAtom(resumeAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })

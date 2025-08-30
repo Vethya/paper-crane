@@ -1,23 +1,18 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+import type { NextRequest } from 'next/server'
 import Archiver from 'archiver'
 import { stripIndent } from 'common-tags'
-import getTemplateData from '../../lib/templates'
-import { FormValues } from '../../types'
+import getTemplateData from '../../../lib/templates'
+import { FormValues } from '../../../types'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    res.status(405)
-    return
-  }
-
-  const sourceCode = await generateSourceCode(req.body as FormValues)
-  sourceCode
-    .pipe(res)
-    .setHeader('content-type', 'application/zip')
-    .setHeader('content-disposition', 'attachment; filename="resume.zip"')
+export async function POST(request: NextRequest) {
+  const body = await request.json()
+  const sourceCode = await generateSourceCode(body as FormValues)
+  return new Response(sourceCode, {
+    headers: {
+      'content-type': 'application/zip',
+      'content-disposition': 'attachment; filename="resume.zip"'
+    }
+  })
 }
 
 /**
