@@ -1,62 +1,38 @@
 import { Fragment } from 'react'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import { MdClose } from 'react-icons/md'
-import styled from 'styled-components'
-
 import { IconButton } from '../../../core/Button'
 import { FormInput } from '../../../core/FormInput'
-import { colors } from '../../../../theme'
-
-const Pill = styled.div`
-  display: inline-flex;
-  border: 1px solid ${colors.borders};
-  border-radius: 100px;
-  padding: 8px 16px;
-  padding-right: 4px;
-  gap: 4px;
-}
-`
-
-const PillsContainer = styled.div`
-  display: flex;
-  gap: 4px;
-  margin: 8px 0;
-  align-items: flex-start;
-  flex-wrap: wrap;
-`
-
-const Label = styled.label`
-  display: inline-block;
-  color: ${colors.white};
-  margin-bottom: 0.5rem;
-`
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 interface KeywordProps {
   label: string
   name: `${'skills' | 'projects'}.${number}.keywords`
   placeholder: string
+  className?: string
 }
 
-export default function Keywords({ name, label, placeholder }: KeywordProps) {
+export default function Keywords({ name, label, placeholder, className }: KeywordProps) {
   const { getValues } = useFormContext()
   const { fields, append, remove } = useFieldArray({ name })
 
   return (
-    <div>
-      <Label>{label}</Label>
+    <div className={twMerge(clsx("", className))}>
+      <label className="inline-block text-white mb-2">{label}</label>
       <FormInput onSubmit={append} />
-      <PillsContainer>
+      <div className="flex gap-1 my-2 items-start flex-wrap">
         {fields.map((field, i) => (
           <Fragment key={field.id}>
-            <Pill>
+            <div className="inline-flex border rounded-full px-4 py-2 pr-1 gap-1" style={{ borderColor: '#4b5563' }}>
               {getValues(`${name}.${i}`)}
               <IconButton type="button" onClick={() => remove(i)}>
                 <MdClose />
               </IconButton>
-            </Pill>
+            </div>
           </Fragment>
         ))}
-      </PillsContainer>
+      </div>
     </div>
   )
 }

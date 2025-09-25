@@ -1,24 +1,18 @@
 import Link from 'next/link'
-import styled from 'styled-components'
-
 import { Logo } from '../core/Logo'
-import { colors } from '../../theme'
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
-const StyledHeader = styled.header`
-  grid-area: header;
-  width: 100%;
-  height: 10vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-bottom: 1px solid ${colors.borders};
-`
-export function Header() {
+interface HeaderProps {
+  className?: string
+}
+
+export function Header({ className }: HeaderProps) {
   return (
-    <StyledHeader>
+    <header className={twMerge(clsx("w-full h-16 flex justify-center items-center border-b", className))} style={{ borderColor: '#374151' }}>
       <Link href="/">
         <Logo scale={0.65} />
       </Link>
-    </StyledHeader>
+    </header>
   )
 }

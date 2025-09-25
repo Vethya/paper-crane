@@ -1,8 +1,7 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import styled from 'styled-components'
-
+import { Suspense } from 'react'
 import { Form } from '../../components/generator/Form'
 import { Header } from '../../components/generator/Header'
 import { Sidebar } from '../../components/generator/Sidebar'
@@ -12,23 +11,25 @@ const Preview = dynamic(
   { ssr: false }
 )
 
-const Main = styled.main`
-  display: grid;
-  grid-template-columns: 0.3fr 0.7fr 1fr;
-  grid-template-rows: auto 1fr;
-  grid-template-areas:
-    'header header header'
-    'sidebar form preview';
-  height: 100vh;
-`
-
 export default function GeneratorPage() {
   return (
-    <Main>
-      <Header />
-      <Sidebar />
-      <Form />
-      <Preview />
-    </Main>
+    <main className="grid grid-cols-[300px_1fr_400px] grid-rows-[auto_1fr] h-screen">
+      <div className="col-span-3">
+        <Header />
+      </div>
+      <div className="border-r p-6" style={{ borderColor: '#374151' }}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <Sidebar />
+        </Suspense>
+      </div>
+      <div className="p-6">
+        <Suspense fallback={<div>Loading...</div>}>
+          <Form />
+        </Suspense>
+      </div>
+      <div className="border-l" style={{ borderColor: '#374151' }}>
+        <Preview />
+      </div>
+    </main>
   )
 }

@@ -2,42 +2,34 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import styled from 'styled-components'
 import { MdDragIndicator } from 'react-icons/md'
-
-import { colors } from '../../theme'
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 import { PrimaryButton, IconButton } from '../core/Button'
 
-const Aside = styled.aside`
-  grid-area: sidebar;
-  border-right: 1px solid ${colors.borders};
-  padding: 24px 36px;
-`
+interface StyledLinkProps {
+  href: string
+  $active: boolean
+  children: React.ReactNode
+}
 
-const Nav = styled.nav`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 24px;
-  margin-bottom: 28px;
-
-  button {
-    cursor: grab;
-  }
-`
-
-const StyledLink = styled(Link)<{ $active: boolean }>`
-  text-decoration: none;
-  font-weight: 300;
-  color: ${colors.foreground};
-
-  ${(props) => props.$active && `color: ${colors.primary};`}
-`
+function StyledLink({ href, $active, children }: StyledLinkProps) {
+  return (
+    <Link
+      href={href}
+      className={twMerge(clsx(
+        "no-underline font-light text-white",
+        $active && "text-green-500"
+      ))}
+    >
+      {children}
+    </Link>
+  )
+}
 
 export function Sidebar() {
   const searchParams = useSearchParams()
-  const currSection = searchParams.get('section') || 'basics'
+  const currSection = searchParams?.get('section') || 'basics'
 
   const sectionLinks = [
     { label: 'Templates', section: 'templates' },
@@ -50,11 +42,11 @@ export function Sidebar() {
   ]
 
   return (
-    <Aside>
-      <Nav>
+    <aside>
+      <nav className="flex flex-col items-start justify-center gap-6 mb-7">
         {sectionLinks.map(({ label, section }) => (
-          <div key={section} style={{ display: 'flex', gap: 8 }}>
-            <IconButton type="button">
+          <div key={section} className="flex gap-2">
+            <IconButton type="button" className="cursor-grab">
               <MdDragIndicator />
             </IconButton>
             <StyledLink
@@ -65,9 +57,9 @@ export function Sidebar() {
             </StyledLink>
           </div>
         ))}
-      </Nav>
+      </nav>
 
       <PrimaryButton form="resume-form">MAKE</PrimaryButton>
-    </Aside>
+    </aside>
   )
 }

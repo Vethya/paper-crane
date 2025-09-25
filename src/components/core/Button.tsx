@@ -1,89 +1,89 @@
-import styled from 'styled-components'
-import { lighten, darken, rgba } from 'polished'
-import { colors } from '../../theme'
+import { ButtonHTMLAttributes, ReactNode } from 'react'
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
-export const Button = styled.button`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: inherit;
-  font-size: 0.85em;
-  text-align: center;
-  text-decoration: none;
-  width: 175px;
-  height: 45px;
-  margin: 7px 0;
-  background: transparent;
-  color: white;
-  border-radius: 100px;
-  border: 1px solid ${darken(0.1, colors.primary)};
-  box-shadow: 0 0 0 0 ${rgba(colors.primary, 0.7)};
-  &:hover {
-    background: linear-gradient(
-      40deg,
-      ${darken(0.45, colors.primary)},
-      ${darken(0.3, colors.primary)}
-    );
-    animation: none;
-    cursor: pointer;
-  }
-  &:active {
-    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06), 0 2px 40px rgba(0, 0, 0, 0.16);
-    border-color: ${lighten(0.15, colors.primary)};
-    color: ${lighten(0.15, colors.primary)};
-  }
-  &:focus {
-    outline: none;
-  }
-`
+// Base button styles using Tailwind classes
+interface BaseButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  children: ReactNode
+  className?: string
+}
 
-export const PrimaryButton = styled(Button)`
-  background: linear-gradient(
-    40deg,
-    ${darken(0.3, colors.primary)},
-    ${colors.primary}
-  );
-  &:hover {
-    background: linear-gradient(
-      40deg,
-      ${darken(0.4, colors.primary)},
-      ${colors.primary}
-    );
-  }
-`
+export function Button({ children, className, ...props }: BaseButtonProps) {
+  return (
+    <button
+      className={twMerge(
+        clsx(
+          "flex justify-center items-center font-inherit text-sm text-center no-underline w-[175px] h-[45px] my-[7px] bg-transparent text-white rounded-full border border-green-500/90 shadow-none hover:bg-gradient-to-r hover:from-green-600/55 hover:to-green-500/70 hover:cursor-pointer focus:outline-none active:shadow-lg active:border-green-500/85 active:text-green-500/85",
+          className
+        )
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
 
-export const MiniButton = styled(Button)`
-  height: unset;
-  width: unset;
-  padding: 6px 24px;
-  background: ${colors.borders};
-  border: none;
-  border-radius: 4px;
-`
+export function PrimaryButton({ children, className, ...props }: BaseButtonProps) {
+  return (
+    <button
+      className={twMerge(
+        clsx(
+          "flex justify-center items-center font-inherit text-sm text-center no-underline w-[175px] h-[45px] my-[7px] text-white rounded-full border-none bg-gradient-to-r from-green-600/70 to-green-500 shadow-none hover:bg-gradient-to-r hover:from-green-700/60 hover:to-green-500 hover:cursor-pointer focus:outline-none active:shadow-lg active:border-green-500/85 active:text-green-500/85",
+          className
+        )
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
 
-export const AddButton = styled.button`
-  padding: 0.5rem 0.75rem;
-  cursor: pointer;
-  outline: none;
-  border: none;
-  background: transparent;
-  color: ${colors.primary};
-`
+export function MiniButton({ children, className, ...props }: BaseButtonProps) {
+  return (
+    <button
+      className={twMerge(
+        clsx(
+          "flex justify-center items-center font-inherit text-sm text-center no-underline px-6 py-[6px] text-white rounded border-none hover:cursor-pointer focus:outline-none",
+          className
+        )
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
 
-export const IconButton = styled.button`
-  display: flex;
-  align-items: center;
-  outline: none;
-  border: none;
-  background: transparent;
-  color: white;
-  border-radius: 4px;
+export function AddButton({ children, className, ...props }: BaseButtonProps) {
+  return (
+    <button
+      className={twMerge(
+        clsx(
+          "px-3 py-2 cursor-pointer outline-none border-none bg-transparent text-green-500 hover:cursor-pointer focus:outline-none",
+          className
+        )
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
 
-  :hover {
-    background: ${colors.borders};
-  }
-
-  :focus {
-    background: ${colors.borders};
-  }
-`
+export function IconButton({ children, className, ...props }: BaseButtonProps) {
+  return (
+    <button
+      className={twMerge(
+        clsx(
+          "flex items-center outline-none border-none bg-transparent text-white rounded hover:bg-slate-700 focus:bg-slate-700 focus:outline-none",
+          className
+        )
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}

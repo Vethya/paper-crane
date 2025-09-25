@@ -1,39 +1,34 @@
 import { Fragment } from 'react'
 import { useFieldArray } from 'react-hook-form'
 import { MdClose, MdDragIndicator } from 'react-icons/md'
-import styled from 'styled-components'
-
 import { Input } from '../../../core/Input'
 import { FormInput } from '../../../core/FormInput'
 import { IconButton } from '../../../core/Button'
-
-const ListContainer = styled.div`
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 4px;
-  margin: 0.5rem 0;
-`
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 interface HighlightsProps {
   label: string
   name: `${'work' | 'volunteer' | 'projects'}.${number}.highlights`
   placeholder: string
+  className?: string
 }
 
 export default function Highlights({
   name,
   label,
-  placeholder
+  placeholder,
+  className
 }: HighlightsProps) {
   const { fields, append, remove } = useFieldArray({ name })
 
   return (
-    <>
-      <label>{label}</label>
-      <ListContainer>
+    <div className={twMerge(clsx("", className))}>
+      <label className="block mb-2 text-white">{label}</label>
+      <div className="grid grid-cols-[auto_1fr_auto] gap-1 my-2">
         {fields.map((field, i) => (
           <Fragment key={field.id}>
-            <IconButton type="button">
+            <IconButton type="button" className="cursor-grab">
               <MdDragIndicator />
             </IconButton>
             <Input name={`${name}.${i}`} placeholder={placeholder} />
@@ -42,8 +37,8 @@ export default function Highlights({
             </IconButton>
           </Fragment>
         ))}
-        <FormInput style={{ gridColumn: '2/3' }} onSubmit={append} />
-      </ListContainer>
-    </>
+        <FormInput className="col-start-2 col-end-3" onSubmit={append} />
+      </div>
+    </div>
   )
 }

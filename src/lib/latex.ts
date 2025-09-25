@@ -26,28 +26,36 @@ export default async function latex(texDoc: string, opts: LaTeXOpts) {
   switch (opts.cmd) {
     case 'pdflatex': {
       for (const [name, content] of fonts) {
-        await pdftex.writeMemFSFile(`fonts/${name}`, content)
+        if (name) {
+          await pdftex.writeMemFSFile(`fonts/${name}`, content)
+        }
       }
 
       for (const [name, content] of inputs) {
-        await pdftex.writeMemFSFile(name, content)
+        if (name) {
+          await pdftex.writeMemFSFile(name, content)
+        }
       }
 
       await pdftex.writeMemFSFile('main.tex', texDoc)
       await pdftex.setEngineMainFile('main.tex')
       const { pdf } = await pdftex.compileLaTeX()
 
-      return URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' }))
+      return URL.createObjectURL(new Blob([pdf as unknown as ArrayBuffer], { type: 'application/pdf' }))
     }
     case 'xelatex': {
       for (const engine of [xetex, dvipdfmx]) {
         for (const [name, content] of fonts) {
-          await engine.writeMemFSFile(`fonts/${name}`, content)
+          if (name) {
+            await engine.writeMemFSFile(`fonts/${name}`, content)
+          }
         }
       }
 
       for (const [name, content] of inputs) {
-        await xetex.writeMemFSFile(name, content)
+        if (name) {
+          await xetex.writeMemFSFile(name, content)
+        }
       }
 
       await xetex.writeMemFSFile('main.tex', texDoc)
@@ -58,7 +66,7 @@ export default async function latex(texDoc: string, opts: LaTeXOpts) {
       await dvipdfmx.setEngineMainFile('main.xdv')
       const { pdf } = await dvipdfmx.compilePDF()
 
-      return URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' }))
+      return URL.createObjectURL(new Blob([pdf as unknown as ArrayBuffer], { type: 'application/pdf' }))
     }
   }
 }

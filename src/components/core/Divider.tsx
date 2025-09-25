@@ -1,9 +1,17 @@
-import styled from 'styled-components'
-import { colors } from '../../theme'
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
-export const Divider = styled.hr`
-  margin: 24px 0;
-  background: ${colors.primary};
-  height: 4px;
-  border: none;
-`
+interface DividerProps {
+  className?: string
+}
+
+export function Divider({ className }: DividerProps) {
+  return (
+    <hr
+      className={twMerge(clsx(
+        "my-6 bg-green-500 h-1 border-none",
+        className
+      ))}
+    />
+  )
+}

@@ -3,42 +3,19 @@
 import dynamic from 'next/dynamic'
 import { useAtom } from 'jotai'
 import { useState, useCallback, useEffect } from 'react'
-import styled from 'styled-components'
-
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 import { resumeAtom } from '../../atoms/resume'
 
 // Dynamic import for react-pdf components
 const Document = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Document })), { ssr: false })
 const Page = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Page })), { ssr: false })
 
-const Output = styled.output`
-  grid-area: preview;
-  background: ${(props) => props.theme.lightBlack};
-  overflow-y: auto;
-`
+interface PreviewProps {
+  className?: string
+}
 
-const PdfContainer = styled.article`
-  width: 100%;
-  height: 100%;
-`
-
-const ResumeDocument = styled(Document)`
-  width: 100%;
-`
-
-const ResumePage = styled(Page)`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 1.5em 0 10rem 0;
-
-  canvas {
-    max-width: 95% !important;
-    height: auto !important;
-  }
-`
-
-export function Preview() {
+export function Preview({ className }: PreviewProps) {
   const [resume] = useAtom(resumeAtom)
   const [, setPageCount] = useState(1)
   const [pageNumber] = useState(1)
@@ -65,7 +42,7 @@ export function Preview() {
     setupWorker()
   }, [])
 
-  const handleDocumentLoadSuccess = useCallback((pdf: any) => {
+  const handleDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
     setPageCount(pdf.numPages)
   }, [])
 
@@ -74,24 +51,31 @@ export function Preview() {
   }, [])
 
   return (
-    <Output>
-      <button onClick={() => window.open(resume.url)}>export as pdf</button>
-      <PdfContainer>
-        <ResumeDocument
+    <output className={twMerge(clsx("overflow-y-auto", className))} style={{ backgroundColor: '#1f2937' }}>
+      <button
+        onClick={() => window.open(resume.url)}
+        className="px-3 py-2 mb-4 bg-green-500 text-white rounded hover:bg-green-600"
+      >
+        export as pdf
+      </button>
+      <article className="w-full h-full">
+        <Document
           file={resume.url || '/blank.pdf'}
           onLoadSuccess={handleDocumentLoadSuccess}
           onLoadError={handleDocumentLoadError}
           loading=""
+          className="w-full"
         >
-          <ResumePage
+          <Page
             pageNumber={pageNumber}
             scale={scale}
             renderAnnotationLayer={false}
             renderTextLayer={false}
             loading=""
+            className="flex justify-center items-center py-6 pb-40 [&>canvas]:max-w-[95%] [&>canvas]:h-auto"
           />
-        </ResumeDocument>
-      </PdfContainer>
-    </Output>
+        </Document>
+      </article>
+    </output>
   )
 }

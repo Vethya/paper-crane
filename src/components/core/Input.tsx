@@ -1,27 +1,27 @@
 import { InputHTMLAttributes } from 'react'
 import { FieldPath, useFormContext } from 'react-hook-form'
-import styled from 'styled-components'
-import { colors } from '../../theme'
 import { FormValues } from '../../types'
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
-export const StyledInput = styled.input`
-  border: none;
-  background: transparent;
-  border: 1px solid ${colors.input};
-  padding: 1rem;
-  color: ${colors.white};
-  font-size: 0.85rem;
-  border-radius: 4px;
+interface StyledInputProps extends InputHTMLAttributes<HTMLInputElement> {
+  className?: string
+}
 
-  &:focus {
-    outline: 1px solid ${colors.primary};
-  }
-
-  &::placeholder {
-    color: ${colors.placeholder};
-    opacity: 0.5;
-  }
-`
+export function StyledInput({ className, ...props }: StyledInputProps) {
+  return (
+    <input
+      className={twMerge(
+        clsx(
+          "bg-transparent p-4 text-white text-sm rounded focus:outline focus:outline-1 focus:outline-green-500 placeholder:text-slate-400 placeholder:opacity-50",
+          className
+        )
+      )}
+      style={{ border: '1px solid #4b5563' }}
+      {...props}
+    />
+  )
+}
 
 export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   name: FieldPath<FormValues>

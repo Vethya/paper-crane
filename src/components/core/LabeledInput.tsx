@@ -1,32 +1,17 @@
-import styled from 'styled-components'
 import { Input, InputProps } from './Input'
-import { colors } from '../../theme'
-
-const Container = styled.div`
-  display: flex;
-  flex-direction: column;
-  margin-bottom: 2rem;
-  color: ${colors.white};
-
-  &:last-of-type {
-    margin-bottom: 0;
-  }
-`
-
-const Label = styled.label`
-  color: ${colors.white};
-  margin-bottom: 0.5rem;
-`
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 interface Props extends Omit<InputProps, 'formContext'> {
   label: string
+  className?: string
 }
 
-export function LabeledInput({ label, ...inputProps }: Props) {
+export function LabeledInput({ label, className, ...inputProps }: Props) {
   return (
-    <Container>
-      <Label>{label}</Label>
+    <div className={twMerge(clsx("flex flex-col mb-8 text-white last:mb-0", className))}>
+      <label className="text-white mb-2">{label}</label>
       <Input {...inputProps} />
-    </Container>
+    </div>
   )
 }

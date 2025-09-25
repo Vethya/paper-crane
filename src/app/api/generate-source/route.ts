@@ -1,13 +1,14 @@
 import type { NextRequest } from 'next/server'
-import Archiver from 'archiver'
+import Archiver, { Archiver as ArchiverType } from 'archiver'
 import { stripIndent } from 'common-tags'
 import getTemplateData from '../../../lib/templates'
 import { FormValues } from '../../../types'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const sourceCode = await generateSourceCode(body as FormValues)
-  return new Response(sourceCode, {
+  const zip = await generateSourceCode(body as FormValues)
+
+  return new Response(zip as unknown as ReadableStream, {
     headers: {
       'content-type': 'application/zip',
       'content-disposition': 'attachment; filename="resume.zip"'
@@ -21,24 +22,29 @@ export async function POST(request: NextRequest) {
  *
  * @param formData The request body received from the client.
  *
- * @return The generated zip.
+ * @return A promise that resolves to the generated zip stream.
  */
-function generateSourceCode(formData: FormValues) {
-  const { texDoc, opts } = getTemplateData(formData)
-  const prettyDoc = /*prettify(texDoc)*/ texDoc
-  const zip = Archiver('zip')
-  const readme = makeReadme(formData.selectedTemplate, opts.cmd)
+async function generateSourceCode(formData: FormValues): Promise<ArchiverType> {
+  return new Promise((resolve, reject) => {
+    const { texDoc, opts } = getTemplateData(formData)
+    const prettyDoc = /*prettify(texDoc)*/ texDoc
+    const zip = Archiver('zip')
+    const readme = makeReadme(formData.selectedTemplate, opts.cmd)
 
-  zip.append(prettyDoc, { name: 'resume.tex' })
-  zip.append(readme, { name: 'README.md' })
+    zip.append(prettyDoc, { name: 'resume.tex' })
+    zip.append(readme, { name: 'README.md' })
 
-  if (opts.inputs) {
-    zip.directory(opts.inputs, '../')
-  }
+    if (opts.inputs) {
+      opts.inputs.forEach((inputPath: string) => {
+        zip.file(`public${inputPath}`, { name: inputPath.replace('/templates/', '') })
+      })
+    }
 
-  zip.finalize()
+    zip.on('error', reject)
+    zip.on('end', () => resolve(zip))
 
-  return zip
+    zip.finalize()
+  })
 }
 
 /**

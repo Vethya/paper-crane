@@ -4,8 +4,6 @@ import { useCallback, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useAtom } from 'jotai'
-import styled from 'styled-components'
-
 import { TemplatesSection } from './sections/TemplatesSection'
 import { ProfileSection } from './sections/ProfileSection'
 import { EducationSection } from './sections/EducationSection'
@@ -15,6 +13,8 @@ import { AwardSection } from './sections/AwardsSection'
 import { ProjectsSection } from './sections/projectsSection'
 import { resumeAtom } from '../../../atoms/resume'
 import { FormValues } from '../../../types'
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 import latex from '../../../lib/latex'
 import getTemplateData from '../../../lib/templates'
@@ -24,18 +24,17 @@ async function generateResume(formData: FormValues): Promise<string> {
   return latex(texDoc, opts)
 }
 
-const StyledForm = styled.form`
-  grid-area: form;
-  overflow: auto;
-`
-
 const initialFormValues: FormValues = {
   headings: {},
   sections: ['profile', 'education', 'work', 'skills', 'projects', 'awards'],
   selectedTemplate: 1
 }
 
-export function Form() {
+interface FormProps {
+  className?: string
+}
+
+export function Form({ className }: FormProps) {
   const searchParams = useSearchParams()
   const currSection = searchParams.get('section') || 'basics'
 
@@ -70,7 +69,8 @@ export function Form() {
 
   return (
     <FormProvider {...formContext}>
-      <StyledForm
+      <form
+        className={twMerge(clsx("overflow-auto", className))}
         id="resume-form"
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
@@ -81,7 +81,7 @@ export function Form() {
         {currSection === 'skills' && <SkillsSection />}
         {currSection === 'awards' && <AwardSection />}
         {currSection === 'projects' && <ProjectsSection />}
-      </StyledForm>
+      </form>
     </FormProvider>
   )
 }

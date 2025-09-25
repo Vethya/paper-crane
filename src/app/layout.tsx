@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { GlobalStyle } from '../components/core/GlobalStyle'
+import './globals.css'
 
 export const metadata: Metadata = {
   title: 'Resumake',
@@ -14,7 +14,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <GlobalStyle />
         {children}
       </body>
     </html>

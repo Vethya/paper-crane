@@ -1,29 +1,18 @@
 import { ReactNode } from 'react'
-import styled from 'styled-components'
-
-const Container = styled.fieldset`
-  width: 100%;
-  padding: 0 2rem;
-  padding-bottom: 2rem;
-`
-
-const Title = styled.h2`
-  margin: 1.5rem 0;
-  font-size: 1.15rem;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-`
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 interface Props {
   title?: string
   children: ReactNode
+  className?: string
 }
 
-export function FormSection({ title = '', children }: Props) {
+export function FormSection({ title = '', children, className }: Props) {
   return (
-    <Container>
-      <Title>{title}</Title>
+    <fieldset className={twMerge(clsx("w-full px-8 pb-8", className))}>
+      <h2 className="my-6 text-xl tracking-wider uppercase">{title}</h2>
       {children}
-    </Container>
+    </fieldset>
   )
 }
