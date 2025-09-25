@@ -9,8 +9,7 @@
   }
 
   html, body {
-    @apply w-full h-full text-white;
-    background-color: #1f2937;
+    @apply w-full h-full bg-slate-950 text-slate-100 antialiased;
     font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 0.95rem;
   }

@@ -13,7 +13,7 @@ export function Button({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          "flex justify-center items-center font-inherit text-sm text-center no-underline w-[175px] h-[45px] my-[7px] bg-transparent text-white rounded-full border border-green-500/90 shadow-none hover:bg-gradient-to-r hover:from-green-600/55 hover:to-green-500/70 hover:cursor-pointer focus:outline-none active:shadow-lg active:border-green-500/85 active:text-green-500/85",
+          "flex h-11 min-w-[175px] items-center justify-center rounded-full border border-emerald-400/70 bg-transparent px-5 text-sm font-medium text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 focus-visible:ring-offset-0 hover:border-emerald-300/80 hover:text-emerald-200",
           className
         )
       )}
@@ -29,7 +29,7 @@ export function PrimaryButton({ children, className, ...props }: BaseButtonProps
     <button
       className={twMerge(
         clsx(
-          "flex justify-center items-center font-inherit text-sm text-center no-underline w-[175px] h-[45px] my-[7px] text-white rounded-full border-none bg-gradient-to-r from-green-600/70 to-green-500 shadow-none hover:bg-gradient-to-r hover:from-green-700/60 hover:to-green-500 hover:cursor-pointer focus:outline-none active:shadow-lg active:border-green-500/85 active:text-green-500/85",
+          "flex h-11 min-w-[175px] items-center justify-center rounded-full border-none bg-gradient-to-r from-emerald-500 to-emerald-400 px-5 text-sm font-semibold text-white shadow-[0_18px_45px_-25px_rgba(16,185,129,0.75)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 hover:from-emerald-500/90 hover:to-emerald-400/90",
           className
         )
       )}
