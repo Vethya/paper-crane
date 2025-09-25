@@ -22,24 +22,26 @@ export function Preview({ className }: PreviewProps) {
   const [scale] = useState(document.body.clientWidth > 1440 ? 1.75 : 1)
 
   useEffect(() => {
+    let cancelled = false
+
     const setupWorker = async () => {
       try {
         const { pdfjs } = await import('react-pdf')
-        const workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`
-
-        const testResponse = await fetch(workerSrc, { method: 'HEAD' })
-        if (testResponse.ok) {
-          pdfjs.GlobalWorkerOptions.workerSrc = workerSrc
-        } else {
-          const fallbackSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`
-          pdfjs.GlobalWorkerOptions.workerSrc = fallbackSrc
+        if (cancelled) {
+          return
         }
+
+        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
       } catch (error) {
         console.warn('Failed to setup PDF.js worker, PDF preview may not work:', error)
       }
     }
 
     setupWorker()
+
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const handleDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
