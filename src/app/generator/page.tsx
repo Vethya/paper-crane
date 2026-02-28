@@ -22,7 +22,7 @@ export default function GeneratorPage() {
       <div className="relative z-10 flex flex-1 flex-col">
         <Header className="border-b border-white/5 bg-slate-950/80 backdrop-blur" />
 
-        <div className="grid flex-1 grid-cols-1 gap-6 overflow-hidden px-4 py-8 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_420px] xl:px-8">
+        <div className="grid flex-1 grid-cols-1 gap-6 overflow-hidden px-4 py-8 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_500px] xl:px-8">
           <div className="hidden rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur lg:block">
             <Suspense fallback={<div className="text-sm text-slate-400">Loading sidebar...</div>}>
               <Sidebar />

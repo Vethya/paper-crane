@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { useAtom } from 'jotai'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { resumeAtom } from '../../atoms/resume'
@@ -19,7 +19,8 @@ export function Preview({ className }: PreviewProps) {
   const [resume] = useAtom(resumeAtom)
   const [, setPageCount] = useState(1)
   const [pageNumber] = useState(1)
-  const [scale] = useState(document.body.clientWidth > 1440 ? 1.75 : 1)
+  const containerRef = useRef<HTMLElement>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -44,6 +45,15 @@ export function Preview({ className }: PreviewProps) {
     }
   }, [])
 
+  useEffect(() => {
+    if (!containerRef.current) return
+    const ro = new ResizeObserver(([entry]) => {
+      setContainerWidth(entry.contentRect.width)
+    })
+    ro.observe(containerRef.current)
+    return () => ro.disconnect()
+  }, [])
+
   const handleDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
     setPageCount(pdf.numPages)
   }, [])
@@ -53,14 +63,14 @@ export function Preview({ className }: PreviewProps) {
   }, [])
 
   return (
-    <output className={twMerge(clsx("overflow-y-auto", className))} style={{ backgroundColor: '#1f2937' }}>
+    <output ref={containerRef} className={twMerge(clsx("flex-1 w-full overflow-y-auto flex flex-col", className))} style={{ backgroundColor: '#1f2937' }}>
       <button
         onClick={() => window.open(resume.url)}
         className="px-3 py-2 mb-4 bg-green-500 text-white rounded hover:bg-green-600"
       >
         export as pdf
       </button>
-      <article className="w-full h-full">
+      <article className="flex-1 flex flex-col">
         <Document
           file={resume.url || '/blank.pdf'}
           onLoadSuccess={handleDocumentLoadSuccess}
@@ -68,14 +78,16 @@ export function Preview({ className }: PreviewProps) {
           loading=""
           className="w-full"
         >
-          <Page
-            pageNumber={pageNumber}
-            scale={scale}
-            renderAnnotationLayer={false}
-            renderTextLayer={false}
-            loading=""
-            className="flex justify-center items-center py-6 pb-40 [&>canvas]:max-w-[95%] [&>canvas]:h-auto"
-          />
+          {containerWidth > 0 && (
+            <Page
+              pageNumber={pageNumber}
+              width={containerWidth * 0.92}
+              renderAnnotationLayer={false}
+              renderTextLayer={false}
+              loading=""
+              className="flex justify-center py-6"
+            />
+          )}
         </Document>
       </article>
     </output>
