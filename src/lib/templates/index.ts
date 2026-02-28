@@ -49,42 +49,85 @@ function sanitizeFormValues(data: FormValues): FormValues {
           // website intentionally not escaped (used in \href{})
         }
       : undefined,
-    work: data.work?.map((job) => ({
-      ...job,
-      name: esc(job.name),
-      company: esc(job.company),
-      position: esc(job.position),
-      location: esc(job.location),
-      summary: esc(job.summary),
-      highlights: job.highlights.map((h) => esc(h) as string)
-    })),
-    education: data.education?.map((edu) => ({
-      ...edu,
-      institution: esc(edu.institution),
-      area: esc(edu.area),
-      studyType: esc(edu.studyType),
-      score: esc(edu.score),
-      location: esc(edu.location)
-    })),
-    awards: data.awards?.map((award) => ({
-      ...award,
-      title: esc(award.title),
-      awarder: esc(award.awarder),
-      summary: esc(award.summary)
-    })),
-    skills: data.skills?.map((skill) => ({
-      ...skill,
-      name: esc(skill.name),
-      keywords: skill.keywords?.map((k) => esc(k) as string)
-    })),
-    projects: data.projects?.map((project) => ({
-      ...project,
-      name: esc(project.name),
-      description: esc(project.description),
-      highlights: project.highlights?.map((h) => esc(h) as string),
-      keywords: project.keywords?.map((k) => esc(k) as string)
-      // url intentionally not escaped (used in \href{})
-    }))
+    work: (() => {
+      const arr = data.work?.map((job) => ({
+        ...job,
+        name: esc(job.name),
+        company: esc(job.company),
+        position: esc(job.position),
+        location: esc(job.location),
+        summary: esc(job.summary),
+        highlights: job.highlights.map((h) => esc(h) as string)
+      })).filter(
+        (j) =>
+          j.company ||
+          j.name ||
+          j.position ||
+          j.startDate ||
+          j.endDate ||
+          j.summary ||
+          j.location ||
+          j.highlights.some(Boolean)
+      )
+      return arr?.length ? arr : undefined
+    })(),
+    education: (() => {
+      const arr = data.education?.map((edu) => ({
+        ...edu,
+        institution: esc(edu.institution),
+        area: esc(edu.area),
+        studyType: esc(edu.studyType),
+        score: esc(edu.score),
+        location: esc(edu.location)
+      })).filter(
+        (e) =>
+          e.institution ||
+          e.area ||
+          e.studyType ||
+          e.startDate ||
+          e.endDate ||
+          e.score ||
+          e.location
+      )
+      return arr?.length ? arr : undefined
+    })(),
+    awards: (() => {
+      const arr = data.awards?.map((award) => ({
+        ...award,
+        title: esc(award.title),
+        awarder: esc(award.awarder),
+        summary: esc(award.summary)
+      })).filter((a) => a.title || a.date || a.awarder || a.summary)
+      return arr?.length ? arr : undefined
+    })(),
+    skills: (() => {
+      const arr = data.skills?.map((skill) => ({
+        ...skill,
+        name: esc(skill.name),
+        keywords: skill.keywords?.map((k) => esc(k) as string)
+      })).filter((s) => s.name || s.keywords?.some(Boolean))
+      return arr?.length ? arr : undefined
+    })(),
+    projects: (() => {
+      const arr = data.projects?.map((project) => ({
+        ...project,
+        name: esc(project.name),
+        description: esc(project.description),
+        highlights: project.highlights?.map((h) => esc(h) as string),
+        keywords: project.keywords?.map((k) => esc(k) as string)
+        // url intentionally not escaped (used in \href{})
+      })).filter(
+        (p) =>
+          p.name ||
+          p.description ||
+          p.url ||
+          p.startDate ||
+          p.endDate ||
+          p.highlights?.some(Boolean) ||
+          p.keywords?.some(Boolean)
+      )
+      return arr?.length ? arr : undefined
+    })()
   }
 }
 
