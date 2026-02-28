@@ -11,9 +11,7 @@
     "build": "next build",
     "lint": "next lint",
     "format": "prettier --write src",
-    "format:check": "prettier --check src",
-    "postinstall": "cp node_modules/swiftlatex/dist/swift*.js node_modules/swiftlatex/dist/*.wasm public",
-    "postinstall:windows": "copy .\\node_modules\\swiftlatex\\dist\\swift*.js .\\public\\ && copy .\\node_modules\\swiftlatex\\dist\\*.wasm .\\public\\"
+    "format:check": "prettier --check src"
   },
   "dependencies": {
     "archiver": "^7.0.1",
@@ -27,7 +25,6 @@
     "react-hook-form": "^7.53.2",
     "react-icons": "^5.4.0",
     "react-pdf": "^9.1.1",
-    "swiftlatex": "https://github.com/ducaale/SwiftLaTeX/releases/download/v1.0.0-experimental-9902734/swiftlatex-1.0.0-experimental-9902734.tgz",
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
