@@ -20,15 +20,85 @@ import {
 } from './constants'
 import { FormValues, TemplateData } from '../../types'
 
+// Escape LaTeX special characters in user-provided text.
+// URL fields (website, url) are intentionally excluded.
+function esc(str: string | undefined): string | undefined {
+  return str
+    ?.replace(/&/g, '\\&')
+    .replace(/%/g, '\\%')
+    .replace(/\$/g, '\\$')
+    .replace(/#/g, '\\#')
+    .replace(/_/g, '\\_')
+}
+
+function sanitizeFormValues(data: FormValues): FormValues {
+  return {
+    ...data,
+    basics: data.basics
+      ? {
+          ...data.basics,
+          name: esc(data.basics.name),
+          email: esc(data.basics.email),
+          phone: esc(data.basics.phone),
+          location: data.basics.location
+            ? {
+                ...data.basics.location,
+                address: esc(data.basics.location.address)
+              }
+            : undefined
+          // website intentionally not escaped (used in \href{})
+        }
+      : undefined,
+    work: data.work?.map((job) => ({
+      ...job,
+      name: esc(job.name),
+      company: esc(job.company),
+      position: esc(job.position),
+      location: esc(job.location),
+      summary: esc(job.summary),
+      highlights: job.highlights.map((h) => esc(h) as string)
+    })),
+    education: data.education?.map((edu) => ({
+      ...edu,
+      institution: esc(edu.institution),
+      area: esc(edu.area),
+      studyType: esc(edu.studyType),
+      score: esc(edu.score),
+      location: esc(edu.location)
+    })),
+    awards: data.awards?.map((award) => ({
+      ...award,
+      title: esc(award.title),
+      awarder: esc(award.awarder),
+      summary: esc(award.summary)
+    })),
+    skills: data.skills?.map((skill) => ({
+      ...skill,
+      name: esc(skill.name),
+      keywords: skill.keywords?.map((k) => esc(k) as string)
+    })),
+    projects: data.projects?.map((project) => ({
+      ...project,
+      name: esc(project.name),
+      description: esc(project.description),
+      highlights: project.highlights?.map((h) => esc(h) as string),
+      keywords: project.keywords?.map((k) => esc(k) as string)
+      // url intentionally not escaped (used in \href{})
+    }))
+  }
+}
+
 /**
  * Generates the LaTeX document based on the selected template
  * as well as the necessary options needed for it to create a pdf.
  *
- * @param data - The sanitized form data from the request body.
+ * @param data - The form data from the request body.
  *
  * @return The generated LaTeX document as well as its additional opts.
  */
 export default function getTemplateData(data: FormValues): TemplateData {
+  const sanitized = sanitizeFormValues(data)
+  data = sanitized
   switch (data.selectedTemplate) {
     case TEMPLATE1:
       return {
