@@ -102,7 +102,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
       \\section{${heading || 'EXPERIENCE'}}
       ${work.map((job) => {
         const {
-          name,
+          company,
           position,
           location,
           startDate,
@@ -113,8 +113,8 @@ const generator: Omit<Generator, 'resumeHeader'> = {
         let jobLine = ''
         let dateRange = ''
 
-        if (name) {
-          jobLine += `\\textbf{${name}}, `
+        if (company) {
+          jobLine += `\\textbf{${company}}, `
         }
 
         if (position) {

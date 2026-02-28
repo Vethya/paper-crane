@@ -118,7 +118,7 @@ const generator: Generator = {
       \\cvsection{${heading || 'Experience'}}
       \\begin{cventries}
       ${work.map((job) => {
-        const { name, position, location, startDate, endDate, highlights } = job
+        const { company, position, location, startDate, endDate, highlights } = job
 
         let dateRange
         let dutyLines
@@ -142,7 +142,7 @@ const generator: Generator = {
         return stripIndent`
           \\cventry
             {${position || ''}}
-            {${name || ''}}
+            {${company || ''}}
             {${location || ''}}
             {${dateRange || ''}}
             {${dutyLines}}

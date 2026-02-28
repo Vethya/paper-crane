@@ -97,7 +97,7 @@ const generator: Generator = {
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       \\begin{itemize}[leftmargin=*]
       ${work.map((job) => {
-        const { name, position, location, startDate, endDate, highlights } = job
+        const { company, position, location, startDate, endDate, highlights } = job
 
         let dateRange
         let dutyLines
@@ -121,7 +121,7 @@ const generator: Generator = {
         return stripIndent`
           \\item[]
             \\job
-              {${name || ''}}
+              {${company || ''}}
               {${location || ''}}
               {${position || ''}}
               {${dateRange || ''}}
