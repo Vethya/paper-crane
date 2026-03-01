@@ -257,6 +257,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
           inputs: [
             '/templates/template7/collection.sty',
             '/templates/template7/moderncv.cls',
+            '/templates/template7/moderncvcompatibility.sty',
             '/templates/template7/moderncvcolorblue.sty',
             '/templates/template7/moderncviconsletters.sty',
             '/templates/template7/moderncviconsmarvosym.sty',
