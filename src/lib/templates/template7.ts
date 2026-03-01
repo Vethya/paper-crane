@@ -206,7 +206,6 @@ const generator: Generator = {
       % available at http://www.latex-project.org/lppl/.
 
 
-      \\PassOptionsToPackage{expansion=false}{microtype}
       \\documentclass[letterpaper]{moderncv}        % possible options include font size ('10pt', '11pt' and '12pt'), paper size ('a4paper', 'letterpaper', 'a5paper', 'legalpaper', 'executivepaper' and 'landscape') and font family ('sans' and 'roman')
       \\usepackage{textcomp}
       % moderncv themes

@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     texlive-latex-extra \
     texlive-fonts-extra \
     texlive-fonts-recommended \
+    lmodern \
     && rm -rf /var/lib/apt/lists/*
 
 RUN npm install -g pnpm
