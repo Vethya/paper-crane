@@ -16,8 +16,8 @@ export function ProjectsSection() {
     const defaultProject: Project = {
       name: '',
       description: '',
-      url: '',
-      keywords: []
+      keywords: [],
+      url: ''
     }
 
     append(defaultProject)

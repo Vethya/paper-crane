@@ -14,8 +14,10 @@ export function EducationSection() {
   const handleAdd = () => {
     const defaultEducation: Education = {
       institution: '',
+      location: '',
       studyType: '',
       area: '',
+      score: '',
       startDate: '',
       endDate: ''
     }
@@ -43,6 +45,11 @@ export function EducationSection() {
             placeholder="Rutgers University"
           />
           <LabeledInput
+            name={`education.${index}.location`}
+            label="School Location"
+            placeholder="New Brunswick, NJ"
+          />
+          <LabeledInput
             name={`education.${index}.studyType`}
             label="Degree"
             placeholder="Bachelor's"
@@ -51,6 +58,11 @@ export function EducationSection() {
             name={`education.${index}.area`}
             label="Major"
             placeholder="Computer Science"
+          />
+          <LabeledInput
+            name={`education.${index}.score`}
+            label="GPA"
+            placeholder="3.8"
           />
           <LabeledInput
             name={`education.${index}.startDate`}

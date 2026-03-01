@@ -15,8 +15,8 @@ export function WorkSection() {
   const handleAdd = () => {
     const defaultWork: Work = {
       company: '',
+      location: '',
       position: '',
-      summary: '',
       startDate: '',
       endDate: '',
       highlights: []
@@ -45,14 +45,14 @@ export function WorkSection() {
             placeholder="Netflix"
           />
           <LabeledInput
+            name={`work.${index}.location`}
+            label="Location"
+            placeholder="Los Gatos, CA"
+          />
+          <LabeledInput
             name={`work.${index}.position`}
             label="Position"
             placeholder="Software Engineer"
-          />
-          <LabeledInput
-            name={`work.${index}.summary`}
-            label="Summary"
-            placeholder="lorem ipsum"
           />
           <LabeledInput
             name={`work.${index}.startDate`}
