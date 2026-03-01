@@ -1,7 +1,9 @@
 'use client'
 
+import clsx from 'clsx'
 import dynamic from 'next/dynamic'
-import { Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Suspense, useEffect, useState } from 'react'
 import { Form } from '../../components/generator/Form'
 import { Header } from '../../components/generator/Header'
 import { Sidebar } from '../../components/generator/Sidebar'
@@ -12,6 +14,12 @@ const Preview = dynamic(
 )
 
 export default function GeneratorPage() {
+  const [activePanel, setActivePanel] = useState<'nav' | 'form' | 'preview'>('form')
+  const section = useSearchParams().get('section')
+  useEffect(() => {
+    setActivePanel('form')
+  }, [section])
+
   return (
     <main className="relative flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <div className="pointer-events-none absolute inset-0 opacity-70">
@@ -22,20 +30,37 @@ export default function GeneratorPage() {
       <div className="relative z-10 flex flex-1 flex-col">
         <Header className="border-b border-white/5 bg-slate-950/80 backdrop-blur" />
 
-        <div className="grid flex-1 grid-cols-1 gap-6 overflow-hidden px-4 py-8 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_500px] xl:px-8">
-          <div className="hidden rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur lg:block">
+        <div className="flex border-b border-white/5 bg-slate-950/80 backdrop-blur xl:hidden">
+          {(['nav', 'form', 'preview'] as const).map((panel) => (
+            <button
+              key={panel}
+              onClick={() => setActivePanel(panel)}
+              className={clsx(
+                "flex-1 py-3 text-sm font-medium capitalize transition-colors",
+                activePanel === panel
+                  ? "border-b-2 border-emerald-500 text-emerald-400"
+                  : "text-slate-400 hover:text-slate-200"
+              )}
+            >
+              {panel === 'nav' ? 'Nav' : panel === 'preview' ? 'Preview' : 'Form'}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid flex-1 grid-cols-1 gap-6 overflow-hidden px-4 py-8 xl:grid-cols-[320px_minmax(0,1fr)_500px] xl:px-8">
+          <div className={clsx("rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur", activePanel !== 'nav' ? "hidden xl:block" : "block")}>
             <Suspense fallback={<div className="text-sm text-slate-400">Loading sidebar...</div>}>
               <Sidebar />
             </Suspense>
           </div>
 
-          <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-4 backdrop-blur sm:p-6 lg:p-8">
+          <div className={clsx("rounded-3xl border border-white/10 bg-slate-900/50 p-4 backdrop-blur sm:p-6 lg:p-8", activePanel !== 'form' ? "hidden xl:block" : "block")}>
             <Suspense fallback={<div className="flex h-full items-center justify-center text-sm text-slate-400">Loading form...</div>}>
               <Form />
             </Suspense>
           </div>
 
-          <div className="hidden flex-col rounded-3xl border border-emerald-500/15 bg-slate-950/60 backdrop-blur xl:flex">
+          <div className={clsx("flex-col rounded-3xl border border-emerald-500/15 bg-slate-950/60 backdrop-blur", activePanel !== 'preview' ? "hidden xl:flex" : "flex")}>
             <div className="border-b border-emerald-500/10 px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-emerald-300/80">
               Live preview
             </div>
@@ -45,12 +70,6 @@ export default function GeneratorPage() {
               </Suspense>
             </div>
           </div>
-        </div>
-
-        <div className="border-t border-white/5 bg-slate-900/80 px-4 py-4 text-xs text-slate-500 backdrop-blur sm:px-6 lg:hidden">
-          <p className="text-center">
-            Need the live preview? Open the generator on a larger screen for the full layout.
-          </p>
         </div>
       </div>
     </main>
