@@ -21,7 +21,7 @@ export default function GeneratorPage() {
   }, [section])
 
   return (
-    <main className="relative flex min-h-screen flex-col bg-slate-950 text-slate-100">
+    <main className="relative flex min-h-screen flex-col overflow-hidden bg-slate-950 text-slate-100">
       <div className="pointer-events-none absolute inset-0 opacity-70">
         <div className="absolute inset-y-0 left-0 w-[20%] bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent blur-[140px]" />
         <div className="absolute bottom-16 right-[-12%] h-80 w-80 rounded-full bg-emerald-500/15 blur-3xl" />
