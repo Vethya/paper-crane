@@ -72,6 +72,22 @@ export function AddButton({ children, className, ...props }: BaseButtonProps) {
   )
 }
 
+export function RemoveButton({ children, className, ...props }: BaseButtonProps) {
+  return (
+    <button
+      className={twMerge(
+        clsx(
+          "px-3 py-2 cursor-pointer outline-none border-none bg-transparent text-red-500 hover:cursor-pointer focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed",
+          className
+        )
+      )}
+      {...props}
+    >
+      {children}
+    </button>
+  )
+}
+
 export function IconButton({ children, className, ...props }: BaseButtonProps) {
   return (
     <button

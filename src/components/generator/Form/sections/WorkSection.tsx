@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { useFieldArray } from 'react-hook-form'
 
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton } from '../../../core/Button'
+import { AddButton, RemoveButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
 import Highlights from './Highlights'
@@ -10,7 +10,7 @@ import Highlights from './Highlights'
 import { Work } from '../../../../types'
 
 export function WorkSection() {
-  const { fields, append } = useFieldArray({ name: 'work' })
+  const { fields, append, remove } = useFieldArray({ name: 'work' })
 
   const handleAdd = () => {
     const defaultWork: Work = {
@@ -69,6 +69,13 @@ export function WorkSection() {
             placeholder="Did cool stuff at company"
             name={`work.${index}.highlights`}
           />
+          <RemoveButton
+            type="button"
+            disabled={fields.length === 1}
+            onClick={() => remove(index)}
+          >
+            - Remove Work Experience
+          </RemoveButton>
           <Divider />
         </Fragment>
       ))}

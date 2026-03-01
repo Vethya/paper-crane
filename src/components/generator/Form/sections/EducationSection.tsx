@@ -3,13 +3,13 @@ import { useFieldArray } from 'react-hook-form'
 
 import { FormSection } from './FormSection'
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton } from '../../../core/Button'
+import { AddButton, RemoveButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 
 import { Education } from '../../../../types'
 
 export function EducationSection() {
-  const { fields, append } = useFieldArray({ name: 'education' })
+  const { fields, append, remove } = useFieldArray({ name: 'education' })
 
   const handleAdd = () => {
     const defaultEducation: Education = {
@@ -74,6 +74,13 @@ export function EducationSection() {
             label="End Date"
             placeholder="Jun 2019"
           />
+          <RemoveButton
+            type="button"
+            disabled={fields.length === 1}
+            onClick={() => remove(index)}
+          >
+            - Remove School
+          </RemoveButton>
           <Divider />
         </Fragment>
       ))}

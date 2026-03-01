@@ -2,7 +2,7 @@ import { Fragment } from 'react'
 import { useFieldArray } from 'react-hook-form'
 
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton } from '../../../core/Button'
+import { AddButton, RemoveButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
 import Keywords from './Keywords'
@@ -10,7 +10,7 @@ import Keywords from './Keywords'
 import { Skill } from '../../../../types'
 
 export function SkillsSection() {
-  const { fields, append } = useFieldArray({ name: 'skills' })
+  const { fields, append, remove } = useFieldArray({ name: 'skills' })
 
   const handleAdd = () => {
     const defaultSkill: Skill = {
@@ -45,6 +45,13 @@ export function SkillsSection() {
             placeholder="TypeScript"
             name={`skills.${index}.keywords`}
           />
+          <RemoveButton
+            type="button"
+            disabled={fields.length === 1}
+            onClick={() => remove(index)}
+          >
+            - Remove Skill
+          </RemoveButton>
           <Divider />
         </Fragment>
       ))}
