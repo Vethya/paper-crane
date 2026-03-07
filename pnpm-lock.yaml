@@ -41,9 +41,6 @@ importers:
       react-pdf:
         specifier: ^9.1.1
         version: 9.2.1(@types/react@19.1.12)(react-dom@19.1.1(react@19.1.1))(react@19.1.1)
-      swiftlatex:
-        specifier: https://github.com/ducaale/SwiftLaTeX/releases/download/v1.0.0-experimental-9902734/swiftlatex-1.0.0-experimental-9902734.tgz
-        version: https://github.com/ducaale/SwiftLaTeX/releases/download/v1.0.0-experimental-9902734/swiftlatex-1.0.0-experimental-9902734.tgz
       tailwind-merge:
         specifier: ^3.3.1
         version: 3.3.1
@@ -915,9 +912,6 @@ packages:
   color@4.2.3:
     resolution: {integrity: sha512-1rXeuUUiGGrykh+CeBdu5Ie7OJwinCgQY0bc7GCRxy5xVHy+moaqkpL/jqQq0MtQOeYcrqEz4abc5f0KtU7W4A==}
     engines: {node: '>=12.5.0'}
-
-  comlink@4.4.2:
-    resolution: {integrity: sha512-OxGdvBmJuNKSCMO4NTl1L47VRp6xn2wG4F/2hYzB6tiCb709otOxtEYCSvK80PtjODfXXZu8ds+Nw5kVCjqd2g==}
 
   commander@4.1.1:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
@@ -2323,10 +2317,6 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
 
-  swiftlatex@https://github.com/ducaale/SwiftLaTeX/releases/download/v1.0.0-experimental-9902734/swiftlatex-1.0.0-experimental-9902734.tgz:
-    resolution: {tarball: https://github.com/ducaale/SwiftLaTeX/releases/download/v1.0.0-experimental-9902734/swiftlatex-1.0.0-experimental-9902734.tgz}
-    version: 1.0.0
-
   tailwind-merge@3.3.1:
     resolution: {integrity: sha512-gBXpgUm/3rp1lMZZrM/w7D8GKqshif0zAymAhbCyIt8KMe+0v9DQ7cdYLR4FHH/cKpdTXb+A/tKKU3eolfsI+g==}
 
@@ -3383,8 +3373,6 @@ snapshots:
       color-convert: 2.0.1
       color-string: 1.9.1
     optional: true
-
-  comlink@4.4.2: {}
 
   commander@4.1.1: {}
 
@@ -4996,10 +4984,6 @@ snapshots:
       has-flag: 4.0.0
 
   supports-preserve-symlinks-flag@1.0.0: {}
-
-  swiftlatex@https://github.com/ducaale/SwiftLaTeX/releases/download/v1.0.0-experimental-9902734/swiftlatex-1.0.0-experimental-9902734.tgz:
-    dependencies:
-      comlink: 4.4.2
 
   tailwind-merge@3.3.1: {}
 
