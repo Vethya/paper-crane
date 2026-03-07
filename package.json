@@ -19,7 +19,7 @@
     "clsx": "^2.1.1",
     "common-tags": "^1.8.2",
     "jotai": "^2.8.3",
-    "next": "^15.1.8",
+    "next": "15.5.9",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hook-form": "^7.53.2",
