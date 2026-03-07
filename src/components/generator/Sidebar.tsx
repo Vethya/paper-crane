@@ -2,10 +2,10 @@
 
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { MdDragIndicator } from 'react-icons/md'
+// import { MdDragIndicator } from 'react-icons/md'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { PrimaryButton, IconButton } from '../core/Button'
+import { PrimaryButton } from '../core/Button'
 
 interface StyledLinkProps {
   href: string

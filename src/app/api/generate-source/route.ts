@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
   const body = await request.json()
   try {
     const buffer = await generateSourceCode(body as FormValues)
-    return new Response(buffer, {
+    return new Response(new Uint8Array(buffer), {
       headers: {
         'content-type': 'application/zip',
         'content-disposition': 'attachment; filename="resume.zip"'

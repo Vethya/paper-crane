@@ -84,7 +84,7 @@ export function Preview({ className }: PreviewProps) {
   const [pageNumber, setPageNumber] = useState(1)
   const [zoom, setZoom] = useState(1.0)
   const [hasJson, setHasJson] = useState(false)
-  const containerRef = useRef<HTMLElement>(null)
+  const containerRef = useRef<HTMLOutputElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [downloadOpen, setDownloadOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)

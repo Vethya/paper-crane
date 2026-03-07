@@ -14,6 +14,14 @@ const Preview = dynamic(
 )
 
 export default function GeneratorPage() {
+  return (
+    <Suspense>
+      <GeneratorContent />
+    </Suspense>
+  )
+}
+
+function GeneratorContent() {
   const [activePanel, setActivePanel] = useState<'nav' | 'form' | 'preview'>('form')
   const section = useSearchParams().get('section')
   useEffect(() => {
