@@ -86,6 +86,8 @@ export function Preview({ className }: PreviewProps) {
   const [hasJson, setHasJson] = useState(false)
   const containerRef = useRef<HTMLElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
+  const [downloadOpen, setDownloadOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -116,6 +118,17 @@ export function Preview({ className }: PreviewProps) {
     ro.observe(containerRef.current)
     return () => ro.disconnect()
   }, [])
+
+  useEffect(() => {
+    if (!downloadOpen) return
+    const handler = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDownloadOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [downloadOpen])
 
   const handleDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
     setNumPages(pdf.numPages)
@@ -192,6 +205,9 @@ export function Preview({ className }: PreviewProps) {
 
   const btnClass =
     'flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-white/80 text-xs'
+  const dropdownItemClass =
+    'flex items-center gap-2 w-full px-3 py-1.5 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs'
+  const isNarrow = containerWidth > 0 && containerWidth < 520
 
   return (
     <output
@@ -200,42 +216,61 @@ export function Preview({ className }: PreviewProps) {
       style={{ backgroundColor: '#1f2937' }}
     >
       {/* Toolbar */}
-      <div className="flex items-center gap-1 px-3 py-2 bg-[#1c1c1c] border-b border-white/10 text-sm shrink-0">
-        {/* Left group: downloads */}
-        <div className="flex items-center gap-1">
-          <button
-            className={btnClass}
-            onClick={handleDownloadPdf}
-            disabled={!resume.url}
-            title="Download PDF"
-          >
-            <IconDownload />
-            PDF
-          </button>
-          <button
-            className={btnClass}
-            onClick={handleDownloadLatex}
-            disabled={!hasJson}
-            title="Download LaTeX source (ZIP)"
-          >
-            <IconDownload />
-            LaTeX
-          </button>
-          <button
-            className={btnClass}
-            onClick={handleDownloadJson}
-            disabled={!hasJson}
-            title="Download JSON"
-          >
-            <IconDownload />
-            JSON
-          </button>
+      <div className="grid grid-cols-3 items-center gap-1 px-3 py-2 bg-[#1c1c1c] border-b border-white/10 text-sm shrink-0">
+        {/* Left group: downloads — dropdown on narrow, individual buttons on wide */}
+        <div className="flex items-center gap-1 justify-start">
+          {isNarrow ? (
+            <div className="relative shrink-0" ref={dropdownRef}>
+              <button
+                className={btnClass}
+                onClick={() => setDownloadOpen(v => !v)}
+                title="Download"
+              >
+                <IconDownload />
+              </button>
+              {downloadOpen && (
+                <div className="absolute top-full left-0 z-[9999] bg-[#2a2a2a] border border-white/10 rounded shadow-lg py-1 min-w-[130px]">
+                  <button
+                    className={dropdownItemClass}
+                    onClick={() => { handleDownloadPdf(); setDownloadOpen(false) }}
+                    disabled={!resume.url}
+                  >
+                    <IconDownload /> PDF
+                  </button>
+                  <button
+                    className={dropdownItemClass}
+                    onClick={() => { handleDownloadLatex(); setDownloadOpen(false) }}
+                    disabled={!hasJson}
+                  >
+                    <IconDownload /> LaTeX
+                  </button>
+                  <button
+                    className={dropdownItemClass}
+                    onClick={() => { handleDownloadJson(); setDownloadOpen(false) }}
+                    disabled={!hasJson}
+                  >
+                    <IconDownload /> JSON
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <>
+              <button className={btnClass} onClick={handleDownloadPdf} disabled={!resume.url} title="Download PDF">
+                <IconDownload /> PDF
+              </button>
+              <button className={btnClass} onClick={handleDownloadLatex} disabled={!hasJson} title="Download LaTeX source (ZIP)">
+                <IconDownload /> LaTeX
+              </button>
+              <button className={btnClass} onClick={handleDownloadJson} disabled={!hasJson} title="Download JSON">
+                <IconDownload /> JSON
+              </button>
+            </>
+          )}
         </div>
 
-        <div className="flex-1" />
-
-        {/* Center group: page navigation */}
-        <div className="flex items-center gap-1">
+        {/* Center group: page navigation — always truly centered */}
+        <div className="flex items-center gap-1 justify-center">
           <button
             className={btnClass}
             onClick={handlePrevPage}
@@ -245,7 +280,7 @@ export function Preview({ className }: PreviewProps) {
             <IconArrowLeft />
           </button>
           <span className="text-white/60 text-xs px-1 tabular-nums whitespace-nowrap">
-            Page {pageNumber} / {numPages}
+            {isNarrow ? `${pageNumber}/${numPages}` : `Page ${pageNumber} / ${numPages}`}
           </span>
           <button
             className={btnClass}
@@ -257,10 +292,8 @@ export function Preview({ className }: PreviewProps) {
           </button>
         </div>
 
-        <div className="flex-1" />
-
         {/* Right group: zoom + print */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 justify-end">
           <button
             className={btnClass}
             onClick={handleZoomOut}
