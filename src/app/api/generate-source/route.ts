@@ -1,30 +1,34 @@
 import type { NextRequest } from 'next/server'
-import Archiver, { Archiver as ArchiverType } from 'archiver'
+import Archiver from 'archiver'
 import { stripIndent } from 'common-tags'
 import getTemplateData from '../../../lib/templates'
 import { FormValues } from '../../../types'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const zip = await generateSourceCode(body as FormValues)
-
-  return new Response(zip as unknown as ReadableStream, {
-    headers: {
-      'content-type': 'application/zip',
-      'content-disposition': 'attachment; filename="resume.zip"'
-    }
-  })
+  try {
+    const buffer = await generateSourceCode(body as FormValues)
+    return new Response(buffer, {
+      headers: {
+        'content-type': 'application/zip',
+        'content-disposition': 'attachment; filename="resume.zip"'
+      }
+    })
+  } catch (err) {
+    console.error('[generate-source] Error generating ZIP:', err)
+    return new Response('Failed to generate source', { status: 500 })
+  }
 }
 
 /**
  * Generates resume source files from the request body,
- * and then saves it to a zip which is then sent to the client.
+ * collects all archiver chunks into a Buffer, and resolves with it.
  *
  * @param formData The request body received from the client.
  *
- * @return A promise that resolves to the generated zip stream.
+ * @return A promise that resolves to a Buffer containing the ZIP contents.
  */
-async function generateSourceCode(formData: FormValues): Promise<ArchiverType> {
+async function generateSourceCode(formData: FormValues): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const { texDoc, opts } = getTemplateData(formData)
     const prettyDoc = /*prettify(texDoc)*/ texDoc
@@ -40,8 +44,10 @@ async function generateSourceCode(formData: FormValues): Promise<ArchiverType> {
       })
     }
 
+    const chunks: Buffer[] = []
+    zip.on('data', (chunk: Buffer) => chunks.push(chunk))
     zip.on('error', reject)
-    zip.on('end', () => resolve(zip))
+    zip.on('end', () => resolve(Buffer.concat(chunks)))
 
     zip.finalize()
   })

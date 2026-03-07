@@ -15,10 +15,75 @@ interface PreviewProps {
   className?: string
 }
 
+const ZOOM_STEPS = [1.0, 1.25, 1.5, 2.0]
+
+// Inline SVG icons
+function IconDownload() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 2v8M5 7l3 3 3-3" />
+      <path d="M2 12h12" />
+    </svg>
+  )
+}
+
+function IconArrowLeft() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10 3L5 8l5 5" />
+    </svg>
+  )
+}
+
+function IconArrowRight() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 3l5 5-5 5" />
+    </svg>
+  )
+}
+
+function IconZoomOut() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="7" cy="7" r="4.5" />
+      <path d="M5 7h4M11 11l2.5 2.5" />
+    </svg>
+  )
+}
+
+function IconZoomIn() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="7" cy="7" r="4.5" />
+      <path d="M5 7h4M7 5v4M11 11l2.5 2.5" />
+    </svg>
+  )
+}
+
+function IconPrinter() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="6" width="10" height="6" rx="1" />
+      <path d="M5 6V3h6v3" />
+      <rect x="5" y="9" width="6" height="3" />
+    </svg>
+  )
+}
+
+function triggerDownload(url: string, filename: string) {
+  const a = document.createElement('a')
+  a.href = url
+  a.download = filename
+  a.click()
+}
+
 export function Preview({ className }: PreviewProps) {
   const [resume] = useAtom(resumeAtom)
-  const [, setPageCount] = useState(1)
-  const [pageNumber] = useState(1)
+  const [numPages, setNumPages] = useState(1)
+  const [pageNumber, setPageNumber] = useState(1)
+  const [zoom, setZoom] = useState(1.0)
+  const [hasJson, setHasJson] = useState(false)
   const containerRef = useRef<HTMLElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
 
@@ -28,10 +93,7 @@ export function Preview({ className }: PreviewProps) {
     const setupWorker = async () => {
       try {
         const { pdfjs } = await import('react-pdf')
-        if (cancelled) {
-          return
-        }
-
+        if (cancelled) return
         pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
       } catch (error) {
         console.warn('Failed to setup PDF.js worker, PDF preview may not work:', error)
@@ -39,11 +101,12 @@ export function Preview({ className }: PreviewProps) {
     }
 
     setupWorker()
-
-    return () => {
-      cancelled = true
-    }
+    return () => { cancelled = true }
   }, [])
+
+  useEffect(() => {
+    setHasJson(!!localStorage.getItem('jsonResume'))
+  }, [resume.url])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -55,22 +118,181 @@ export function Preview({ className }: PreviewProps) {
   }, [])
 
   const handleDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
-    setPageCount(pdf.numPages)
+    setNumPages(pdf.numPages)
+    setPageNumber(1)
   }, [])
 
   const handleDocumentLoadError = useCallback((error: Error) => {
     console.warn('Failed to load PDF document:', error)
   }, [])
 
+  const handleDownloadPdf = useCallback(() => {
+    if (!resume.url) return
+    triggerDownload(resume.url, 'resume.pdf')
+  }, [resume.url])
+
+  const handleDownloadLatex = useCallback(async () => {
+    const raw = localStorage.getItem('jsonResume')
+    if (!raw) return
+    try {
+      const formData = JSON.parse(raw)
+      const res = await fetch('/api/generate-source', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      })
+      if (!res.ok) throw new Error('LaTeX generation failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      triggerDownload(url, 'resume.zip')
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('[Preview] LaTeX download failed:', err)
+    }
+  }, [])
+
+  const handleDownloadJson = useCallback(() => {
+    const jsonResume = localStorage.getItem('jsonResume')
+    if (!jsonResume) return
+    const blob = new Blob([jsonResume], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    triggerDownload(url, 'resume.json')
+    URL.revokeObjectURL(url)
+  }, [])
+
+  const handlePrint = useCallback(() => {
+    if (!resume.url) return
+    window.open(resume.url, '_blank')
+  }, [resume.url])
+
+  const handlePrevPage = useCallback(() => {
+    setPageNumber(p => Math.max(1, p - 1))
+  }, [])
+
+  const handleNextPage = useCallback(() => {
+    setPageNumber(p => Math.min(numPages, p + 1))
+  }, [numPages])
+
+  const handleZoomOut = useCallback(() => {
+    setZoom(z => {
+      const idx = ZOOM_STEPS.indexOf(z)
+      return idx > 0 ? ZOOM_STEPS[idx - 1] : z
+    })
+  }, [])
+
+  const handleZoomIn = useCallback(() => {
+    setZoom(z => {
+      const idx = ZOOM_STEPS.indexOf(z)
+      return idx < ZOOM_STEPS.length - 1 ? ZOOM_STEPS[idx + 1] : z
+    })
+  }, [])
+
+  const zoomIdx = ZOOM_STEPS.indexOf(zoom)
+  const pageWidth = containerWidth > 0 ? containerWidth * 0.92 * zoom : undefined
+
+  const btnClass =
+    'flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-white/80 text-xs'
+
   return (
-    <output ref={containerRef} className={twMerge(clsx("flex-1 w-full overflow-y-auto flex flex-col", className))} style={{ backgroundColor: '#1f2937' }}>
-      <button
-        onClick={() => window.open(resume.url)}
-        className="px-3 py-2 mb-4 bg-green-500 text-white rounded hover:bg-green-600"
+    <output
+      ref={containerRef}
+      className={twMerge(clsx('flex-1 w-full flex flex-col', className))}
+      style={{ backgroundColor: '#1f2937' }}
+    >
+      {/* Toolbar */}
+      <div className="flex items-center gap-1 px-3 py-2 bg-[#1c1c1c] border-b border-white/10 text-sm shrink-0">
+        {/* Left group: downloads */}
+        <div className="flex items-center gap-1">
+          <button
+            className={btnClass}
+            onClick={handleDownloadPdf}
+            disabled={!resume.url}
+            title="Download PDF"
+          >
+            <IconDownload />
+            PDF
+          </button>
+          <button
+            className={btnClass}
+            onClick={handleDownloadLatex}
+            disabled={!hasJson}
+            title="Download LaTeX source (ZIP)"
+          >
+            <IconDownload />
+            LaTeX
+          </button>
+          <button
+            className={btnClass}
+            onClick={handleDownloadJson}
+            disabled={!hasJson}
+            title="Download JSON"
+          >
+            <IconDownload />
+            JSON
+          </button>
+        </div>
+
+        <div className="flex-1" />
+
+        {/* Center group: page navigation */}
+        <div className="flex items-center gap-1">
+          <button
+            className={btnClass}
+            onClick={handlePrevPage}
+            disabled={pageNumber <= 1}
+            title="Previous page"
+          >
+            <IconArrowLeft />
+          </button>
+          <span className="text-white/60 text-xs px-1 tabular-nums whitespace-nowrap">
+            Page {pageNumber} / {numPages}
+          </span>
+          <button
+            className={btnClass}
+            onClick={handleNextPage}
+            disabled={pageNumber >= numPages}
+            title="Next page"
+          >
+            <IconArrowRight />
+          </button>
+        </div>
+
+        <div className="flex-1" />
+
+        {/* Right group: zoom + print */}
+        <div className="flex items-center gap-1">
+          <button
+            className={btnClass}
+            onClick={handleZoomOut}
+            disabled={zoomIdx <= 0}
+            title="Zoom out"
+          >
+            <IconZoomOut />
+          </button>
+          <button
+            className={btnClass}
+            onClick={handleZoomIn}
+            disabled={zoomIdx >= ZOOM_STEPS.length - 1}
+            title="Zoom in"
+          >
+            <IconZoomIn />
+          </button>
+          <button
+            className={btnClass}
+            onClick={handlePrint}
+            disabled={!resume.url}
+            title="Print"
+          >
+            <IconPrinter />
+          </button>
+        </div>
+      </div>
+
+      {/* PDF viewer */}
+      <article
+        className="flex-1 overflow-y-auto"
+        style={{ overflowX: zoom > 1 ? 'auto' : 'hidden' }}
       >
-        export as pdf
-      </button>
-      <article className="flex-1 flex flex-col">
         <Document
           file={resume.url || '/blank.pdf'}
           onLoadSuccess={handleDocumentLoadSuccess}
@@ -78,10 +300,10 @@ export function Preview({ className }: PreviewProps) {
           loading=""
           className="w-full"
         >
-          {containerWidth > 0 && (
+          {pageWidth !== undefined && (
             <Page
               pageNumber={pageNumber}
-              width={containerWidth * 0.92}
+              width={pageWidth}
               renderAnnotationLayer={false}
               renderTextLayer={false}
               loading=""
