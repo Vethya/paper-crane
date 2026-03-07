@@ -47,7 +47,7 @@ export default function GeneratorPage() {
           ))}
         </div>
 
-        <div className="grid flex-1 grid-cols-1 gap-6 overflow-hidden px-4 py-8 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_500px] xl:px-8">
+        <div className="grid flex-1 grid-cols-1 gap-6 overflow-hidden px-4 py-8 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[15%_minmax(0,1fr)_51%] xl:px-8">
           <div className={clsx("rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur", activePanel !== 'nav' ? "hidden xl:block" : "block")}>
             <Suspense fallback={<div className="text-sm text-slate-400">Loading sidebar...</div>}>
               <Sidebar />
