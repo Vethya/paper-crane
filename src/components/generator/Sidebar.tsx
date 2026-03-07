@@ -19,7 +19,7 @@ function StyledLink({ href, $active, children }: StyledLinkProps) {
       href={href}
       className={twMerge(clsx(
         "no-underline font-light text-white",
-        $active && "text-green-500"
+        $active && "text-green"
       ))}
     >
       {children}
@@ -46,9 +46,9 @@ export function Sidebar() {
       <nav className="flex flex-col items-start justify-center gap-6 mb-7">
         {sectionLinks.map(({ label, section }) => (
           <div key={section} className="flex gap-2">
-            <IconButton type="button" className="cursor-grab">
+            {/* <IconButton type="button" className="cursor-grab">
               <MdDragIndicator />
-            </IconButton>
+            </IconButton> */}
             <StyledLink
               href={`/generator?section=${section}`}
               $active={section === currSection}
