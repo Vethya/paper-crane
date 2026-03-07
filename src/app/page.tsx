@@ -56,8 +56,8 @@ export default function Home() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-slate-100">
       <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute -top-32 -left-16 h-72 w-72 rounded-full bg-emerald-500/25 blur-3xl" />
-        <div className="absolute bottom-0 right-[-10%] h-[28rem] w-[28rem] rounded-full bg-emerald-600/10 blur-[160px]" />
+        <div className="absolute -top-32 -left-16 h-72 w-72 rounded-full bg-blue-600/25 blur-3xl" />
+        <div className="absolute bottom-0 right-[-10%] h-[28rem] w-[28rem] rounded-full bg-blue-700/10 blur-[160px]" />
         <div className="absolute inset-x-0 top-1/3 mx-auto h-32 max-w-4xl rounded-full bg-white/5 blur-3xl" />
       </div>
 
@@ -69,20 +69,20 @@ export default function Home() {
               Craft polished resumes in minutes
             </h1>
             <p className="mx-auto mt-6 max-w-2xl text-base text-slate-300 sm:text-lg">
-              Resumake helps you focus on your story—not formatting headaches. Choose a template, keep your content organized, and export a resume that looks sharp on every screen.
+              Resume Manager helps you focus on your story—not formatting headaches. Choose a template, keep your content organized, and export a resume that looks sharp on every screen.
             </p>
 
             <div className="mx-auto mt-10 flex w-full flex-col items-center justify-center gap-3 sm:w-auto sm:flex-row">
               <PrimaryButton
                 onClick={startNewSession}
-                className="!w-full px-8 py-3 text-base font-medium shadow-[0_15px_45px_-20px_rgba(16,185,129,0.7)] transition hover:shadow-[0_18px_55px_-18px_rgba(16,185,129,0.7)] sm:!w-auto"
+                className="!w-full px-8 py-3 text-base font-medium shadow-[0_15px_45px_-20px_rgba(37,99,235,0.7)] transition hover:shadow-[0_18px_55px_-18px_rgba(37,99,235,0.7)] sm:!w-auto"
               >
                 Make New Resume
               </PrimaryButton>
 
               {hasSession && (
                 <Link href="/generator" className="w-full sm:w-auto">
-                  <Button className="!w-full border-white/20 px-8 py-3 text-base font-medium text-slate-200 transition hover:border-emerald-400/60 hover:text-emerald-300 sm:!w-auto">
+                  <Button className="!w-full border-white/20 px-8 py-3 text-base font-medium text-slate-200 transition hover:border-blue-500/60 hover:text-blue-400 sm:!w-auto">
                     Continue Session
                   </Button>
                 </Link>
@@ -90,9 +90,9 @@ export default function Home() {
 
               <label
                 htmlFor="import-json"
-                className="group inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-white/20 px-8 py-3 text-base font-medium text-slate-200 transition hover:border-emerald-400/60 hover:text-emerald-300 hover:shadow-[0_15px_45px_-25px_rgba(16,185,129,0.75)] sm:w-auto"
+                className="group inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-white/20 px-8 py-3 text-base font-medium text-slate-200 transition hover:border-blue-500/60 hover:text-blue-400 hover:shadow-[0_15px_45px_-25px_rgba(37,99,235,0.75)] sm:w-auto"
               >
-                <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400/70 group-hover:bg-emerald-300" />
+                <span className="inline-flex h-2 w-2 rounded-full bg-blue-500/70 group-hover:bg-blue-400" />
                 Import JSON
               </label>
             </div>
@@ -109,7 +109,7 @@ export default function Home() {
               {featureHighlights.map((feature) => (
                 <div
                   key={feature.title}
-                  className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur transition hover:border-emerald-400/40 hover:bg-white/8"
+                  className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur transition hover:border-blue-500/40 hover:bg-white/8"
                 >
                   <h2 className="text-lg font-semibold text-white">{feature.title}</h2>
                   <p className="mt-3 text-sm text-slate-300">{feature.description}</p>
@@ -121,28 +121,8 @@ export default function Home() {
 
         <footer className="relative border-t border-white/5 bg-slate-900/70 px-6 py-6 text-xs text-slate-400 backdrop-blur sm:px-10">
           <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center justify-between gap-4">
-            <span>© {new Date().getFullYear()} Saad Quadri</span>
-            <div className="flex flex-wrap items-center gap-4">
-              <Link href="/about" className="transition hover:text-emerald-300">
-                About
-              </Link>
-              <a
-                href="https://github.com/saadq/resumake"
-                target="_blank"
-                rel="noreferrer"
-                className="transition hover:text-emerald-300"
-              >
-                Source
-              </a>
-              <a
-                href="https://github.com/saadq/resumake/issues"
-                target="_blank"
-                rel="noreferrer"
-                className="transition hover:text-emerald-300"
-              >
-                Issues
-              </a>
-            </div>
+            <span>© {new Date().getFullYear()} Resume Manager</span>
+            <div className="flex flex-wrap items-center gap-4"></div>
           </div>
         </footer>
       </div>
