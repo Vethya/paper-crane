@@ -8,8 +8,8 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: '#22d7a6',
-        accent: '#22d7a6',
+        primary: '#2563EB',
+        accent: '#2563EB',
         foreground: '#ffffff',
         background: '#14171d',
         borders: '#202530',
@@ -24,7 +24,7 @@ module.exports = {
         lightGray: '#121217',
         gray: '#161619',
         white: '#ffffff',
-        green: '#22d7a6',
+        green: '#2563EB',
       },
       fontFamily: {
         sans: ['-apple-system', 'system-ui', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', 'sans-serif'],

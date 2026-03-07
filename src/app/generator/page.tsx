@@ -23,8 +23,8 @@ export default function GeneratorPage() {
   return (
     <main className="relative flex min-h-screen flex-col overflow-hidden bg-slate-950 text-slate-100 xl:h-screen">
       <div className="pointer-events-none absolute inset-0 opacity-70">
-        <div className="absolute inset-y-0 left-0 w-[20%] bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent blur-[140px]" />
-        <div className="absolute bottom-16 right-[-12%] h-80 w-80 rounded-full bg-emerald-500/15 blur-3xl" />
+        <div className="absolute inset-y-0 left-0 w-[20%] bg-gradient-to-r from-blue-600/10 via-blue-600/5 to-transparent blur-[140px]" />
+        <div className="absolute bottom-16 right-[-12%] h-80 w-80 rounded-full bg-blue-600/15 blur-3xl" />
       </div>
 
       <div className="relative z-10 flex flex-1 flex-col xl:min-h-0">
@@ -38,7 +38,7 @@ export default function GeneratorPage() {
               className={clsx(
                 "flex-1 py-3 text-sm font-medium capitalize transition-colors",
                 activePanel === panel
-                  ? "border-b-2 border-emerald-500 text-emerald-400"
+                  ? "border-b-2 border-blue-600 text-blue-500"
                   : "text-slate-400 hover:text-slate-200"
               )}
             >
@@ -60,8 +60,8 @@ export default function GeneratorPage() {
             </Suspense>
           </div>
 
-          <div className={clsx("flex-col rounded-3xl border border-emerald-500/15 bg-slate-950/60 backdrop-blur", activePanel !== 'preview' ? "hidden xl:flex" : "flex")}>
-            <div className="border-b border-emerald-500/10 px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-emerald-300/80">
+          <div className={clsx("flex-col rounded-3xl border border-blue-600/15 bg-slate-950/60 backdrop-blur", activePanel !== 'preview' ? "hidden xl:flex" : "flex")}>
+            <div className="border-b border-blue-600/10 px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-blue-400/80">
               Live preview
             </div>
             <div className="flex flex-1 overflow-hidden">

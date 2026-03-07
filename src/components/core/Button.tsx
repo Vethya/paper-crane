@@ -13,7 +13,7 @@ export function Button({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          "flex h-11 min-w-[175px] items-center justify-center rounded-full border border-emerald-400/70 bg-transparent px-5 text-sm font-medium text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 focus-visible:ring-offset-0 hover:border-emerald-300/80 hover:text-emerald-200",
+          "flex h-11 min-w-[175px] items-center justify-center rounded-full border border-blue-500/70 bg-transparent px-5 text-sm font-medium text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-0 hover:border-blue-400/80 hover:text-blue-300",
           className
         )
       )}
@@ -29,7 +29,7 @@ export function PrimaryButton({ children, className, ...props }: BaseButtonProps
     <button
       className={twMerge(
         clsx(
-          "flex h-11 min-w-[175px] items-center justify-center rounded-full border-none bg-gradient-to-r from-emerald-500 to-emerald-400 px-5 text-sm font-semibold text-white shadow-[0_18px_45px_-25px_rgba(16,185,129,0.75)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 hover:from-emerald-500/90 hover:to-emerald-400/90",
+          "flex h-11 min-w-[175px] items-center justify-center rounded-full border-none bg-gradient-to-r from-blue-600 to-blue-500 px-5 text-sm font-semibold text-white shadow-[0_18px_45px_-25px_rgba(37,99,235,0.75)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 hover:from-blue-600/90 hover:to-blue-500/90",
           className
         )
       )}
@@ -61,7 +61,7 @@ export function AddButton({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          "px-3 py-2 cursor-pointer outline-none border-none bg-transparent text-green-500 hover:cursor-pointer focus:outline-none",
+          "px-3 py-2 cursor-pointer outline-none border-none bg-transparent text-blue-500 hover:cursor-pointer focus:outline-none",
           className
         )
       )}

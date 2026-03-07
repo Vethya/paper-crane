@@ -2,7 +2,7 @@ export const black = '#0F0F0F'
 export const lightGray = '#121217'
 export const gray = '#161619'
 export const white = '#ffffff'
-export const green = '#22d7a6'
+export const green = '#2563EB'
 
 export const primary = green
 export const accent = green
