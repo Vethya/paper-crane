@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { FcGoogle } from 'react-icons/fc'
 import { authClient } from '@/db/auth-client'
 import { Logo } from '@/components/core/Logo'
@@ -11,12 +12,23 @@ import { PrimaryButton, Button } from '@/components/core/Button'
 type Tab = 'signin' | 'signup'
 
 export default function LoginPage() {
+  const router = useRouter()
+  const { data: session, isPending } = authClient.useSession()
+
   const [tab, setTab] = useState<Tab>('signin')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    if (!isPending && session) {
+      router.replace('/generator')
+    }
+  }, [session, isPending, router])
+
+  if (isPending) return null
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
