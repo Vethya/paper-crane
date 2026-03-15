@@ -31,7 +31,7 @@ export default function LoginPage() {
           <Link href="/"><Logo /></Link>
         </div>
 
-        <div className="rounded-2xl border bg-[#121217] p-8" style={{ borderColor: '#374151' }}>
+        <div className="rounded-2xl border border-slate-700 bg-slate-900 p-8">
           <Button
             type="button"
             className="w-full min-w-0 gap-2 rounded-lg"

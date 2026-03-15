@@ -69,8 +69,7 @@ export function Header({ className }: HeaderProps) {
 
               {open && (
                 <div
-                  className="absolute right-0 mt-2 w-44 rounded-lg py-1 z-50"
-                  style={{ background: '#1a1a24', border: '1px solid #374151' }}
+                  className="absolute right-0 mt-2 w-44 rounded-lg border border-slate-700 bg-slate-800 py-1 z-50"
                 >
                   <button
                     onClick={handleLogout}
@@ -84,8 +83,7 @@ export function Header({ className }: HeaderProps) {
           ) : (
             <Link
               href="/login"
-              className="text-sm text-slate-300 border rounded-full px-4 py-1.5 hover:text-white hover:border-slate-400 transition-colors"
-              style={{ borderColor: '#4b5563' }}
+              className="text-sm text-slate-300 border border-slate-600 rounded-full px-4 py-1.5 hover:text-white hover:border-slate-400 transition-colors"
             >
               Login
             </Link>
