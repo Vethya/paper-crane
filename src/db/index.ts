@@ -10,7 +10,7 @@ declare global {
   var _mongoClient: MongoClient | undefined;
 }
 
-const connectDB = (): Promise<typeof mongoose> => {
+export const connectDB = (): Promise<typeof mongoose> => {
   if (global._mongooseConn) return global._mongooseConn;
   global._mongooseConn = mongoose.connect(env.MONGODB_URI);
   return global._mongooseConn;
@@ -22,7 +22,5 @@ if (!global._mongoClient) {
 
 export const client: MongoClient = global._mongoClient;
 export const db = client.db();
-
-await connectDB();
 
 export default mongoose;
