@@ -1,13 +1,5 @@
 export type Location = {
   address?: string
-  postalCode?: string
-  city?: string
-  countryCode?: string
-  region?: string
-}
-
-export type Profile = {
-  url?: string
 }
 
 export type Basics = {
@@ -15,34 +7,22 @@ export type Basics = {
   email?: string
   phone?: string
   location?: Location
-  profiles?: Profile[] // TODO: revisit how profiles gets rendered
 
   // non-standard attribute
   website?: string
 }
 
 export type Work = {
-  name?: string
   // non-standard attribute
   company?: string
 
   position?: string
   startDate?: string
   endDate?: string
-  summary?: string
   highlights: string[]
 
   // non-standard attribute
   location?: string
-}
-
-export type Volunteer = {
-  organization?: string
-  position?: string
-  startDate?: string
-  endDate?: string
-  summary?: string
-  highlights?: string[]
 }
 
 export type Education = {
@@ -64,28 +44,16 @@ export type Award = {
   summary?: string
 }
 
-export type Publication = {
-  name?: string
-  publisher?: string
-  releaseDate?: string
-  url?: string
-  summary?: string
-}
-
 export type Skill = {
   name?: string
-  level?: string
   keywords?: string[]
 }
 
 export type Project = {
   name?: string
   description?: string
-  highlights?: string[]
   keywords?: string[]
   url?: string
-  startDate?: string
-  endDate?: string
 }
 
 // Based on the [JSON Resume](http://jsonresume.org/) standard with extensions
@@ -93,10 +61,8 @@ export type Project = {
 export type Resume = {
   basics?: Basics
   work?: Work[]
-  volunteer?: Volunteer[]
   education?: Education[]
   awards?: Award[]
-  publications?: Publication[]
   skills?: Skill[]
   projects?: Project[]
 }
