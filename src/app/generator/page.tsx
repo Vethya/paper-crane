@@ -36,7 +36,7 @@ function GeneratorContent() {
       </div>
 
       <div className="relative z-10 flex flex-1 flex-col xl:min-h-0">
-        <Header className="border-b border-white/5 bg-slate-950/80 backdrop-blur" />
+        <Header className="border-b border-white/5 bg-slate-950/80 backdrop-blur z-10" />
 
         <div className="flex border-b border-white/5 bg-slate-950/80 backdrop-blur xl:hidden">
           {(['nav', 'form', 'preview'] as const).map((panel) => (
