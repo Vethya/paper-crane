@@ -71,6 +71,13 @@ export function Header({ className }: HeaderProps) {
                 <div
                   className="absolute right-0 mt-2 w-44 rounded-lg border border-slate-700 bg-slate-800 py-1 z-50"
                 >
+                  <Link
+                    href="/resumes"
+                    onClick={() => setOpen(false)}
+                    className="block px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
+                  >
+                    My Resumes
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
