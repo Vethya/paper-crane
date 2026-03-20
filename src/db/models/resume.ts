@@ -4,6 +4,7 @@ import type { FormValues } from "@/types";
 export interface IResume extends Document {
   userId: string;
   title: string;
+  tags: string[];
   content: FormValues;
   templateId: string;
   createdAt: Date;
@@ -107,6 +108,7 @@ const ResumeSchema = new Schema<IResume>(
   {
     userId: { type: String, required: true, index: true },
     title: { type: String, required: true },
+    tags: { type: [String], default: [] },
     content: { type: ContentSchema, required: true },
     templateId: { type: String, required: true },
   },

@@ -18,3 +18,30 @@ export async function GET(request: NextRequest) {
 
   return NextResponse.json(resumes)
 }
+
+export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
+  const { title } = await request.json()
+  if (!title?.trim()) {
+    return NextResponse.json({ error: "Title is required" }, { status: 400 })
+  }
+
+  await connectDB()
+
+  const resume = await Resume.create({
+    userId: session.user.id,
+    title: title.trim(),
+    templateId: "1",
+    content: {
+      headings: {},
+      sections: ["profile", "education", "work", "skills", "projects", "awards"],
+      selectedTemplate: 1,
+    },
+  })
+
+  return NextResponse.json({ _id: resume._id, title: resume.title }, { status: 201 })
+}
