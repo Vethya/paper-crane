@@ -7,6 +7,7 @@ import { FiPlus } from "react-icons/fi"
 import { authClient } from "@/db/auth-client"
 import { Logo } from "@/components/core/Logo"
 import { ResumeCard } from "@/components/resumes/ResumeCard"
+import { CreateResumeDialog } from "@/components/resumes/CreateResumeDialog"
 
 interface ResumeListItem {
   _id: string
@@ -66,13 +67,12 @@ export default function ResumesPage() {
             )}
           </div>
 
-          <Link
-            href="/generator"
-            className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
-          >
-            <FiPlus size={16} />
-            New Resume
-          </Link>
+          <CreateResumeDialog>
+            <span className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 cursor-pointer">
+              <FiPlus size={16} />
+              New Resume
+            </span>
+          </CreateResumeDialog>
         </div>
 
         {loading && (
@@ -95,13 +95,12 @@ export default function ResumesPage() {
         {!loading && !error && resumes.length === 0 && (
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 py-24 text-center">
             <p className="mb-4 text-slate-400">You haven&apos;t created any resumes yet.</p>
-            <Link
-              href="/generator"
-              className="flex items-center gap-2 rounded-full border border-blue-500/70 px-5 py-2 text-sm text-white transition hover:border-blue-400/80 hover:text-blue-300"
-            >
-              <FiPlus size={15} />
-              Create your first resume
-            </Link>
+            <CreateResumeDialog>
+              <span className="flex items-center gap-2 rounded-full border border-blue-500/70 px-5 py-2 text-sm text-white transition hover:border-blue-400/80 hover:text-blue-300 cursor-pointer">
+                <FiPlus size={15} />
+                Create your first resume
+              </span>
+            </CreateResumeDialog>
           </div>
         )}
 
@@ -114,6 +113,7 @@ export default function ResumesPage() {
                 title={resume.title}
                 tags={resume.tags}
                 updatedAt={resume.updatedAt}
+                onDelete={id => setResumes(prev => prev.filter(r => r._id !== id))}
               />
             ))}
           </div>
