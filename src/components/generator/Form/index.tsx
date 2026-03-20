@@ -12,6 +12,7 @@ import { SkillsSection } from './sections/SkillsSection'
 import { AwardSection } from './sections/AwardsSection'
 import { ProjectsSection } from './sections/projectsSection'
 import { resumeAtom } from '../../../atoms/resume'
+import { formDataAtom } from '../../../atoms/formData'
 import { FormValues } from '../../../types'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -37,23 +38,50 @@ interface FormProps {
 export function Form({ className }: FormProps) {
   const searchParams = useSearchParams()
   const currSection = searchParams.get('section') || 'basics'
+  const resumeId = searchParams.get('id')
 
   const [resume, setResume] = useAtom(resumeAtom)
+  const [, setFormData] = useAtom(formDataAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
 
-  // TODO: move this to a custom react hook
   useEffect(() => {
-    const lastSession = localStorage.getItem('jsonResume')
-    if (lastSession) {
-      // TODO: validate JSON schema using Zod
-      const jsonResume = JSON.parse(lastSession) as FormValues
-      formContext.reset(jsonResume)
+    let cancelled = false
+
+    async function loadData() {
+      if (resumeId) {
+        const res = await fetch(`/api/resumes/${resumeId}`)
+        if (!res.ok) return
+        const data = await res.json()
+        if (cancelled) return
+        const content = data.content as FormValues
+        formContext.reset(content)
+        setFormData(content)
+      } else {
+        const lastSession = localStorage.getItem('jsonResume')
+        if (lastSession) {
+          const jsonResume = JSON.parse(lastSession) as FormValues
+          formContext.reset(jsonResume)
+          setFormData(jsonResume)
+        } else {
+          setFormData(initialFormValues)
+        }
+      }
     }
+
+    loadData()
+
     const subscription = formContext.watch((data) => {
-      localStorage.setItem('jsonResume', JSON.stringify(data))
+      if (!resumeId) {
+        localStorage.setItem('jsonResume', JSON.stringify(data))
+      }
+      setFormData(data as FormValues)
     })
-    return () => subscription.unsubscribe()
-  }, [formContext])
+
+    return () => {
+      cancelled = true
+      subscription.unsubscribe()
+    }
+  }, [resumeId, formContext, setFormData])
 
   const handleFormSubmit = useCallback(async () => {
     const formValues = formContext.getValues()

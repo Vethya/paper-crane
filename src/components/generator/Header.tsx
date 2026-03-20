@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { FiChevronDown } from 'react-icons/fi'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { FiChevronDown, FiCheck } from 'react-icons/fi'
 import { Logo } from '../core/Logo'
 import { authClient } from '@/db/auth-client'
+import { useAtomValue } from 'jotai'
+import { formDataAtom } from '@/atoms/formData'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -13,10 +15,16 @@ interface HeaderProps {
   className?: string
 }
 
+type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+
 export function Header({ className }: HeaderProps) {
   const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const resumeId = searchParams.get('id')
+  const formData = useAtomValue(formDataAtom)
   const [open, setOpen] = useState(false)
+  const [saveState, setSaveState] = useState<SaveState>('idle')
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -34,6 +42,24 @@ export function Header({ className }: HeaderProps) {
     await authClient.signOut({ fetchOptions: { onSuccess: () => router.push('/login') } })
   }
 
+  async function handleSave() {
+    if (!resumeId || !formData) return
+    setSaveState('saving')
+    try {
+      const res = await fetch(`/api/resumes/${resumeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: formData }),
+      })
+      if (!res.ok) throw new Error()
+      setSaveState('saved')
+      setTimeout(() => setSaveState('idle'), 2000)
+    } catch {
+      setSaveState('error')
+      setTimeout(() => setSaveState('idle'), 2000)
+    }
+  }
+
   const user = session?.user
   const initials = user?.name
     ? user.name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
@@ -47,6 +73,32 @@ export function Header({ className }: HeaderProps) {
       <Link href="/">
         <Logo />
       </Link>
+
+      <div className="flex items-center gap-3">
+        {resumeId && (
+          <button
+            onClick={handleSave}
+            disabled={saveState === 'saving'}
+            className={clsx(
+              "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition",
+              saveState === 'saved'
+                ? "bg-green-600/20 text-green-400 border border-green-600/30"
+                : saveState === 'error'
+                ? "bg-red-600/20 text-red-400 border border-red-600/30"
+                : "bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-60"
+            )}
+          >
+            {saveState === 'saved' ? (
+              <><FiCheck size={13} /> Saved</>
+            ) : saveState === 'error' ? (
+              "Error"
+            ) : saveState === 'saving' ? (
+              "Saving…"
+            ) : (
+              "Save"
+            )}
+          </button>
+        )}
 
       {!isPending && (
         <div className="relative" ref={dropdownRef}>
@@ -97,6 +149,7 @@ export function Header({ className }: HeaderProps) {
           )}
         </div>
       )}
+      </div>
     </header>
   )
 }
