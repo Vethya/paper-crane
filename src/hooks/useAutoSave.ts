@@ -54,7 +54,7 @@ export function useAutoSave(resumeId: string | null, formData: FormValues | null
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [resumeId, formData])
+  }, [resumeId, formData, setSaveState])
 
   return saveState
 }

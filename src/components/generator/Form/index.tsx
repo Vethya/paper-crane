@@ -84,7 +84,7 @@ export function Form({ className }: FormProps) {
       cancelled = true
       subscription.unsubscribe()
     }
-  }, [resumeId, formContext, setFormData])
+  }, [resumeId, formContext, setFormData, setResumeTags])
 
   const handleFormSubmit = useCallback(async () => {
     const formValues = formContext.getValues()
