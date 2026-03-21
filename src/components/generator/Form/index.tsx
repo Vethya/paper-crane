@@ -4,6 +4,7 @@ import { useCallback, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useAtom } from 'jotai'
+import { Loader2 } from 'lucide-react'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { ProfileSection } from './sections/ProfileSection'
 import { EducationSection } from './sections/EducationSection'
@@ -11,7 +12,7 @@ import { WorkSection } from './sections/WorkSection'
 import { SkillsSection } from './sections/SkillsSection'
 import { AwardSection } from './sections/AwardsSection'
 import { ProjectsSection } from './sections/projectsSection'
-import { resumeAtom } from '../../../atoms/resume'
+import { resumeAtom, isLoadingResumeAtom } from '../../../atoms/resume'
 import { formDataAtom } from '../../../atoms/formData'
 import { resumeTagsAtom } from '../../../atoms/resumeTags'
 import { FormValues } from '../../../types'
@@ -44,6 +45,7 @@ export function Form({ className }: FormProps) {
   const [resume, setResume] = useAtom(resumeAtom)
   const [, setFormData] = useAtom(formDataAtom)
   const [, setResumeTags] = useAtom(resumeTagsAtom)
+  const [isLoadingResume, setIsLoadingResume] = useAtom(isLoadingResumeAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
 
   useEffect(() => {
@@ -51,14 +53,19 @@ export function Form({ className }: FormProps) {
 
     async function loadData() {
       if (resumeId) {
-        const res = await fetch(`/api/resumes/${resumeId}`)
-        if (!res.ok) return
-        const data = await res.json()
-        if (cancelled) return
-        const content = data.content as FormValues
-        formContext.reset(content)
-        setFormData(content)
-        setResumeTags(data.tags ?? [])
+        setIsLoadingResume(true)
+        try {
+          const res = await fetch(`/api/resumes/${resumeId}`)
+          if (!res.ok) return
+          const data = await res.json()
+          if (cancelled) return
+          const content = data.content as FormValues
+          formContext.reset(content)
+          setFormData(content)
+          setResumeTags(data.tags ?? [])
+        } finally {
+          if (!cancelled) setIsLoadingResume(false)
+        }
       } else {
         const lastSession = localStorage.getItem('jsonResume')
         if (lastSession) {
@@ -84,7 +91,7 @@ export function Form({ className }: FormProps) {
       cancelled = true
       subscription.unsubscribe()
     }
-  }, [resumeId, formContext, setFormData, setResumeTags])
+  }, [resumeId, formContext, setFormData, setResumeTags, setIsLoadingResume])
 
   const handleFormSubmit = useCallback(async () => {
     const formValues = formContext.getValues()
@@ -105,13 +112,21 @@ export function Form({ className }: FormProps) {
         id="resume-form"
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
-        {currSection === 'templates' && <TemplatesSection />}
-        {currSection === 'basics' && <ProfileSection />}
-        {currSection === 'education' && <EducationSection />}
-        {currSection === 'work' && <WorkSection />}
-        {currSection === 'skills' && <SkillsSection />}
-        {currSection === 'awards' && <AwardSection />}
-        {currSection === 'projects' && <ProjectsSection />}
+        {isLoadingResume ? (
+          <div className="flex h-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <>
+            {currSection === 'templates' && <TemplatesSection />}
+            {currSection === 'basics' && <ProfileSection />}
+            {currSection === 'education' && <EducationSection />}
+            {currSection === 'work' && <WorkSection />}
+            {currSection === 'skills' && <SkillsSection />}
+            {currSection === 'awards' && <AwardSection />}
+            {currSection === 'projects' && <ProjectsSection />}
+          </>
+        )}
       </form>
     </FormProvider>
   )

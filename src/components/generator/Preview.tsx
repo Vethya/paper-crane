@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { resumeAtom } from '../../atoms/resume'
+import { resumeAtom, isLoadingResumeAtom } from '../../atoms/resume'
 import { formDataAtom } from '../../atoms/formData'
 
 // Dynamic import for react-pdf components
@@ -88,6 +88,7 @@ function triggerDownload(url: string, filename: string) {
 export function Preview({ className }: PreviewProps) {
   const [resume] = useAtom(resumeAtom)
   const formData = useAtomValue(formDataAtom)
+  const isLoadingResume = useAtomValue(isLoadingResumeAtom)
   const hasJson = formData !== null
   const [numPages, setNumPages] = useState(1)
   const [pageNumber, setPageNumber] = useState(1)
@@ -218,21 +219,21 @@ useEffect(() => {
               >
                 <DropdownMenuItem
                   onClick={handleDownloadPdf}
-                  disabled={!resume.url}
+                  disabled={!resume.url || isLoadingResume}
                   className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
                 >
                   <IconDownload /> PDF
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleDownloadLatex}
-                  disabled={!hasJson}
+                  disabled={!hasJson || isLoadingResume}
                   className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
                 >
                   <IconDownload /> LaTeX
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={handleDownloadJson}
-                  disabled={!hasJson}
+                  disabled={!hasJson || isLoadingResume}
                   className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
                 >
                   <IconDownload /> JSON
@@ -241,13 +242,13 @@ useEffect(() => {
             </DropdownMenu>
           ) : (
             <>
-              <button className={btnClass} onClick={handleDownloadPdf} disabled={!resume.url} title="Download PDF">
+              <button className={btnClass} onClick={handleDownloadPdf} disabled={!resume.url || isLoadingResume} title="Download PDF">
                 <IconDownload /> PDF
               </button>
-              <button className={btnClass} onClick={handleDownloadLatex} disabled={!hasJson} title="Download LaTeX source (ZIP)">
+              <button className={btnClass} onClick={handleDownloadLatex} disabled={!hasJson || isLoadingResume} title="Download LaTeX source (ZIP)">
                 <IconDownload /> LaTeX
               </button>
-              <button className={btnClass} onClick={handleDownloadJson} disabled={!hasJson} title="Download JSON">
+              <button className={btnClass} onClick={handleDownloadJson} disabled={!hasJson || isLoadingResume} title="Download JSON">
                 <IconDownload /> JSON
               </button>
             </>
@@ -298,7 +299,7 @@ useEffect(() => {
           <button
             className={btnClass}
             onClick={handlePrint}
-            disabled={!resume.url}
+            disabled={!resume.url || isLoadingResume}
             title="Print"
           >
             <IconPrinter />
