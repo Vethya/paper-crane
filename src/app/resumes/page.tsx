@@ -79,16 +79,16 @@ export default function ResumesPage() {
 
           <div className="flex items-center gap-2">
             <ImportResumeDialog>
-              <span className="flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 cursor-pointer">
+              <button className="flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 cursor-pointer">
                 <FiUpload size={15} />
                 Import
-              </span>
+              </button>
             </ImportResumeDialog>
             <CreateResumeDialog>
-              <span className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 cursor-pointer">
+              <button className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 cursor-pointer">
                 <FiPlus size={16} />
                 New Resume
-              </span>
+              </button>
             </CreateResumeDialog>
           </div>
         </div>
@@ -114,10 +114,10 @@ export default function ResumesPage() {
           <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 py-24 text-center">
             <p className="mb-4 text-slate-400">You haven&apos;t created any resumes yet.</p>
             <CreateResumeDialog>
-              <span className="flex items-center gap-2 rounded-full border border-blue-500/70 px-5 py-2 text-sm text-white transition hover:border-blue-400/80 hover:text-blue-300 cursor-pointer">
+              <button className="flex items-center gap-2 rounded-full border border-blue-500/70 px-5 py-2 text-sm text-white transition hover:border-blue-400/80 hover:text-blue-300 cursor-pointer">
                 <FiPlus size={15} />
                 Create your first resume
-              </span>
+              </button>
             </CreateResumeDialog>
           </div>
         )}
