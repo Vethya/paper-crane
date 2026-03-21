@@ -73,7 +73,7 @@ export function Header({ className }: HeaderProps) {
       className={twMerge(clsx("w-full h-16 flex justify-between items-center border-b px-6", className))}
       style={{ borderColor: '#374151' }}
     >
-      <Link href="/">
+      <Link href={session ? "/resumes" : "/"}>
         <Logo />
       </Link>
 

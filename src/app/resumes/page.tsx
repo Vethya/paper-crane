@@ -65,7 +65,7 @@ export default function ResumesPage() {
       </div>
 
       <header className="relative z-10 flex h-16 items-center justify-between border-b border-white/5 bg-slate-950/80 px-6 backdrop-blur">
-        <Link href="/"><Logo /></Link>
+        <Link href="/resumes"><Logo /></Link>
         <div className="flex items-center gap-3">
           <span className="text-sm text-slate-400">{session.user.name ?? session.user.email}</span>
         </div>
