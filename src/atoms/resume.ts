@@ -13,3 +13,6 @@ export const resumeAtom = atom({
 })
 
 resumeAtom.debugLabel = 'resumeAtom'
+
+export const isLoadingResumeAtom = atom(false)
+isLoadingResumeAtom.debugLabel = 'isLoadingResumeAtom'

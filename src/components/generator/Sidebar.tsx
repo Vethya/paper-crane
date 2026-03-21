@@ -5,7 +5,9 @@ import { useSearchParams } from 'next/navigation'
 // import { MdDragIndicator } from 'react-icons/md'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { useAtomValue } from 'jotai'
 import { PrimaryButton } from '../core/Button'
+import { isLoadingResumeAtom } from '@/atoms/resume'
 
 interface StyledLinkProps {
   href: string
@@ -31,6 +33,7 @@ export function Sidebar() {
   const searchParams = useSearchParams()
   const currSection = searchParams?.get('section') || 'basics'
   const resumeId = searchParams?.get('id')
+  const isLoadingResume = useAtomValue(isLoadingResumeAtom)
 
   const sectionLinks = [
     { label: 'Templates', section: 'templates' },
@@ -60,7 +63,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <PrimaryButton form="resume-form">MAKE</PrimaryButton>
+      <PrimaryButton form="resume-form" disabled={isLoadingResume}>MAKE</PrimaryButton>
     </aside>
   )
 }
