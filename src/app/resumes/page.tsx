@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { FiPlus } from "react-icons/fi"
+import { FiPlus, FiUpload } from "react-icons/fi"
 import { authClient } from "@/db/auth-client"
 import { Header } from "@/components/generator/Header"
 import { ResumeCard } from "@/components/resumes/ResumeCard"
 import { CreateResumeDialog } from "@/components/resumes/CreateResumeDialog"
+import { ImportResumeDialog } from "@/components/resumes/ImportResumeDialog"
 import type { TagColor } from "@/lib/tagColors"
 
 interface ResumeListItem {
@@ -76,12 +77,20 @@ export default function ResumesPage() {
             )}
           </div>
 
-          <CreateResumeDialog>
-            <span className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 cursor-pointer">
-              <FiPlus size={16} />
-              New Resume
-            </span>
-          </CreateResumeDialog>
+          <div className="flex items-center gap-2">
+            <ImportResumeDialog>
+              <span className="flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-white/5 cursor-pointer">
+                <FiUpload size={15} />
+                Import
+              </span>
+            </ImportResumeDialog>
+            <CreateResumeDialog>
+              <span className="flex items-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 cursor-pointer">
+                <FiPlus size={16} />
+                New Resume
+              </span>
+            </CreateResumeDialog>
+          </div>
         </div>
 
         {loading && (

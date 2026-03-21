@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const { title } = await request.json()
+  const { title, content } = await request.json()
   if (!title?.trim()) {
     return NextResponse.json({ error: "Title is required" }, { status: 400 })
   }
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     userId: session.user.id,
     title: title.trim(),
     templateId: "1",
-    content: {
+    content: content ?? {
       headings: {},
       sections: ["profile", "education", "work", "skills", "projects", "awards"],
       selectedTemplate: 1,
