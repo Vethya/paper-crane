@@ -8,6 +8,7 @@ import { authClient } from "@/db/auth-client"
 import { Logo } from "@/components/core/Logo"
 import { ResumeCard } from "@/components/resumes/ResumeCard"
 import { CreateResumeDialog } from "@/components/resumes/CreateResumeDialog"
+import type { TagColor } from "@/lib/tagColors"
 
 interface ResumeListItem {
   _id: string
@@ -16,10 +17,17 @@ interface ResumeListItem {
   updatedAt: string
 }
 
+interface TagItem {
+  _id: string
+  name: string
+  color: TagColor
+}
+
 export default function ResumesPage() {
   const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
   const [resumes, setResumes] = useState<ResumeListItem[]>([])
+  const [tagMap, setTagMap] = useState<Record<string, TagItem>>({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,12 +39,19 @@ export default function ResumesPage() {
 
   useEffect(() => {
     if (!session) return
-    fetch("/api/resumes")
-      .then(res => {
+    Promise.all([
+      fetch("/api/resumes").then(res => {
         if (!res.ok) throw new Error("Failed to load resumes")
         return res.json()
+      }),
+      fetch("/api/tags").then(res => res.ok ? res.json() : []),
+    ])
+      .then(([resumeData, tagsData]) => {
+        setResumes(resumeData)
+        const map: Record<string, TagItem> = {}
+        for (const tag of tagsData) map[tag.name] = tag
+        setTagMap(map)
       })
-      .then(setResumes)
       .catch(err => setError(err.message))
       .finally(() => setLoading(false))
   }, [session])
@@ -112,6 +127,7 @@ export default function ResumesPage() {
                 id={resume._id}
                 title={resume.title}
                 tags={resume.tags}
+                tagMap={tagMap}
                 updatedAt={resume.updatedAt}
                 onDelete={id => setResumes(prev => prev.filter(r => r._id !== id))}
               />

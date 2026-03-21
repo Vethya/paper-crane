@@ -8,6 +8,8 @@ import { Logo } from '../core/Logo'
 import { authClient } from '@/db/auth-client'
 import { useAtomValue } from 'jotai'
 import { formDataAtom } from '@/atoms/formData'
+import { resumeTagsAtom } from '@/atoms/resumeTags'
+import { TagPicker } from './TagPicker'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -23,6 +25,7 @@ export function Header({ className }: HeaderProps) {
   const searchParams = useSearchParams()
   const resumeId = searchParams.get('id')
   const formData = useAtomValue(formDataAtom)
+  const resumeTags = useAtomValue(resumeTagsAtom)
   const [open, setOpen] = useState(false)
   const [saveState, setSaveState] = useState<SaveState>('idle')
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -49,7 +52,7 @@ export function Header({ className }: HeaderProps) {
       const res = await fetch(`/api/resumes/${resumeId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: formData }),
+        body: JSON.stringify({ content: formData, tags: resumeTags }),
       })
       if (!res.ok) throw new Error()
       setSaveState('saved')
@@ -75,6 +78,8 @@ export function Header({ className }: HeaderProps) {
       </Link>
 
       <div className="flex items-center gap-3">
+        {resumeId && <TagPicker />}
+
         {resumeId && (
           <button
             onClick={handleSave}

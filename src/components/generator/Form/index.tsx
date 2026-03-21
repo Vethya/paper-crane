@@ -13,6 +13,7 @@ import { AwardSection } from './sections/AwardsSection'
 import { ProjectsSection } from './sections/projectsSection'
 import { resumeAtom } from '../../../atoms/resume'
 import { formDataAtom } from '../../../atoms/formData'
+import { resumeTagsAtom } from '../../../atoms/resumeTags'
 import { FormValues } from '../../../types'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -42,6 +43,7 @@ export function Form({ className }: FormProps) {
 
   const [resume, setResume] = useAtom(resumeAtom)
   const [, setFormData] = useAtom(formDataAtom)
+  const [, setResumeTags] = useAtom(resumeTagsAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
 
   useEffect(() => {
@@ -56,6 +58,7 @@ export function Form({ className }: FormProps) {
         const content = data.content as FormValues
         formContext.reset(content)
         setFormData(content)
+        setResumeTags(data.tags ?? [])
       } else {
         const lastSession = localStorage.getItem('jsonResume')
         if (lastSession) {

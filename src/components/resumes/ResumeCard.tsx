@@ -11,11 +11,19 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import { tagColorMap, type TagColor } from "@/lib/tagColors"
+
+interface TagItem {
+  _id: string
+  name: string
+  color: TagColor
+}
 
 interface ResumeCardProps {
   id: string
   title: string
   tags?: string[]
+  tagMap?: Record<string, TagItem>
   updatedAt: string
   onDelete?: (id: string) => void
 }
@@ -33,7 +41,7 @@ function timeAgo(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString()
 }
 
-export function ResumeCard({ id, title, tags, updatedAt, onDelete }: ResumeCardProps) {
+export function ResumeCard({ id, title, tags, tagMap, updatedAt, onDelete }: ResumeCardProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -87,14 +95,15 @@ export function ResumeCard({ id, title, tags, updatedAt, onDelete }: ResumeCardP
 
         {tags && tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5">
-            {tags.map(tag => (
-              <span
-                key={tag}
-                className="rounded-full bg-slate-800 px-2.5 py-0.5 text-xs text-slate-400"
-              >
-                {tag}
-              </span>
-            ))}
+            {tags.map(tag => {
+              const color = tagMap?.[tag]?.color ?? 'gray'
+              const { badgeBg, badgeText } = tagColorMap[color]
+              return (
+                <span key={tag} className="rounded-full px-2.5 py-0.5 text-xs" style={{ backgroundColor: badgeBg, color: badgeText }}>
+                  {tag}
+                </span>
+              )
+            })}
           </div>
         )}
 

@@ -39,7 +39,7 @@ export async function PATCH(
 
   const resume = await Resume.findOneAndUpdate(
     { _id: id, userId: session.user.id },
-    { $set: { ...(body.content && { content: body.content }), ...(body.title && { title: body.title }) } },
+    { $set: { ...(body.content && { content: body.content }), ...(body.title && { title: body.title }), ...(Array.isArray(body.tags) && { tags: body.tags }) } },
     { new: true, select: { content: 0 } }
   ).lean()
 
