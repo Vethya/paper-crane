@@ -1,11 +1,12 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useAtom } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { resumeAtom } from '../../atoms/resume'
+import { formDataAtom } from '../../atoms/formData'
 
 // Dynamic import for react-pdf components
 const Document = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Document })), { ssr: false })
@@ -80,10 +81,11 @@ function triggerDownload(url: string, filename: string) {
 
 export function Preview({ className }: PreviewProps) {
   const [resume] = useAtom(resumeAtom)
+  const formData = useAtomValue(formDataAtom)
+  const hasJson = formData !== null
   const [numPages, setNumPages] = useState(1)
   const [pageNumber, setPageNumber] = useState(1)
   const [zoom, setZoom] = useState(1.0)
-  const [hasJson, setHasJson] = useState(false)
   const containerRef = useRef<HTMLOutputElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [downloadOpen, setDownloadOpen] = useState(false)
@@ -106,11 +108,7 @@ export function Preview({ className }: PreviewProps) {
     return () => { cancelled = true }
   }, [])
 
-  useEffect(() => {
-    setHasJson(!!localStorage.getItem('jsonResume'))
-  }, [resume.url])
-
-  useEffect(() => {
+useEffect(() => {
     if (!containerRef.current) return
     const ro = new ResizeObserver(([entry]) => {
       setContainerWidth(entry.contentRect.width)
@@ -145,10 +143,8 @@ export function Preview({ className }: PreviewProps) {
   }, [resume.url])
 
   const handleDownloadLatex = useCallback(async () => {
-    const raw = localStorage.getItem('jsonResume')
-    if (!raw) return
+    if (!formData) return
     try {
-      const formData = JSON.parse(raw)
       const res = await fetch('/api/generate-source', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -162,16 +158,15 @@ export function Preview({ className }: PreviewProps) {
     } catch (err) {
       console.error('[Preview] LaTeX download failed:', err)
     }
-  }, [])
+  }, [formData])
 
   const handleDownloadJson = useCallback(() => {
-    const jsonResume = localStorage.getItem('jsonResume')
-    if (!jsonResume) return
-    const blob = new Blob([jsonResume], { type: 'application/json' })
+    if (!formData) return
+    const blob = new Blob([JSON.stringify(formData, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     triggerDownload(url, 'resume.json')
     URL.revokeObjectURL(url)
-  }, [])
+  }, [formData])
 
   const handlePrint = useCallback(() => {
     if (!resume.url) return
