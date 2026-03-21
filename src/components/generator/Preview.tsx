@@ -1,11 +1,18 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useAtom } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { useState, useCallback, useEffect, useRef } from 'react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { resumeAtom } from '../../atoms/resume'
+import { formDataAtom } from '../../atoms/formData'
 
 // Dynamic import for react-pdf components
 const Document = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Document })), { ssr: false })
@@ -80,14 +87,13 @@ function triggerDownload(url: string, filename: string) {
 
 export function Preview({ className }: PreviewProps) {
   const [resume] = useAtom(resumeAtom)
+  const formData = useAtomValue(formDataAtom)
+  const hasJson = formData !== null
   const [numPages, setNumPages] = useState(1)
   const [pageNumber, setPageNumber] = useState(1)
   const [zoom, setZoom] = useState(1.0)
-  const [hasJson, setHasJson] = useState(false)
   const containerRef = useRef<HTMLOutputElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
-  const [downloadOpen, setDownloadOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -106,11 +112,7 @@ export function Preview({ className }: PreviewProps) {
     return () => { cancelled = true }
   }, [])
 
-  useEffect(() => {
-    setHasJson(!!localStorage.getItem('jsonResume'))
-  }, [resume.url])
-
-  useEffect(() => {
+useEffect(() => {
     if (!containerRef.current) return
     const ro = new ResizeObserver(([entry]) => {
       setContainerWidth(entry.contentRect.width)
@@ -118,17 +120,6 @@ export function Preview({ className }: PreviewProps) {
     ro.observe(containerRef.current)
     return () => ro.disconnect()
   }, [])
-
-  useEffect(() => {
-    if (!downloadOpen) return
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDownloadOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [downloadOpen])
 
   const handleDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
     setNumPages(pdf.numPages)
@@ -145,10 +136,8 @@ export function Preview({ className }: PreviewProps) {
   }, [resume.url])
 
   const handleDownloadLatex = useCallback(async () => {
-    const raw = localStorage.getItem('jsonResume')
-    if (!raw) return
+    if (!formData) return
     try {
-      const formData = JSON.parse(raw)
       const res = await fetch('/api/generate-source', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -162,16 +151,15 @@ export function Preview({ className }: PreviewProps) {
     } catch (err) {
       console.error('[Preview] LaTeX download failed:', err)
     }
-  }, [])
+  }, [formData])
 
   const handleDownloadJson = useCallback(() => {
-    const jsonResume = localStorage.getItem('jsonResume')
-    if (!jsonResume) return
-    const blob = new Blob([jsonResume], { type: 'application/json' })
+    if (!formData) return
+    const blob = new Blob([JSON.stringify(formData, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     triggerDownload(url, 'resume.json')
     URL.revokeObjectURL(url)
-  }, [])
+  }, [formData])
 
   const handlePrint = useCallback(() => {
     if (!resume.url) return
@@ -205,8 +193,6 @@ export function Preview({ className }: PreviewProps) {
 
   const btnClass =
     'flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-white/80 text-xs'
-  const dropdownItemClass =
-    'flex items-center gap-2 w-full px-3 py-1.5 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs'
   const isNarrow = containerWidth > 0 && containerWidth < 520
 
   return (
@@ -220,40 +206,39 @@ export function Preview({ className }: PreviewProps) {
         {/* Left group: downloads — dropdown on narrow, individual buttons on wide */}
         <div className="flex items-center gap-1 justify-start">
           {isNarrow ? (
-            <div className="relative shrink-0" ref={dropdownRef}>
-              <button
-                className={btnClass}
-                onClick={() => setDownloadOpen(v => !v)}
-                title="Download"
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={btnClass} title="Download">
+                  <IconDownload />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="min-w-[130px] bg-[#2a2a2a] border border-white/10 rounded shadow-lg py-1"
               >
-                <IconDownload />
-              </button>
-              {downloadOpen && (
-                <div className="absolute top-full left-0 z-[9999] bg-[#2a2a2a] border border-white/10 rounded shadow-lg py-1 min-w-[130px]">
-                  <button
-                    className={dropdownItemClass}
-                    onClick={() => { handleDownloadPdf(); setDownloadOpen(false) }}
-                    disabled={!resume.url}
-                  >
-                    <IconDownload /> PDF
-                  </button>
-                  <button
-                    className={dropdownItemClass}
-                    onClick={() => { handleDownloadLatex(); setDownloadOpen(false) }}
-                    disabled={!hasJson}
-                  >
-                    <IconDownload /> LaTeX
-                  </button>
-                  <button
-                    className={dropdownItemClass}
-                    onClick={() => { handleDownloadJson(); setDownloadOpen(false) }}
-                    disabled={!hasJson}
-                  >
-                    <IconDownload /> JSON
-                  </button>
-                </div>
-              )}
-            </div>
+                <DropdownMenuItem
+                  onClick={handleDownloadPdf}
+                  disabled={!resume.url}
+                  className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
+                >
+                  <IconDownload /> PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDownloadLatex}
+                  disabled={!hasJson}
+                  className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
+                >
+                  <IconDownload /> LaTeX
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDownloadJson}
+                  disabled={!hasJson}
+                  className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
+                >
+                  <IconDownload /> JSON
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <button className={btnClass} onClick={handleDownloadPdf} disabled={!resume.url} title="Download PDF">

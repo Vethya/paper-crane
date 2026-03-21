@@ -9,7 +9,7 @@ import { twMerge } from 'tailwind-merge'
 
 interface HighlightsProps {
   label: string
-  name: `${'work' | 'volunteer' | 'projects'}.${number}.highlights`
+  name: `work.${number}.highlights`
   placeholder: string
   className?: string
 }

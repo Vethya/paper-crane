@@ -30,6 +30,7 @@ function StyledLink({ href, $active, children }: StyledLinkProps) {
 export function Sidebar() {
   const searchParams = useSearchParams()
   const currSection = searchParams?.get('section') || 'basics'
+  const resumeId = searchParams?.get('id')
 
   const sectionLinks = [
     { label: 'Templates', section: 'templates' },
@@ -50,7 +51,7 @@ export function Sidebar() {
               <MdDragIndicator />
             </IconButton> */}
             <StyledLink
-              href={`/generator?section=${section}`}
+              href={`/generator?${resumeId ? `id=${resumeId}&` : ''}section=${section}`}
               $active={section === currSection}
             >
               {label}

@@ -52,20 +52,16 @@ function sanitizeFormValues(data: FormValues): FormValues {
     work: (() => {
       const arr = data.work?.map((job) => ({
         ...job,
-        name: esc(job.name),
         company: esc(job.company),
         position: esc(job.position),
         location: esc(job.location),
-        summary: esc(job.summary),
         highlights: job.highlights.map((h) => esc(h) as string)
       })).filter(
         (j) =>
           j.company ||
-          j.name ||
           j.position ||
           j.startDate ||
           j.endDate ||
-          j.summary ||
           j.location ||
           j.highlights.some(Boolean)
       )
@@ -113,7 +109,6 @@ function sanitizeFormValues(data: FormValues): FormValues {
         ...project,
         name: esc(project.name),
         description: esc(project.description),
-        highlights: project.highlights?.map((h) => esc(h) as string),
         keywords: project.keywords?.map((k) => esc(k) as string)
         // url intentionally not escaped (used in \href{})
       })).filter(
@@ -121,9 +116,6 @@ function sanitizeFormValues(data: FormValues): FormValues {
           p.name ||
           p.description ||
           p.url ||
-          p.startDate ||
-          p.endDate ||
-          p.highlights?.some(Boolean) ||
           p.keywords?.some(Boolean)
       )
       return arr?.length ? arr : undefined

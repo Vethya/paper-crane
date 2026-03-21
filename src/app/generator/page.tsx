@@ -7,6 +7,8 @@ import { Suspense, useEffect, useState } from 'react'
 import { Form } from '../../components/generator/Form'
 import { Header } from '../../components/generator/Header'
 import { Sidebar } from '../../components/generator/Sidebar'
+import { ResumesRedirectDialog } from '../../components/generator/ResumesRedirectDialog'
+import { authClient } from '../../db/auth-client'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
@@ -23,7 +25,12 @@ export default function GeneratorPage() {
 
 function GeneratorContent() {
   const [activePanel, setActivePanel] = useState<'nav' | 'form' | 'preview'>('form')
-  const section = useSearchParams().get('section')
+  const searchParams = useSearchParams()
+  const section = searchParams.get('section')
+  const resumeId = searchParams.get('id')
+  const { data: session, isPending } = authClient.useSession()
+  const showRedirectDialog = !isPending && !!session && !resumeId
+
   useEffect(() => {
     setActivePanel('form')
   }, [section])
@@ -36,7 +43,7 @@ function GeneratorContent() {
       </div>
 
       <div className="relative z-10 flex flex-1 flex-col xl:min-h-0">
-        <Header className="border-b border-white/5 bg-slate-950/80 backdrop-blur" />
+        <Header className="border-b border-white/5 bg-slate-950/80 backdrop-blur z-10" />
 
         <div className="flex border-b border-white/5 bg-slate-950/80 backdrop-blur xl:hidden">
           {(['nav', 'form', 'preview'] as const).map((panel) => (
@@ -80,6 +87,8 @@ function GeneratorContent() {
           </div>
         </div>
       </div>
+
+      <ResumesRedirectDialog open={showRedirectDialog} />
     </main>
   )
 }
