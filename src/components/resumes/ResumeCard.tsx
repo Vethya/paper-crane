@@ -77,7 +77,7 @@ export function ResumeCard({ id, title, tags, tagMap, updatedAt, onDelete }: Res
               <button
                 onClick={e => { e.preventDefault(); e.stopPropagation() }}
                 disabled={deleting}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 opacity-0 transition hover:bg-slate-800 hover:text-slate-300 group-hover:opacity-100"
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-800 hover:text-slate-300 data-[state=open]:bg-slate-800 data-[state=open]:text-slate-300"
               >
                 <FiMoreVertical size={15} />
               </button>
