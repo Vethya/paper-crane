@@ -1,9 +1,8 @@
 "use client"
 
-import { useRef, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { FiFileText, FiMoreVertical, FiTrash2 } from "react-icons/fi"
-import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 import {
   Dialog,
   DialogContent,
@@ -11,6 +10,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { tagColorMap, type TagColor } from "@/lib/tagColors"
 
 interface TagItem {
@@ -42,11 +47,8 @@ function timeAgo(dateStr: string): string {
 }
 
 export function ResumeCard({ id, title, tags, tagMap, updatedAt, onDelete }: ResumeCardProps) {
-  const [menuOpen, setMenuOpen] = useState(false)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
-  const menuRef = useRef<HTMLDivElement>(null)
-  useOnClickOutside(menuRef, () => setMenuOpen(false))
 
   async function handleDelete() {
     setDeleting(true)
@@ -70,27 +72,30 @@ export function ResumeCard({ id, title, tags, tagMap, updatedAt, onDelete }: Res
             </span>
           </div>
 
-          <div ref={menuRef} className="relative flex-shrink-0">
-            <button
-              onClick={e => { e.preventDefault(); e.stopPropagation(); setMenuOpen(v => !v) }}
-              disabled={deleting}
-              className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 opacity-0 transition hover:bg-slate-800 hover:text-slate-300 group-hover:opacity-100"
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                onClick={e => { e.preventDefault(); e.stopPropagation() }}
+                disabled={deleting}
+                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 opacity-0 transition hover:bg-slate-800 hover:text-slate-300 group-hover:opacity-100"
+              >
+                <FiMoreVertical size={15} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              onClick={e => { e.preventDefault(); e.stopPropagation() }}
+              className="min-w-[130px] rounded-xl border border-white/10 bg-slate-900 py-1 shadow-xl"
             >
-              <FiMoreVertical size={15} />
-            </button>
-
-            {menuOpen && (
-              <div className="absolute right-0 top-8 z-20 min-w-[130px] rounded-xl border border-white/10 bg-slate-900 py-1 shadow-xl">
-                <button
-                  onClick={e => { e.preventDefault(); e.stopPropagation(); setMenuOpen(false); setConfirmOpen(true) }}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-400 transition hover:bg-slate-800"
-                >
-                  <FiTrash2 size={13} />
-                  Delete
-                </button>
-              </div>
-            )}
-          </div>
+              <DropdownMenuItem
+                onClick={() => setConfirmOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 transition hover:bg-slate-800 focus:bg-slate-800 focus:text-red-400 cursor-pointer"
+              >
+                <FiTrash2 size={13} />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {tags && tags.length > 0 && (

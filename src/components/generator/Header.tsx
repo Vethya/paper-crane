@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FiChevronDown } from 'react-icons/fi'
@@ -12,6 +11,12 @@ import { TagPicker } from './TagPicker'
 import { useAutoSave } from '@/hooks/useAutoSave'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 
 interface HeaderProps {
   className?: string
@@ -24,22 +29,9 @@ export function Header({ className, showTags = true }: HeaderProps) {
   const searchParams = useSearchParams()
   const resumeId = searchParams.get('id')
   const formData = useAtomValue(formDataAtom)
-  const [open, setOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
   const saveState = useAutoSave(resumeId, formData)
 
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    if (open) document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [open])
-
   async function handleLogout() {
-    setOpen(false)
     await authClient.signOut({ fetchOptions: { onSuccess: () => router.push('/login') } })
   }
 
@@ -68,44 +60,42 @@ export function Header({ className, showTags = true }: HeaderProps) {
         )}
 
       {!isPending && (
-        <div className="relative" ref={dropdownRef}>
+        <div>
           {user ? (
-            <>
-              <button
-                onClick={() => setOpen(o => !o)}
-                className="flex items-center gap-2 text-sm text-white hover:opacity-80 transition-opacity focus:outline-none"
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-2 text-sm text-white hover:opacity-80 transition-opacity focus:outline-none">
+                  {user.image ? (
+                    <img src={user.image} alt={user.name ?? ''} className="w-8 h-8 rounded-full object-cover" />
+                  ) : (
+                    <span className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-semibold">
+                      {initials}
+                    </span>
+                  )}
+                  <span className="hidden sm:inline text-slate-300">{user.name ?? user.email}</span>
+                  <FiChevronDown size={14} className="text-slate-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-44 rounded-lg border border-slate-700 bg-slate-800 py-1"
               >
-                {user.image ? (
-                  <img src={user.image} alt={user.name ?? ''} className="w-8 h-8 rounded-full object-cover" />
-                ) : (
-                  <span className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-semibold">
-                    {initials}
-                  </span>
-                )}
-                <span className="hidden sm:inline text-slate-300">{user.name ?? user.email}</span>
-                <FiChevronDown size={14} className="text-slate-400" />
-              </button>
-
-              {open && (
-                <div
-                  className="absolute right-0 mt-2 w-44 rounded-lg border border-slate-700 bg-slate-800 py-1 z-50"
-                >
+                <DropdownMenuItem asChild>
                   <Link
                     href="/resumes"
-                    onClick={() => setOpen(false)}
-                    className="block px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
+                    className="block px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 focus:bg-white/5 focus:text-slate-300 transition-colors cursor-pointer"
                   >
                     My Resumes
                   </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 transition-colors"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
-            </>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 focus:bg-white/5 focus:text-slate-300 transition-colors cursor-pointer"
+                >
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <Link
               href="/login"

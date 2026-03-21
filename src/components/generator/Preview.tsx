@@ -3,6 +3,12 @@
 import dynamic from 'next/dynamic'
 import { useAtom, useAtomValue } from 'jotai'
 import { useState, useCallback, useEffect, useRef } from 'react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { resumeAtom } from '../../atoms/resume'
@@ -88,8 +94,6 @@ export function Preview({ className }: PreviewProps) {
   const [zoom, setZoom] = useState(1.0)
   const containerRef = useRef<HTMLOutputElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
-  const [downloadOpen, setDownloadOpen] = useState(false)
-  const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -116,17 +120,6 @@ useEffect(() => {
     ro.observe(containerRef.current)
     return () => ro.disconnect()
   }, [])
-
-  useEffect(() => {
-    if (!downloadOpen) return
-    const handler = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setDownloadOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [downloadOpen])
 
   const handleDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
     setNumPages(pdf.numPages)
@@ -200,8 +193,6 @@ useEffect(() => {
 
   const btnClass =
     'flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-white/80 text-xs'
-  const dropdownItemClass =
-    'flex items-center gap-2 w-full px-3 py-1.5 text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs'
   const isNarrow = containerWidth > 0 && containerWidth < 520
 
   return (
@@ -215,40 +206,39 @@ useEffect(() => {
         {/* Left group: downloads — dropdown on narrow, individual buttons on wide */}
         <div className="flex items-center gap-1 justify-start">
           {isNarrow ? (
-            <div className="relative shrink-0" ref={dropdownRef}>
-              <button
-                className={btnClass}
-                onClick={() => setDownloadOpen(v => !v)}
-                title="Download"
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={btnClass} title="Download">
+                  <IconDownload />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                className="min-w-[130px] bg-[#2a2a2a] border border-white/10 rounded shadow-lg py-1"
               >
-                <IconDownload />
-              </button>
-              {downloadOpen && (
-                <div className="absolute top-full left-0 z-[9999] bg-[#2a2a2a] border border-white/10 rounded shadow-lg py-1 min-w-[130px]">
-                  <button
-                    className={dropdownItemClass}
-                    onClick={() => { handleDownloadPdf(); setDownloadOpen(false) }}
-                    disabled={!resume.url}
-                  >
-                    <IconDownload /> PDF
-                  </button>
-                  <button
-                    className={dropdownItemClass}
-                    onClick={() => { handleDownloadLatex(); setDownloadOpen(false) }}
-                    disabled={!hasJson}
-                  >
-                    <IconDownload /> LaTeX
-                  </button>
-                  <button
-                    className={dropdownItemClass}
-                    onClick={() => { handleDownloadJson(); setDownloadOpen(false) }}
-                    disabled={!hasJson}
-                  >
-                    <IconDownload /> JSON
-                  </button>
-                </div>
-              )}
-            </div>
+                <DropdownMenuItem
+                  onClick={handleDownloadPdf}
+                  disabled={!resume.url}
+                  className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
+                >
+                  <IconDownload /> PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDownloadLatex}
+                  disabled={!hasJson}
+                  className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
+                >
+                  <IconDownload /> LaTeX
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleDownloadJson}
+                  disabled={!hasJson}
+                  className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
+                >
+                  <IconDownload /> JSON
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
             <>
               <button className={btnClass} onClick={handleDownloadPdf} disabled={!resume.url} title="Download PDF">
