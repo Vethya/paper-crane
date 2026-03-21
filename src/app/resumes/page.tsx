@@ -1,11 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { FiPlus } from "react-icons/fi"
 import { authClient } from "@/db/auth-client"
-import { Logo } from "@/components/core/Logo"
+import { Header } from "@/components/generator/Header"
 import { ResumeCard } from "@/components/resumes/ResumeCard"
 import { CreateResumeDialog } from "@/components/resumes/CreateResumeDialog"
 import type { TagColor } from "@/lib/tagColors"
@@ -64,12 +63,7 @@ export default function ResumesPage() {
         <div className="absolute inset-y-0 left-0 w-[25%] bg-gradient-to-r from-blue-600/10 via-blue-600/5 to-transparent blur-[140px]" />
       </div>
 
-      <header className="relative z-10 flex h-16 items-center justify-between border-b border-white/5 bg-slate-950/80 px-6 backdrop-blur">
-        <Link href="/resumes"><Logo /></Link>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-400">{session.user.name ?? session.user.email}</span>
-        </div>
-      </header>
+      <Header showTags={false} showSave={false} className="relative z-10 border-b border-white/5 bg-slate-950/80 backdrop-blur" />
 
       <main className="relative z-10 mx-auto max-w-5xl px-6 py-12">
         <div className="mb-8 flex items-center justify-between">

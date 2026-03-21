@@ -15,11 +15,13 @@ import { twMerge } from 'tailwind-merge'
 
 interface HeaderProps {
   className?: string
+  showTags?: boolean
+  showSave?: boolean
 }
 
 type SaveState = 'idle' | 'saving' | 'saved' | 'error'
 
-export function Header({ className }: HeaderProps) {
+export function Header({ className, showTags = true, showSave = true }: HeaderProps) {
   const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -78,9 +80,9 @@ export function Header({ className }: HeaderProps) {
       </Link>
 
       <div className="flex items-center gap-3">
-        {resumeId && <TagPicker />}
+        {resumeId && showTags && <TagPicker />}
 
-        {resumeId && (
+        {resumeId && showSave && (
           <button
             onClick={handleSave}
             disabled={saveState === 'saving'}
