@@ -25,6 +25,23 @@ export function TagPicker() {
   const closeHandler = useCallback(() => setOpen(false), [])
   useOnClickOutside(containerRef, closeHandler)
 
+  const pendingTagsRef = useRef<string[] | null>(null)
+  const tagSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  function scheduleSaveTags(tags: string[]) {
+    pendingTagsRef.current = tags
+    if (tagSaveTimerRef.current) clearTimeout(tagSaveTimerRef.current)
+    tagSaveTimerRef.current = setTimeout(async () => {
+      if (!resumeId || pendingTagsRef.current === null) return
+      await fetch(`/api/resumes/${resumeId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tags: pendingTagsRef.current }),
+      })
+      pendingTagsRef.current = null
+    }, 2000)
+  }
+
   useEffect(() => {
     fetch('/api/tags')
       .then(res => res.json())
@@ -38,17 +55,13 @@ export function TagPicker() {
   const exactMatch = allTags.some(t => t.name.toLowerCase() === search.trim().toLowerCase())
   const showCreate = search.trim() !== '' && !exactMatch
 
-  async function toggleTag(tagName: string) {
+  function toggleTag(tagName: string) {
     if (!resumeId) return
     const newTags = resumeTags.includes(tagName)
       ? resumeTags.filter(t => t !== tagName)
       : [...resumeTags, tagName]
     setResumeTags(newTags)
-    await fetch(`/api/resumes/${resumeId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tags: newTags }),
-    })
+    scheduleSaveTags(newTags)
   }
 
   function openCreate(name = '') {
@@ -72,11 +85,7 @@ export function TagPicker() {
     if (resumeId) {
       const newTags = [...resumeTags, tag.name]
       setResumeTags(newTags)
-      fetch(`/api/resumes/${resumeId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tags: newTags }),
-      })
+      scheduleSaveTags(newTags)
     }
     setSearch('')
   }

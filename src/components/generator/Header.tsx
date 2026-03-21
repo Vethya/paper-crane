@@ -3,34 +3,30 @@
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { FiChevronDown, FiCheck } from 'react-icons/fi'
+import { FiChevronDown } from 'react-icons/fi'
 import { Logo } from '../core/Logo'
 import { authClient } from '@/db/auth-client'
 import { useAtomValue } from 'jotai'
 import { formDataAtom } from '@/atoms/formData'
-import { resumeTagsAtom } from '@/atoms/resumeTags'
 import { TagPicker } from './TagPicker'
+import { useAutoSave } from '@/hooks/useAutoSave'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 interface HeaderProps {
   className?: string
   showTags?: boolean
-  showSave?: boolean
 }
 
-type SaveState = 'idle' | 'saving' | 'saved' | 'error'
-
-export function Header({ className, showTags = true, showSave = true }: HeaderProps) {
+export function Header({ className, showTags = true }: HeaderProps) {
   const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
   const resumeId = searchParams.get('id')
   const formData = useAtomValue(formDataAtom)
-  const resumeTags = useAtomValue(resumeTagsAtom)
   const [open, setOpen] = useState(false)
-  const [saveState, setSaveState] = useState<SaveState>('idle')
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const saveState = useAutoSave(resumeId, formData)
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -45,24 +41,6 @@ export function Header({ className, showTags = true, showSave = true }: HeaderPr
   async function handleLogout() {
     setOpen(false)
     await authClient.signOut({ fetchOptions: { onSuccess: () => router.push('/login') } })
-  }
-
-  async function handleSave() {
-    if (!resumeId || !formData) return
-    setSaveState('saving')
-    try {
-      const res = await fetch(`/api/resumes/${resumeId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content: formData, tags: resumeTags }),
-      })
-      if (!res.ok) throw new Error()
-      setSaveState('saved')
-      setTimeout(() => setSaveState('idle'), 2000)
-    } catch {
-      setSaveState('error')
-      setTimeout(() => setSaveState('idle'), 2000)
-    }
   }
 
   const user = session?.user
@@ -82,29 +60,11 @@ export function Header({ className, showTags = true, showSave = true }: HeaderPr
       <div className="flex items-center gap-3">
         {resumeId && showTags && <TagPicker />}
 
-        {resumeId && showSave && (
-          <button
-            onClick={handleSave}
-            disabled={saveState === 'saving'}
-            className={clsx(
-              "flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-medium transition",
-              saveState === 'saved'
-                ? "bg-green-600/20 text-green-400 border border-green-600/30"
-                : saveState === 'error'
-                ? "bg-red-600/20 text-red-400 border border-red-600/30"
-                : "bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-60"
-            )}
-          >
-            {saveState === 'saved' ? (
-              <><FiCheck size={13} /> Saved</>
-            ) : saveState === 'error' ? (
-              "Error"
-            ) : saveState === 'saving' ? (
-              "Saving…"
-            ) : (
-              "Save"
-            )}
-          </button>
+        {resumeId && saveState === 'saving' && (
+          <span className="text-sm text-slate-400">Saving…</span>
+        )}
+        {resumeId && saveState === 'saved' && (
+          <span className="text-sm text-slate-400">Saved</span>
         )}
 
       {!isPending && (

@@ -63,7 +63,7 @@ export default function ResumesPage() {
         <div className="absolute inset-y-0 left-0 w-[25%] bg-gradient-to-r from-blue-600/10 via-blue-600/5 to-transparent blur-[140px]" />
       </div>
 
-      <Header showTags={false} showSave={false} className="relative z-10 border-b border-white/5 bg-slate-950/80 backdrop-blur" />
+      <Header showTags={false} className="relative z-10 border-b border-white/5 bg-slate-950/80 backdrop-blur" />
 
       <main className="relative z-10 mx-auto max-w-5xl px-6 py-12">
         <div className="mb-8 flex items-center justify-between">
