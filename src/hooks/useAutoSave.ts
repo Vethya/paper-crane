@@ -1,12 +1,14 @@
 "use client"
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+import { useAtom } from 'jotai'
 import { FormValues } from '@/types'
+import { saveStateAtom } from '@/atoms/saveState'
 
-export type SaveState = 'idle' | 'saving' | 'saved' | 'error'
+export type { SaveState } from '@/atoms/saveState'
 
 export function useAutoSave(resumeId: string | null, formData: FormValues | null) {
-  const [saveState, setSaveState] = useState<SaveState>('idle')
+  const [saveState, setSaveState] = useAtom(saveStateAtom)
   const latestFormData = useRef(formData)
   const lastKnownData = useRef<string | null>(null)
 

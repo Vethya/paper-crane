@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useAtom } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import { FiCheck, FiEdit2, FiPlus, FiTag } from 'react-icons/fi'
 import { resumeTagsAtom } from '@/atoms/resumeTags'
+import { saveStateAtom } from '@/atoms/saveState'
 import { TagDialog, type TagItem } from './TagDialog'
 import { tagColorMap } from '@/lib/tagColors'
 import { useOnClickOutside } from '@/hooks/useOnClickOutside'
@@ -20,6 +21,7 @@ export function TagPicker() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTag, setEditingTag] = useState<TagItem | undefined>()
   const [initialName, setInitialName] = useState('')
+  const setSaveState = useSetAtom(saveStateAtom)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const closeHandler = useCallback(() => setOpen(false), [])
@@ -33,11 +35,20 @@ export function TagPicker() {
     if (tagSaveTimerRef.current) clearTimeout(tagSaveTimerRef.current)
     tagSaveTimerRef.current = setTimeout(async () => {
       if (!resumeId || pendingTagsRef.current === null) return
-      await fetch(`/api/resumes/${resumeId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tags: pendingTagsRef.current }),
-      })
+      setSaveState('saving')
+      try {
+        const res = await fetch(`/api/resumes/${resumeId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tags: pendingTagsRef.current }),
+        })
+        if (!res.ok) throw new Error()
+        setSaveState('saved')
+        setTimeout(() => setSaveState('idle'), 2000)
+      } catch {
+        setSaveState('error')
+        setTimeout(() => setSaveState('idle'), 2000)
+      }
       pendingTagsRef.current = null
     }, 2000)
   }
