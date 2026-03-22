@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useAtom } from 'jotai'
 import { TemplatesSection } from './sections/TemplatesSection'
@@ -32,11 +31,11 @@ const initialFormValues: FormValues = {
 
 interface FormProps {
   className?: string
+  activeSection?: string
 }
 
-export function Form({ className }: FormProps) {
-  const searchParams = useSearchParams()
-  const currSection = searchParams.get('section') || 'basics'
+export function Form({ className, activeSection = 'basics' }: FormProps) {
+  const currSection = activeSection
 
   const [resume, setResume] = useAtom(resumeAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
