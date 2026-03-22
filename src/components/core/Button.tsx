@@ -29,7 +29,7 @@ export function PrimaryButton({ children, className, ...props }: BaseButtonProps
     <button
       className={twMerge(
         clsx(
-          "flex h-11 min-w-[175px] items-center justify-center rounded-full border-none bg-gradient-to-r from-blue-600 to-blue-500 px-5 text-sm font-semibold text-white shadow-[0_18px_45px_-25px_rgba(37,99,235,0.75)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 hover:from-blue-600/90 hover:to-blue-500/90",
+          "flex h-11 min-w-[175px] items-center justify-center rounded-full border-none bg-gradient-to-r from-blue-600 to-blue-500 px-5 text-sm font-semibold text-white shadow-[0_18px_45px_-25px_rgba(37,99,235,0.75)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 hover:from-blue-600/90 hover:to-blue-500/90 disabled:bg-none disabled:bg-slate-600 disabled:from-slate-600 disabled:to-slate-600 disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-60",
           className
         )
       )}

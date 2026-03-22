@@ -1,11 +1,14 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useRef, useState } from 'react'
+import { useRef, useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Form } from '../../components/generator/Form'
 import { Header } from '../../components/generator/Header'
 import { MobileNav, Sidebar } from '../../components/generator/Sidebar'
 import { PrimaryButton } from '../../components/core/Button'
+import { ResumesRedirectDialog } from '../../components/generator/ResumesRedirectDialog'
+import { authClient } from '../../db/auth-client'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
@@ -13,8 +16,20 @@ const Preview = dynamic(
 )
 
 export default function GeneratorPage() {
+  return (
+    <Suspense>
+      <GeneratorContent />
+    </Suspense>
+  )
+}
+
+function GeneratorContent() {
   const [activeSection, setActiveSection] = useState('basics')
   const previewRef = useRef<HTMLDivElement>(null)
+  const searchParams = useSearchParams()
+  const resumeId = searchParams.get('id')
+  const { data: session, isPending } = authClient.useSession()
+  const showRedirectDialog = !isPending && !!session && !resumeId
 
   return (
     <main className="relative flex min-h-screen flex-col bg-slate-950 text-slate-100 xl:h-screen xl:overflow-hidden">
@@ -24,7 +39,7 @@ export default function GeneratorPage() {
       </div>
 
       <div className="relative z-10 flex flex-1 flex-col xl:min-h-0">
-        <Header className="border-b border-white/5 bg-slate-950/80 backdrop-blur" />
+        <Header className="border-b border-white/5 bg-slate-950/80 backdrop-blur z-10" />
 
         {/* Mobile layout (below xl) */}
         <div className="flex flex-col gap-4 px-4 py-6 xl:hidden">
@@ -75,6 +90,8 @@ export default function GeneratorPage() {
           </div>
         </div>
       </div>
+
+      <ResumesRedirectDialog open={showRedirectDialog} />
     </main>
   )
 }

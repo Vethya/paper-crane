@@ -2,7 +2,9 @@
 
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import { useAtomValue } from 'jotai'
 import { PrimaryButton } from '../core/Button'
+import { isLoadingResumeAtom } from '@/atoms/resume'
 
 const sectionLinks = [
   { label: 'Templates', section: 'templates' },
@@ -20,6 +22,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
+  const isLoadingResume = useAtomValue(isLoadingResumeAtom)
+
   return (
     <aside>
       <nav className="flex flex-col items-start justify-center gap-6 mb-7">
@@ -38,7 +42,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         ))}
       </nav>
 
-      <PrimaryButton form="resume-form">MAKE</PrimaryButton>
+      <PrimaryButton form="resume-form" disabled={isLoadingResume}>MAKE</PrimaryButton>
     </aside>
   )
 }
