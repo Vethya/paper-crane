@@ -1,69 +1,75 @@
 'use client'
 
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-// import { MdDragIndicator } from 'react-icons/md'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useAtomValue } from 'jotai'
 import { PrimaryButton } from '../core/Button'
 import { isLoadingResumeAtom } from '@/atoms/resume'
 
-interface StyledLinkProps {
-  href: string
-  $active: boolean
-  children: React.ReactNode
+const sectionLinks = [
+  { label: 'Templates', section: 'templates' },
+  { label: 'Profile', section: 'basics' },
+  { label: 'Education', section: 'education' },
+  { label: 'Work Experience', section: 'work' },
+  { label: 'Skills', section: 'skills' },
+  { label: 'Projects', section: 'projects' },
+  { label: 'Awards', section: 'awards' }
+]
+
+interface SidebarProps {
+  activeSection: string
+  onSectionChange: (section: string) => void
 }
 
-function StyledLink({ href, $active, children }: StyledLinkProps) {
-  return (
-    <Link
-      href={href}
-      className={twMerge(clsx(
-        "no-underline font-light text-white",
-        $active && "text-green"
-      ))}
-    >
-      {children}
-    </Link>
-  )
-}
-
-export function Sidebar() {
-  const searchParams = useSearchParams()
-  const currSection = searchParams?.get('section') || 'basics'
-  const resumeId = searchParams?.get('id')
+export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
   const isLoadingResume = useAtomValue(isLoadingResumeAtom)
-
-  const sectionLinks = [
-    { label: 'Templates', section: 'templates' },
-    { label: 'Profile', section: 'basics' },
-    { label: 'Education', section: 'education' },
-    { label: 'Work Experience', section: 'work' },
-    { label: 'Skills', section: 'skills' },
-    { label: 'Projects', section: 'projects' },
-    { label: 'Awards', section: 'awards' }
-  ]
 
   return (
     <aside>
       <nav className="flex flex-col items-start justify-center gap-6 mb-7">
         {sectionLinks.map(({ label, section }) => (
-          <div key={section} className="flex gap-2">
-            {/* <IconButton type="button" className="cursor-grab">
-              <MdDragIndicator />
-            </IconButton> */}
-            <StyledLink
-              href={`/generator?${resumeId ? `id=${resumeId}&` : ''}section=${section}`}
-              $active={section === currSection}
-            >
-              {label}
-            </StyledLink>
-          </div>
+          <button
+            key={section}
+            type="button"
+            onClick={() => onSectionChange(section)}
+            className={twMerge(clsx(
+              "font-light text-white text-left",
+              activeSection === section && "text-green"
+            ))}
+          >
+            {label}
+          </button>
         ))}
       </nav>
 
       <PrimaryButton form="resume-form" disabled={isLoadingResume}>MAKE</PrimaryButton>
     </aside>
+  )
+}
+
+interface MobileNavProps {
+  activeSection: string
+  onSectionChange: (section: string) => void
+}
+
+export function MobileNav({ activeSection, onSectionChange }: MobileNavProps) {
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {sectionLinks.map(({ label, section }) => (
+        <button
+          key={section}
+          type="button"
+          onClick={() => onSectionChange(section)}
+          className={clsx(
+            "shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            activeSection === section
+              ? "bg-blue-600 text-white"
+              : "bg-slate-800/60 text-slate-400 hover:text-slate-200"
+          )}
+        >
+          {label}
+        </button>
+      ))}
+    </div>
   )
 }

@@ -35,11 +35,12 @@ const initialFormValues: FormValues = {
 
 interface FormProps {
   className?: string
+  activeSection?: string
 }
 
-export function Form({ className }: FormProps) {
+export function Form({ className, activeSection = 'basics' }: FormProps) {
   const searchParams = useSearchParams()
-  const currSection = searchParams.get('section') || 'basics'
+  const currSection = activeSection
   const resumeId = searchParams.get('id')
 
   const [resume, setResume] = useAtom(resumeAtom)
