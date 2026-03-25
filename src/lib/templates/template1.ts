@@ -315,7 +315,7 @@ const generator: Generator = {
 }
 
 function template1(values: FormValues) {
-  const { headings } = values
+  const { headings = {} } = values
 
   return stripIndent`
     \\documentclass[a4paper]{article}
