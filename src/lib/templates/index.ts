@@ -34,6 +34,7 @@ function esc(str: string | undefined): string | undefined {
 function sanitizeFormValues(data: FormValues): FormValues {
   return {
     ...data,
+    headings: data.headings ?? {},
     basics: data.basics
       ? {
           ...data.basics,
