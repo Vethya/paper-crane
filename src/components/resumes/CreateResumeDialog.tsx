@@ -88,7 +88,7 @@ export function CreateResumeDialog({ children }: CreateResumeDialogProps) {
           {error && <p className="text-xs text-red-400">{error}</p>}
         </div>
 
-        <DialogFooter className="gap-2 bg-transparent border-t-0 -mx-0 -mb-0 pt-2">
+        <DialogFooter className="gap-2 sm:gap-0 bg-transparent border-t-0 -mx-0 -mb-0 pt-2">
           <button
             onClick={() => handleOpenChange(false)}
             disabled={loading}
