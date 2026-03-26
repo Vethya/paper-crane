@@ -176,7 +176,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
             {error && <p className="text-xs text-red-400">{error}</p>}
           </div>
 
-          <DialogFooter className="bg-transparent border-t-0 pt-2">
+          <DialogFooter className="gap-2 sm:gap-0 bg-transparent border-t-0 pt-2">
             <button
               onClick={() => handleOpenChange(false)}
               disabled={loading}
