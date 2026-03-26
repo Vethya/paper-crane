@@ -71,7 +71,7 @@ export function CreateResumeDialog({ children }: CreateResumeDialogProps) {
           <DialogTitle className="text-white">New Resume</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-2 py-2 ">
+        <div className="flex flex-col gap-2 py-2">
           <Label htmlFor="resume-title" className="text-slate-300 text-sm">
             Title
           </Label>
