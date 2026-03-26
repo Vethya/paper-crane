@@ -66,12 +66,12 @@ export function CreateResumeDialog({ children }: CreateResumeDialogProps) {
         {children}
       </span>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-slate-900 border-white/10 text-slate-100 sm:max-w-md">
+      <DialogContent className="bg-slate-900 border-white/10 text-slate-100 sm:max-w-md ">
         <DialogHeader>
           <DialogTitle className="text-white">New Resume</DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-2 py-2">
+        <div className="flex flex-col gap-2 py-2 ">
           <Label htmlFor="resume-title" className="text-slate-300 text-sm">
             Title
           </Label>
@@ -88,7 +88,7 @@ export function CreateResumeDialog({ children }: CreateResumeDialogProps) {
           {error && <p className="text-xs text-red-400">{error}</p>}
         </div>
 
-        <DialogFooter className="bg-transparent border-t-0 -mx-0 -mb-0 pt-2">
+        <DialogFooter className="gap-2 bg-transparent border-t-0 -mx-0 -mb-0 pt-2">
           <button
             onClick={() => handleOpenChange(false)}
             disabled={loading}
