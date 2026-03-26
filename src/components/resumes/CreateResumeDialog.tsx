@@ -66,7 +66,7 @@ export function CreateResumeDialog({ children }: CreateResumeDialogProps) {
         {children}
       </span>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="bg-slate-900 border-white/10 text-slate-100 sm:max-w-md ">
+      <DialogContent className="bg-slate-900 border-white/10 text-slate-100 sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-white">New Resume</DialogTitle>
         </DialogHeader>
