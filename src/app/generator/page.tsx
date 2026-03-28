@@ -8,6 +8,8 @@ import { Header } from '../../components/generator/Header'
 import { MobileNav, Sidebar } from '../../components/generator/Sidebar'
 import { PrimaryButton } from '../../components/core/Button'
 import { ResumesRedirectDialog } from '../../components/generator/ResumesRedirectDialog'
+import { AgentTriggerButton } from '../../components/agent/AgentTriggerButton'
+import { AgentOverlay } from '../../components/agent/AgentOverlay'
 import { authClient } from '../../db/auth-client'
 
 const Preview = dynamic(
@@ -92,6 +94,8 @@ function GeneratorContent() {
       </div>
 
       <ResumesRedirectDialog open={showRedirectDialog} />
+      <AgentTriggerButton />
+      <AgentOverlay />
     </main>
   )
 }
