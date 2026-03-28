@@ -33,6 +33,12 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
 
   const canSend = text.trim().length > 0 && !isStreaming
 
+  // Auto-focus on mount (when overlay opens)
+  useEffect(() => {
+    const id = setTimeout(() => textareaRef.current?.focus(), 50)
+    return () => clearTimeout(id)
+  }, [])
+
   // Auto-resize textarea
   useEffect(() => {
     const el = textareaRef.current
