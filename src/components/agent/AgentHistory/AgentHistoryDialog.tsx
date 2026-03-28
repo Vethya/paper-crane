@@ -160,7 +160,7 @@ export function AgentHistoryDialog({ resumeId, onClose, onSelect }: AgentHistory
             >
               <div className="flex flex-col gap-1">
                 <span className="text-sm font-medium text-slate-100">Delete chat?</span>
-                <span className="text-sm text-slate-500">This can't be undone.</span>
+                <span className="text-sm text-slate-500">This can&apos;t be undone.</span>
               </div>
               <div className="flex justify-end gap-2">
                 <button
