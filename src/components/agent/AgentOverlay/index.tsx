@@ -2,6 +2,7 @@
 
 import { useAtom, useAtomValue } from 'jotai'
 import { AnimatePresence, motion } from 'framer-motion'
+import { Sparkles } from 'lucide-react'
 import { useCallback, useState } from 'react'
 import {
   agentOpenAtom,
@@ -15,6 +16,7 @@ import {
   type AgentMessage,
 } from '../../../atoms/agentAtom'
 import { formDataAtom } from '../../../atoms/formData'
+import { authClient } from '../../../db/auth-client'
 import { AgentOverlayHeader } from './AgentOverlayHeader'
 import { AgentMessageList } from './AgentMessageList'
 import { AgentComposer } from './AgentComposer'
@@ -65,6 +67,7 @@ export function AgentOverlay() {
   const [historyOpen, setHistoryOpen] = useAtom(agentHistoryOpenAtom)
   const resumeId = useAtomValue(agentResumeIdAtom)
   const formData = useAtomValue(formDataAtom)
+  const { data: session } = authClient.useSession()
   const [isLoadingSession, setIsLoadingSession] = useState(false)
 
   const handleClose = useCallback(() => {
@@ -189,7 +192,19 @@ export function AgentOverlay() {
             <AgentOverlayHeader onClose={handleClose} onHistoryClick={() => setHistoryOpen(true)} onNewChat={handleNewChat} />
             <div className="mx-4 border-b border-slate-700/50" />
 
-            {isLoadingSession ? (
+            {!session ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
+                <Sparkles className="h-10 w-10 text-blue-400/60" />
+                <p className="text-base font-medium text-slate-200">Sign in to use the Resume Agent</p>
+                <p className="text-sm text-slate-400">The AI agent is available to authenticated users only.</p>
+                <a
+                  href="/login"
+                  className="mt-2 rounded-full bg-blue-600 px-6 py-2 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+                >
+                  Sign in
+                </a>
+              </div>
+            ) : isLoadingSession ? (
               <div className="flex flex-1 flex-col gap-3 px-4 py-6">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
@@ -203,7 +218,7 @@ export function AgentOverlay() {
             )}
 
             <div className="mx-4 border-t border-slate-700/50" />
-            <AgentComposer onSend={handleSend} />
+            {session && <AgentComposer onSend={handleSend} />}
 
             <AnimatePresence>
               {historyOpen && resumeId && (

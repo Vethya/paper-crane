@@ -1,7 +1,8 @@
 import { google } from '@ai-sdk/google'
 import { streamText, type ModelMessage } from 'ai'
-import type { NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import type { AgentMessage, AgentMode } from '../../../../atoms/agentAtom'
+import { auth } from '../../../../lib/auth'
 
 // Ensure the env var is validated at startup via src/env.ts
 import '../../../../env'
@@ -15,6 +16,11 @@ const SYSTEM_PROMPTS: Record<AgentMode, string> = {
 }
 
 export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { messages, mode } = (await request.json()) as {
     messages: AgentMessage[]
     mode: AgentMode
