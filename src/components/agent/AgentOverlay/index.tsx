@@ -1,52 +1,108 @@
 'use client'
 
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { AnimatePresence, motion } from 'framer-motion'
-import { useCallback, useRef } from 'react'
-import { agentOpenAtom, agentMessagesAtom, agentIsStreamingAtom, agentModeAtom, type AgentMessage } from '../../../atoms/agentAtom'
+import { useCallback, useState } from 'react'
+import {
+  agentOpenAtom,
+  agentMessagesAtom,
+  agentIsStreamingAtom,
+  agentModeAtom,
+  agentSessionIdAtom,
+  agentResumeIdAtom,
+  agentHistoryOpenAtom,
+  type AgentMode,
+  type AgentMessage,
+} from '../../../atoms/agentAtom'
 import { formDataAtom } from '../../../atoms/formData'
 import { AgentOverlayHeader } from './AgentOverlayHeader'
 import { AgentMessageList } from './AgentMessageList'
 import { AgentComposer } from './AgentComposer'
+import { AgentHistoryDialog } from '../AgentHistory/AgentHistoryDialog'
 
 function buildResumeContextMessages(resumeData: object): AgentMessage[] {
   return [
     {
       id: 'ctx-resume',
       role: 'user',
-      hidden: true,
       content: `Here is my current resume data in JSON format. Please use this as context for our conversation:\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`,
     },
     {
       id: 'ctx-ack',
       role: 'assistant',
-      hidden: true,
       content: "I've reviewed your resume. How can I help you?",
     },
   ]
+}
+
+async function saveSession({
+  resumeId,
+  sessionId,
+  mode,
+  messages,
+}: {
+  resumeId: string
+  sessionId: string | null
+  mode: string
+  messages: AgentMessage[]
+}): Promise<string> {
+  const res = await fetch('/api/agent/sessions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ resumeId, sessionId, mode, messages }),
+  })
+  if (!res.ok) throw new Error('Failed to save session')
+  const data = (await res.json()) as { sessionId: string }
+  return data.sessionId
 }
 
 export function AgentOverlay() {
   const [open, setOpen] = useAtom(agentOpenAtom)
   const [messages, setMessages] = useAtom(agentMessagesAtom)
   const [isStreaming, setIsStreaming] = useAtom(agentIsStreamingAtom)
-  const mode = useAtomValue(agentModeAtom)
+  const [sessionId, setSessionId] = useAtom(agentSessionIdAtom)
+  const [mode, setMode] = useAtom(agentModeAtom)
+  const [historyOpen, setHistoryOpen] = useAtom(agentHistoryOpenAtom)
+  const resumeId = useAtomValue(agentResumeIdAtom)
   const formData = useAtomValue(formDataAtom)
-  const contextInjectedRef = useRef(false)
+  const [isLoadingSession, setIsLoadingSession] = useState(false)
+
+  const handleClose = useCallback(() => {
+    setOpen(false)
+    setMessages([])
+    setSessionId(null)
+    setHistoryOpen(false)
+  }, [setOpen, setMessages, setSessionId, setHistoryOpen])
+
+  const handleNewChat = useCallback(() => {
+    setMessages([])
+    setSessionId(null)
+    setHistoryOpen(false)
+  }, [setMessages, setSessionId, setHistoryOpen])
+
+  const handleSelectSession = useCallback(
+    async (id: string) => {
+      setHistoryOpen(false)
+      setIsLoadingSession(true)
+      try {
+        const res = await fetch(`/api/agent/sessions/${id}`)
+        if (!res.ok) throw new Error('Failed to load session')
+        const data = (await res.json()) as { mode: AgentMode; messages: AgentMessage[] }
+        setMessages(data.messages)
+        setSessionId(id)
+        setMode(data.mode)
+      } catch (err) {
+        console.error('[AgentOverlay] Load session error:', err)
+      } finally {
+        setIsLoadingSession(false)
+      }
+    },
+    [setHistoryOpen, setMessages, setSessionId, setMode],
+  )
 
   const handleSend = useCallback(
     async (text: string) => {
       if (isStreaming) return
-
-      let currentMessages = messages
-
-      // Inject hidden resume context on the very first user message
-      if (!contextInjectedRef.current) {
-        contextInjectedRef.current = true
-        const contextMessages = buildResumeContextMessages(formData ?? {})
-        currentMessages = [...contextMessages]
-        setMessages(contextMessages)
-      }
 
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
@@ -60,50 +116,63 @@ export function AgentOverlay() {
         content: '',
       }
 
-      const nextMessages = [...currentMessages, userMessage]
+      const nextMessages = [...messages, userMessage]
       setMessages([...nextMessages, assistantMessage])
       setIsStreaming(true)
+
+      // Always prepend fresh resume context — never stale, works for both new and resumed sessions
+      const apiMessages = [...buildResumeContextMessages(formData ?? {}), ...nextMessages]
+
+      let finalContent = ''
 
       try {
         const res = await fetch('/api/agent/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: nextMessages, mode }),
+          body: JSON.stringify({ messages: apiMessages, mode }),
         })
 
         if (!res.ok || !res.body) throw new Error('Stream request failed')
 
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
-        let accumulated = ''
 
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
 
-          accumulated += decoder.decode(value, { stream: true })
+          finalContent += decoder.decode(value, { stream: true })
 
           setMessages((prev) => {
             const updated = [...prev]
-            updated[updated.length - 1] = { ...assistantMessage, content: accumulated }
+            updated[updated.length - 1] = { ...assistantMessage, content: finalContent }
             return updated
           })
         }
       } catch (err) {
         console.error('[AgentOverlay] Stream error:', err)
+        finalContent = 'Something went wrong. Please try again.'
         setMessages((prev) => {
           const updated = [...prev]
-          updated[updated.length - 1] = {
-            ...assistantMessage,
-            content: 'Something went wrong. Please try again.',
-          }
+          updated[updated.length - 1] = { ...assistantMessage, content: finalContent }
           return updated
         })
       } finally {
         setIsStreaming(false)
+
+        // Auto-save after each completed response
+        if (resumeId) {
+          const finalMessages = [...nextMessages, { ...assistantMessage, content: finalContent }]
+          try {
+            const savedId = await saveSession({ resumeId, sessionId, mode, messages: finalMessages })
+            setSessionId(savedId)
+          } catch (err) {
+            console.error('[AgentOverlay] Session save error:', err)
+          }
+        }
       }
     },
-    [isStreaming, messages, mode, formData, setMessages, setIsStreaming],
+    [isStreaming, messages, mode, formData, resumeId, sessionId, setMessages, setIsStreaming, setSessionId],
   )
 
   return (
@@ -116,14 +185,35 @@ export function AgentOverlay() {
           transition={{ duration: 0.15, ease: 'easeOut' }}
           className="fixed inset-0 z-50 flex flex-col bg-slate-950/85 backdrop-blur-sm"
         >
-          <div className="mx-auto flex h-full w-full max-w-2xl flex-col">
-            <AgentOverlayHeader onClose={() => setOpen(false)} onHistoryClick={() => {}} />
+          <div className="relative mx-auto flex h-full w-full max-w-2xl flex-col">
+            <AgentOverlayHeader onClose={handleClose} onHistoryClick={() => setHistoryOpen(true)} onNewChat={handleNewChat} />
             <div className="mx-4 border-b border-slate-700/50" />
 
-            <AgentMessageList messages={messages} isStreaming={isStreaming} />
+            {isLoadingSession ? (
+              <div className="flex flex-1 flex-col gap-3 px-4 py-6">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-10 animate-pulse rounded-2xl bg-slate-800/60 ${i % 2 === 0 ? 'self-end w-2/3' : 'self-start w-3/4'}`}
+                  />
+                ))}
+              </div>
+            ) : (
+              <AgentMessageList messages={messages} isStreaming={isStreaming} />
+            )}
 
             <div className="mx-4 border-t border-slate-700/50" />
             <AgentComposer onSend={handleSend} />
+
+            <AnimatePresence>
+              {historyOpen && resumeId && (
+                <AgentHistoryDialog
+                  resumeId={resumeId}
+                  onClose={() => setHistoryOpen(false)}
+                  onSelect={handleSelectSession}
+                />
+              )}
+            </AnimatePresence>
           </div>
         </motion.div>
       )}

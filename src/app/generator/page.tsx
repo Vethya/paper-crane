@@ -1,8 +1,9 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useRef, useState, Suspense } from 'react'
+import { useRef, useState, Suspense, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { useSetAtom } from 'jotai'
 import { Form } from '../../components/generator/Form'
 import { Header } from '../../components/generator/Header'
 import { MobileNav, Sidebar } from '../../components/generator/Sidebar'
@@ -11,6 +12,7 @@ import { ResumesRedirectDialog } from '../../components/generator/ResumesRedirec
 import { AgentTriggerButton } from '../../components/agent/AgentTriggerButton'
 import { AgentOverlay } from '../../components/agent/AgentOverlay/index'
 import { authClient } from '../../db/auth-client'
+import { agentResumeIdAtom } from '../../atoms/agentAtom'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
@@ -32,6 +34,11 @@ function GeneratorContent() {
   const resumeId = searchParams.get('id')
   const { data: session, isPending } = authClient.useSession()
   const showRedirectDialog = !isPending && !!session && !resumeId
+  const setAgentResumeId = useSetAtom(agentResumeIdAtom)
+
+  useEffect(() => {
+    setAgentResumeId(resumeId)
+  }, [resumeId, setAgentResumeId])
 
   return (
     <main className="relative flex min-h-screen flex-col bg-slate-950 text-slate-100 xl:h-screen xl:overflow-hidden">

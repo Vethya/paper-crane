@@ -13,8 +13,6 @@ export type AgentMessage = {
   id: string
   role: 'user' | 'assistant'
   content: string
-  /** Hidden messages are sent to the API but not shown in the UI (e.g. resume context) */
-  hidden?: boolean
 }
 
 export const agentMessagesAtom = atom<AgentMessage[]>([])
@@ -22,3 +20,12 @@ agentMessagesAtom.debugLabel = 'agentMessagesAtom'
 
 export const agentIsStreamingAtom = atom(false)
 agentIsStreamingAtom.debugLabel = 'agentIsStreamingAtom'
+
+export const agentSessionIdAtom = atom<string | null>(null)
+agentSessionIdAtom.debugLabel = 'agentSessionIdAtom'
+
+export const agentResumeIdAtom = atom<string | null>(null)
+agentResumeIdAtom.debugLabel = 'agentResumeIdAtom'
+
+export const agentHistoryOpenAtom = atom(false)
+agentHistoryOpenAtom.debugLabel = 'agentHistoryOpenAtom'

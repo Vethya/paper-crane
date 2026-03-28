@@ -12,13 +12,12 @@ interface AgentMessageListProps {
 
 export function AgentMessageList({ messages, isStreaming }: AgentMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
-  const visible = messages.filter((m) => !m.hidden)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  if (visible.length === 0) {
+  if (messages.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center px-4">
         <p className="text-center text-sm text-slate-500">Ask anything about your resume</p>
@@ -29,7 +28,7 @@ export function AgentMessageList({ messages, isStreaming }: AgentMessageListProp
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="flex flex-col gap-4">
-        {visible.map((msg) => (
+        {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
