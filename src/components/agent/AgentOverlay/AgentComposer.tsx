@@ -1,9 +1,9 @@
 'use client'
 
 import { useRef, useState, useEffect, useCallback } from 'react'
-import { useAtom } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { Send, ChevronDown, Check, MessageCircle, ClipboardList, Wand, type LucideIcon } from 'lucide-react'
-import { agentModeAtom, AGENT_MODES, type AgentMode } from '../../../atoms/agentAtom'
+import { agentModeAtom, agentIsStreamingAtom, AGENT_MODES, type AgentMode } from '../../../atoms/agentAtom'
 
 const MODE_ICONS: Record<AgentMode, LucideIcon> = {
   Chat: MessageCircle,
@@ -21,12 +21,25 @@ interface AgentComposerProps {
   onSend: (text: string) => void
 }
 
-export function AgentComposer({ onSend: _onSend }: AgentComposerProps) {
+export function AgentComposer({ onSend }: AgentComposerProps) {
   const [mode, setMode] = useAtom(agentModeAtom)
+  const isStreaming = useAtomValue(agentIsStreamingAtom)
+  const [text, setText] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const ActiveIcon = MODE_ICONS[mode]
   const placeholder = MODE_PLACEHOLDERS[mode]
+
+  const canSend = text.trim().length > 0 && !isStreaming
+
+  // Auto-resize textarea
+  useEffect(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [text])
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -58,6 +71,19 @@ export function AgentComposer({ onSend: _onSend }: AgentComposerProps) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
+  function submit() {
+    if (!canSend) return
+    onSend(text.trim())
+    setText('')
+  }
+
+  function handleTextareaKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      submit()
+    }
+  }
+
   function selectMode(m: AgentMode) {
     setMode(m)
     setDropdownOpen(false)
@@ -67,15 +93,15 @@ export function AgentComposer({ onSend: _onSend }: AgentComposerProps) {
     <div className="shrink-0 p-4">
       <div className="flex flex-col gap-5 rounded-2xl border border-white/10 bg-slate-900/70 px-4 pb-3 pt-4">
         <textarea
+          ref={textareaRef}
           rows={1}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={handleTextareaKeyDown}
           placeholder={placeholder}
-          className="w-full resize-none bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
+          disabled={isStreaming}
+          className="w-full resize-none bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none disabled:opacity-50"
           style={{ maxHeight: '12rem' }}
-          onInput={(e) => {
-            const el = e.currentTarget
-            el.style.height = 'auto'
-            el.style.height = `${el.scrollHeight}px`
-          }}
         />
 
         <div className="flex items-center justify-between">
@@ -115,12 +141,16 @@ export function AgentComposer({ onSend: _onSend }: AgentComposerProps) {
           </div>
 
           {/* Send button */}
-          <button className="flex items-center justify-center rounded-lg bg-blue-600 p-2 text-white transition hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:opacity-40">
+          <button
+            onClick={submit}
+            disabled={!canSend}
+            className="flex items-center justify-center rounded-lg bg-blue-600 p-2 text-white transition hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:opacity-40"
+          >
             <Send className="h-4 w-4" />
           </button>
         </div>
       </div>
-      <p className="mt-2 text-center text-xs text-slate-600">Shift+Tab to cycle modes</p>
+      <p className="mt-2 text-center text-xs text-slate-600">Shift+Tab to cycle modes · Enter to send · Shift+Enter for newline</p>
     </div>
   )
 }
