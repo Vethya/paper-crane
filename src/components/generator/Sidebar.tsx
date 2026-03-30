@@ -42,7 +42,9 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
         ))}
       </nav>
 
-      <PrimaryButton form="resume-form" disabled={isLoadingResume}>MAKE</PrimaryButton>
+      <div className="flex justify-center">
+        <PrimaryButton form="resume-form" disabled={isLoadingResume}>MAKE</PrimaryButton>
+      </div>
     </aside>
   )
 }
