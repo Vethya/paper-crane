@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
-import { useAtom } from 'jotai'
+import { useAtom, useSetAtom } from 'jotai'
 import { Loader2 } from 'lucide-react'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { ProfileSection } from './sections/ProfileSection'
@@ -13,7 +13,8 @@ import { SkillsSection } from './sections/SkillsSection'
 import { AwardSection } from './sections/AwardsSection'
 import { ProjectsSection } from './sections/projectsSection'
 import { resumeAtom, isLoadingResumeAtom } from '../../../atoms/resume'
-import { formDataAtom } from '../../../atoms/formData'
+import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
+import { AgentFieldFocuser } from '../../agent/AgentFieldFocuser'
 import { resumeTagsAtom } from '../../../atoms/resumeTags'
 import { FormValues } from '../../../types'
 import clsx from 'clsx'
@@ -47,6 +48,7 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
   const [, setFormData] = useAtom(formDataAtom)
   const [, setResumeTags] = useAtom(resumeTagsAtom)
   const [isLoadingResume, setIsLoadingResume] = useAtom(isLoadingResumeAtom)
+  const setFormSetValue = useSetAtom(formSetValueAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
 
   useEffect(() => {
@@ -94,6 +96,12 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
     }
   }, [resumeId, formContext, setFormData, setResumeTags, setIsLoadingResume])
 
+  // Register setValue so the agent edit system can apply / restore values from outside the form
+  useEffect(() => {
+    setFormSetValue(() => formContext.setValue)
+    return () => setFormSetValue(null)
+  }, [setFormSetValue, formContext.setValue])
+
   const handleFormSubmit = useCallback(async () => {
     const formValues = formContext.getValues()
     setResume({ ...resume, isLoading: true })
@@ -119,6 +127,7 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
           </div>
         ) : (
           <>
+            <AgentFieldFocuser />
             {currSection === 'templates' && <TemplatesSection />}
             {currSection === 'basics' && <ProfileSection />}
             {currSection === 'education' && <EducationSection />}

@@ -11,8 +11,10 @@ import { PrimaryButton } from '../../components/core/Button'
 import { ResumesRedirectDialog } from '../../components/generator/ResumesRedirectDialog'
 import { AgentTriggerButton } from '../../components/agent/AgentTriggerButton'
 import { AgentOverlay } from '../../components/agent/AgentOverlay/index'
+import { AgentEditReviewBar } from '../../components/agent/AgentEditReviewBar'
 import { authClient } from '../../db/auth-client'
 import { agentResumeIdAtom } from '../../atoms/agentAtom'
+import { activeSectionSetterAtom } from '../../atoms/activeSection'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
@@ -35,10 +37,16 @@ function GeneratorContent() {
   const { data: session, isPending } = authClient.useSession()
   const showRedirectDialog = !isPending && !!session && !resumeId
   const setAgentResumeId = useSetAtom(agentResumeIdAtom)
+  const setActiveSectionSetter = useSetAtom(activeSectionSetterAtom)
 
   useEffect(() => {
     setAgentResumeId(resumeId)
   }, [resumeId, setAgentResumeId])
+
+  useEffect(() => {
+    setActiveSectionSetter(() => setActiveSection)
+    return () => setActiveSectionSetter(null)
+  }, [setActiveSection, setActiveSectionSetter])
 
   return (
     <main className="relative flex min-h-screen flex-col bg-slate-950 text-slate-100 xl:h-screen xl:overflow-hidden">
@@ -103,6 +111,7 @@ function GeneratorContent() {
       <ResumesRedirectDialog open={showRedirectDialog} />
       <AgentTriggerButton />
       <AgentOverlay />
+      <AgentEditReviewBar />
     </main>
   )
 }

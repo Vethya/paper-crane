@@ -15,12 +15,25 @@ import {
   type AgentMode,
   type AgentMessage,
 } from '../../../atoms/agentAtom'
-import { formDataAtom } from '../../../atoms/formData'
+import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
+import {
+  agentPendingEditsAtom,
+  agentEditSummaryAtom,
+  agentFocusedEditIdAtom,
+  type FieldEdit,
+  type NewEntryEdit,
+  type PendingEdit,
+} from '../../../atoms/agentEdits'
 import { authClient } from '../../../db/auth-client'
+import { MOCK_EDIT_RESPONSE } from '../../../lib/agentMock'
 import { AgentOverlayHeader } from './AgentOverlayHeader'
 import { AgentMessageList } from './AgentMessageList'
 import { AgentComposer } from './AgentComposer'
 import { AgentHistoryDialog } from '../AgentHistory/AgentHistoryDialog'
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 function buildResumeContextMessages(resumeData: object): AgentMessage[] {
   return [
@@ -35,6 +48,23 @@ function buildResumeContextMessages(resumeData: object): AgentMessage[] {
       content: "I've reviewed your resume. How can I help you?",
     },
   ]
+}
+
+function getValueAtPath(data: unknown, path: string): string | string[] | undefined {
+  const parts = path.split('.')
+  let current: unknown = data
+  for (const part of parts) {
+    if (current == null) return undefined
+    const index = Number(part)
+    if (!isNaN(index) && Array.isArray(current)) {
+      current = current[index]
+    } else {
+      current = (current as Record<string, unknown>)[part]
+    }
+  }
+  if (typeof current === 'string') return current
+  if (Array.isArray(current) && current.every((v) => typeof v === 'string')) return current as string[]
+  return undefined
 }
 
 async function saveSession({
@@ -58,6 +88,10 @@ async function saveSession({
   return data.sessionId
 }
 
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export function AgentOverlay() {
   const [open, setOpen] = useAtom(agentOpenAtom)
   const [messages, setMessages] = useAtom(agentMessagesAtom)
@@ -67,6 +101,10 @@ export function AgentOverlay() {
   const [historyOpen, setHistoryOpen] = useAtom(agentHistoryOpenAtom)
   const resumeId = useAtomValue(agentResumeIdAtom)
   const formData = useAtomValue(formDataAtom)
+  const formSetValue = useAtomValue(formSetValueAtom)
+  const [, setPendingEdits] = useAtom(agentPendingEditsAtom)
+  const [, setEditSummary] = useAtom(agentEditSummaryAtom)
+  const [, setFocusedEditId] = useAtom(agentFocusedEditIdAtom)
   const { data: session } = authClient.useSession()
   const [isLoadingSession, setIsLoadingSession] = useState(false)
 
@@ -103,16 +141,17 @@ export function AgentOverlay() {
     [setHistoryOpen, setMessages, setSessionId, setMode],
   )
 
-  const handleSend = useCallback(
-    async (text: string) => {
-      if (isStreaming) return
+  // ---------------------------------------------------------------------------
+  // Chat send (existing streaming flow — Chat & Feedback modes)
+  // ---------------------------------------------------------------------------
 
+  const handleChatSend = useCallback(
+    async (text: string) => {
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
         content: text,
       }
-
       const assistantMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
@@ -123,9 +162,7 @@ export function AgentOverlay() {
       setMessages([...nextMessages, assistantMessage])
       setIsStreaming(true)
 
-      // Always prepend fresh resume context — never stale, works for both new and resumed sessions
       const apiMessages = [...buildResumeContextMessages(formData ?? {}), ...nextMessages]
-
       let finalContent = ''
 
       try {
@@ -143,9 +180,7 @@ export function AgentOverlay() {
         while (true) {
           const { done, value } = await reader.read()
           if (done) break
-
           finalContent += decoder.decode(value, { stream: true })
-
           setMessages((prev) => {
             const updated = [...prev]
             updated[updated.length - 1] = { ...assistantMessage, content: finalContent }
@@ -162,8 +197,6 @@ export function AgentOverlay() {
         })
       } finally {
         setIsStreaming(false)
-
-        // Auto-save after each completed response
         if (resumeId) {
           const finalMessages = [...nextMessages, { ...assistantMessage, content: finalContent }]
           try {
@@ -175,7 +208,193 @@ export function AgentOverlay() {
         }
       }
     },
-    [isStreaming, messages, mode, formData, resumeId, sessionId, setMessages, setIsStreaming, setSessionId],
+    [messages, mode, formData, resumeId, sessionId, setMessages, setIsStreaming, setSessionId],
+  )
+
+  // ---------------------------------------------------------------------------
+  // Tailoring edit send (structured output flow)
+  // ---------------------------------------------------------------------------
+
+  const handleEditSend = useCallback(
+    async (text: string) => {
+      const userMessage: AgentMessage = {
+        id: crypto.randomUUID(),
+        role: 'user',
+        content: text,
+      }
+      const thinkingMessage: AgentMessage = {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: 'Tailoring your resume…',
+      }
+
+      const nextMessages = [...messages, userMessage]
+      setMessages([...nextMessages, thinkingMessage])
+      setIsStreaming(true)
+
+      // Snapshot formData before applying any edits
+      const snapshot = formData ?? {}
+
+      try {
+        const isMock = process.env.NEXT_PUBLIC_AGENT_MOCK === 'true'
+
+        // In mock mode skip the real API call entirely — no tokens spent
+        let data: {
+          summary: string
+          edits: Array<
+            | { type: 'set'; fieldPath: string; newValue: string | string[]; reason: string }
+            | { type: 'append'; arrayPath: string; entry: Record<string, unknown>; reason: string }
+            | { type: 'appendSkill'; name: string; keywords: string[]; reason: string }
+          >
+        }
+        if (isMock) {
+          await new Promise((r) => setTimeout(r, 800)) // simulate network delay
+          data = MOCK_EDIT_RESPONSE
+        } else {
+          const res = await fetch('/api/agent/edit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              messages: nextMessages.map(({ role, content }) => ({ role, content })),
+              resumeData: snapshot,
+            }),
+          })
+          if (!res.ok) throw new Error('Edit request failed')
+          data = (await res.json()) as typeof data
+        }
+
+        const pendingEdits: PendingEdit[] = []
+
+        // Track the in-progress arrays so successive appends to the same path stack correctly
+        const latestArrays: Record<string, unknown[]> = {}
+
+        const getLatestArray = (arrayPath: string): unknown[] => {
+          if (arrayPath in latestArrays) return latestArrays[arrayPath]
+          return ((snapshot as Record<string, unknown>)[arrayPath] as unknown[]) ?? []
+        }
+
+        for (const edit of data.edits) {
+          if (edit.type === 'set') {
+            const originalValue = getValueAtPath(snapshot, edit.fieldPath)
+            const fieldEdit: FieldEdit = {
+              id: crypto.randomUUID(),
+              type: 'set',
+              fieldPath: edit.fieldPath,
+              originalValue,
+              newValue: edit.newValue,
+              reason: edit.reason,
+              status: 'pending',
+            }
+            pendingEdits.push(fieldEdit)
+
+            // Apply immediately — user approves/rejects afterward
+            if (formSetValue && typeof edit.newValue === 'string') {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formSetValue(edit.fieldPath as any, edit.newValue, { shouldDirty: true, shouldValidate: true })
+            }
+            // Array values (keywords) are handled by Keywords.tsx via useEffect when pendingEdits updates
+          } else if (edit.type === 'append' || edit.type === 'appendSkill') {
+            const arrayPath: NewEntryEdit['arrayPath'] =
+              edit.type === 'appendSkill' ? 'skills' : (edit.arrayPath as NewEntryEdit['arrayPath'])
+            const entry: Record<string, unknown> =
+              edit.type === 'appendSkill'
+                ? { name: edit.name, keywords: edit.keywords }
+                : edit.entry
+            const currentLatest = getLatestArray(arrayPath)
+            const entryIndex = currentLatest.length
+            const newArray = [...currentLatest, entry]
+            latestArrays[arrayPath] = newArray
+
+            const newEntryEdit: NewEntryEdit = {
+              id: crypto.randomUUID(),
+              type: 'append',
+              arrayPath,
+              entryIndex,
+              entry,
+              reason: edit.reason,
+              status: 'pending',
+            }
+            pendingEdits.push(newEntryEdit)
+
+            // Apply immediately — append the new entry to the form
+            if (formSetValue) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              formSetValue(arrayPath as any, newArray as any, { shouldDirty: true, shouldValidate: true })
+            }
+          }
+        }
+
+        // Update state — Keywords.tsx effects will fire once these atoms are set
+        setPendingEdits(pendingEdits)
+        setEditSummary(data.summary)
+        // Focus first edit so AgentFieldFocuser navigates to it immediately
+        setFocusedEditId(pendingEdits[0]?.id ?? null)
+
+        const doneMessage: AgentMessage = {
+          ...thinkingMessage,
+          content: `Done! ${data.summary} Review the highlighted changes in the form, then approve or reject each one.`,
+        }
+        setMessages([...nextMessages, doneMessage])
+
+        // Save session
+        if (resumeId) {
+          try {
+            const savedId = await saveSession({
+              resumeId,
+              sessionId,
+              mode,
+              messages: [...nextMessages, doneMessage],
+            })
+            setSessionId(savedId)
+          } catch (err) {
+            console.error('[AgentOverlay] Session save error:', err)
+          }
+        }
+
+        // Close overlay so the user can see the highlighted form
+        handleClose()
+      } catch (err) {
+        console.error('[AgentOverlay] Edit error:', err)
+        const errorMessage: AgentMessage = {
+          ...thinkingMessage,
+          content: 'Something went wrong while tailoring your resume. Please try again.',
+        }
+        setMessages([...nextMessages, errorMessage])
+      } finally {
+        setIsStreaming(false)
+      }
+    },
+    [
+      messages,
+      mode,
+      formData,
+      formSetValue,
+      resumeId,
+      sessionId,
+      setMessages,
+      setIsStreaming,
+      setSessionId,
+      setPendingEdits,
+      setEditSummary,
+      setFocusedEditId,
+      handleClose,
+    ],
+  )
+
+  // ---------------------------------------------------------------------------
+  // Dispatch
+  // ---------------------------------------------------------------------------
+
+  const handleSend = useCallback(
+    async (text: string) => {
+      if (isStreaming) return
+      if (mode === 'Tailoring') {
+        await handleEditSend(text)
+      } else {
+        await handleChatSend(text)
+      }
+    },
+    [isStreaming, mode, handleEditSend, handleChatSend],
   )
 
   return (

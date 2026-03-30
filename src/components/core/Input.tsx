@@ -13,7 +13,7 @@ export function StyledInput({ className, ...props }: StyledInputProps) {
     <input
       className={twMerge(
         clsx(
-          "bg-transparent p-4 text-white text-sm rounded focus:outline focus:outline-1 focus:outline-green-500 placeholder:text-slate-400 placeholder:opacity-50",
+          "w-full bg-transparent p-4 text-white text-sm rounded focus:outline focus:outline-1 focus:outline-green-500 placeholder:text-slate-400 placeholder:opacity-50",
           className
         )
       )}
