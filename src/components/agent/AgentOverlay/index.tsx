@@ -3,7 +3,8 @@
 import { useAtom, useAtomValue } from 'jotai'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
   agentOpenAtom,
   agentMessagesAtom,
@@ -109,6 +110,12 @@ export function AgentOverlay() {
   const { data: session } = authClient.useSession()
   const [isLoadingSession, setIsLoadingSession] = useState(false)
 
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const chatIdParam = searchParams.get('chatId')
+  const prevOpenRef = useRef(false)
+
   const handleClose = useCallback(() => {
     setOpen(false)
     setMessages([])
@@ -120,7 +127,10 @@ export function AgentOverlay() {
     setMessages([])
     setSessionId(null)
     setHistoryOpen(false)
-  }, [setMessages, setSessionId, setHistoryOpen])
+    const params = new URLSearchParams(searchParams.toString())
+    params.delete('chatId')
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }, [setMessages, setSessionId, setHistoryOpen, searchParams, pathname, router])
 
   const handleSelectSession = useCallback(
     async (id: string) => {
@@ -141,6 +151,29 @@ export function AgentOverlay() {
     },
     [setHistoryOpen, setMessages, setSessionId, setMode],
   )
+
+  // Auto-open overlay on mount if chatId is present in URL
+  useEffect(() => {
+    if (chatIdParam) setOpen(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // When overlay opens fresh (no active session), load the chat from URL
+  useEffect(() => {
+    const justOpened = open && !prevOpenRef.current
+    prevOpenRef.current = open
+    if (!justOpened || sessionId !== null || !chatIdParam) return
+    handleSelectSession(chatIdParam)
+  }, [open, chatIdParam, sessionId, handleSelectSession])
+
+  // Sync sessionId → URL
+  useEffect(() => {
+    if (!sessionId) return
+    const params = new URLSearchParams(searchParams.toString())
+    if (params.get('chatId') === sessionId) return
+    params.set('chatId', sessionId)
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+  }, [sessionId, pathname, router, searchParams])
 
   // ---------------------------------------------------------------------------
   // Chat send (existing streaming flow — Chat & Feedback modes)
