@@ -20,7 +20,17 @@ export type NewEntryEdit = {
   status: 'pending' | 'approved' | 'rejected'
 }
 
-export type PendingEdit = FieldEdit | NewEntryEdit
+export type RemoveEntryEdit = {
+  id: string
+  type: 'remove'
+  arrayPath: 'work' | 'education' | 'skills' | 'projects' | 'awards'
+  entryIndex: number
+  entry: Record<string, unknown>
+  reason: string
+  status: 'pending' | 'approved' | 'rejected'
+}
+
+export type PendingEdit = FieldEdit | NewEntryEdit | RemoveEntryEdit
 
 export const agentPendingEditsAtom = atom<PendingEdit[]>([])
 agentPendingEditsAtom.debugLabel = 'agentPendingEditsAtom'

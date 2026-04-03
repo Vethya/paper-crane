@@ -63,6 +63,19 @@ const AppendSkillSchema = z.object({
   reason: z.string().describe('One sentence explaining why this new skill category strengthens the application.')
 })
 
+const RemoveEntrySchema = z.object({
+  type: z.literal('remove'),
+  arrayPath: z
+    .enum(['work', 'education', 'projects', 'awards', 'skills'])
+    .describe('Top-level array from which to remove an existing entry.'),
+  index: z
+    .number()
+    .int()
+    .min(0)
+    .describe('0-based index of the entry to remove from the array.'),
+  reason: z.string().describe('One sentence explaining why removing this entry strengthens the application.')
+})
+
 const AgentEditResponseSchema = z.object({
   summary: z
     .string()
@@ -70,7 +83,7 @@ const AgentEditResponseSchema = z.object({
       'A single sentence summarising all changes made. Example: "Tailored 7 fields to highlight React expertise for a Senior Frontend Engineer role at Stripe."'
     ),
   edits: z
-    .array(z.discriminatedUnion('type', [FieldEditSchema, NewEntrySchema, AppendSkillSchema]))
+    .array(z.discriminatedUnion('type', [FieldEditSchema, NewEntrySchema, AppendSkillSchema, RemoveEntrySchema]))
     .describe('Ordered list of edit operations. Apply all of them.')
 })
 
@@ -94,6 +107,10 @@ Return a JSON object matching the schema exactly. Three operation types:
    \`{ "type": "appendSkill", "name": "...", "keywords": [...], "reason": "..." }\`
    Use this — NOT "append" — whenever you need to add a new skills section. To update an existing skill category's keywords, use "set" with "skills.N.keywords".
 
+4. **remove** — suggest removing an existing entry from a top-level array
+   \`{ "type": "remove", "arrayPath": "work"|"education"|"projects"|"awards"|"skills", "index": N, "reason": "..." }\`
+   Use sparingly — only when an entry clearly weakens the application or is completely irrelevant to the target role. Never remove an entry just because it isn't directly relevant.
+
 ## Addressable field paths (dot-notation, N = 0-based index)
 
 | Section | Paths |
@@ -115,6 +132,7 @@ Return a JSON object matching the schema exactly. Three operation types:
 - **keywords fields** — always output the complete new keywords array (not a diff). The key is always \`"newValue"\` — never use \`"keywords"\` as a key, even when the fieldPath contains the word "keywords". Example: \`{ "type": "set", "fieldPath": "projects.1.keywords", "newValue": ["React", "Node.js"], "reason": "..." }\`.
 - **highlights** — edit individual highlight lines at their exact index (work.N.highlights.M), or append new highlights.
 - **New entries** — use "append" for work/education/projects/awards; use "appendSkill" for a new skill category. Only add new entries when they genuinely strengthen the application.
+- **Removals** — use "remove" only when an entry actively hurts the application (e.g. a role in a completely unrelated field for a senior specialist position). When in doubt, keep the entry and improve it with "set" instead.
 
 ---
 
@@ -520,6 +538,7 @@ export async function POST(request: NextRequest) {
       prompt: userPrompt
     })
 
+    console.log('[agent/edit] generateObject response:', JSON.stringify(object, null, 2))
     return NextResponse.json(object)
   } catch (err) {
     console.error('[agent/edit] generateObject error:', err)

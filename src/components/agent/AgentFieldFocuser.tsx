@@ -140,7 +140,7 @@ export function AgentFieldFocuser() {
     const fieldPath = edit.type === 'set' ? edit.fieldPath : null
     const selector = fieldPath
       ? `[data-field-path="${fieldPath}"]`
-      : edit.type === 'append'
+      : edit.type === 'append' || edit.type === 'remove'
         ? `[data-array-path="${edit.arrayPath}"][data-array-index="${edit.entryIndex}"]`
         : null
     if (!selector || !formEl) return

@@ -22,6 +22,7 @@ import {
   agentFocusedEditIdAtom,
   type FieldEdit,
   type NewEntryEdit,
+  type RemoveEntryEdit,
   type PendingEdit,
 } from '../../../atoms/agentEdits'
 import { authClient } from '../../../db/auth-client'
@@ -245,6 +246,7 @@ export function AgentOverlay() {
             | { type: 'set'; fieldPath: string; newValue: string | string[]; reason: string }
             | { type: 'append'; arrayPath: string; entry: Record<string, unknown>; reason: string }
             | { type: 'appendSkill'; name: string; keywords: string[]; reason: string }
+            | { type: 'remove'; arrayPath: string; index: number; reason: string }
           >
         }
         if (isMock) {
@@ -293,6 +295,21 @@ export function AgentOverlay() {
               formSetValue(edit.fieldPath as any, edit.newValue, { shouldDirty: true, shouldValidate: true })
             }
             // Array values (keywords) are handled by Keywords.tsx via useEffect when pendingEdits updates
+          } else if (edit.type === 'remove') {
+            const arrayPath = edit.arrayPath as RemoveEntryEdit['arrayPath']
+            const currentArray = getLatestArray(arrayPath)
+            const entry = (currentArray[edit.index] ?? {}) as Record<string, unknown>
+            const removeEdit: RemoveEntryEdit = {
+              id: crypto.randomUUID(),
+              type: 'remove',
+              arrayPath,
+              entryIndex: edit.index,
+              entry,
+              reason: edit.reason,
+              status: 'pending',
+            }
+            pendingEdits.push(removeEdit)
+            // Do NOT modify the form — entry stays visible until user confirms removal
           } else if (edit.type === 'append' || edit.type === 'appendSkill') {
             const arrayPath: NewEntryEdit['arrayPath'] =
               edit.type === 'appendSkill' ? 'skills' : (edit.arrayPath as NewEntryEdit['arrayPath'])

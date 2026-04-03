@@ -2,8 +2,8 @@
 
 import { useAtom, useAtomValue } from 'jotai'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, ChevronLeft, ChevronRight, RotateCcw, Sparkles } from 'lucide-react'
-import { agentPendingEditsAtom, agentEditSummaryAtom, agentFocusedEditIdAtom, type NewEntryEdit } from '../../atoms/agentEdits'
+import { Check, ChevronLeft, ChevronRight, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
+import { agentPendingEditsAtom, agentEditSummaryAtom, agentFocusedEditIdAtom, type NewEntryEdit, type RemoveEntryEdit } from '../../atoms/agentEdits'
 import { formSetValueAtom, formDataAtom } from '../../atoms/formData'
 import { useAdvanceFocusedEdit } from '../../hooks/useAdvanceFocusedEdit'
 
@@ -15,14 +15,14 @@ const ARRAY_LABELS: Record<NewEntryEdit['arrayPath'], string> = {
   awards: 'Award'
 }
 
-function entryTitle(edit: NewEntryEdit): string {
+function entryTitle(edit: NewEntryEdit | RemoveEntryEdit): string {
   const e = edit.entry
-  if (edit.arrayPath === 'work') return `${e.position ?? 'New role'} at ${e.company ?? '?'}`
-  if (edit.arrayPath === 'education') return `${e.area ?? e.studyType ?? 'New degree'} at ${e.institution ?? '?'}`
-  if (edit.arrayPath === 'skills') return `${e.name ?? 'New skill'}`
-  if (edit.arrayPath === 'projects') return `${e.name ?? 'New project'}`
-  if (edit.arrayPath === 'awards') return `${e.title ?? 'New award'}`
-  return 'New entry'
+  if (edit.arrayPath === 'work') return `${e.position ?? 'Role'} at ${e.company ?? '?'}`
+  if (edit.arrayPath === 'education') return `${e.area ?? e.studyType ?? 'Degree'} at ${e.institution ?? '?'}`
+  if (edit.arrayPath === 'skills') return `${e.name ?? 'Skill'}`
+  if (edit.arrayPath === 'projects') return `${e.name ?? 'Project'}`
+  if (edit.arrayPath === 'awards') return `${e.title ?? 'Award'}`
+  return 'Entry'
 }
 
 export function AgentEditReviewBar() {
@@ -36,6 +36,7 @@ export function AgentEditReviewBar() {
   const pendingList = pendingEdits.filter((e) => e.status === 'pending')
   const pendingCount = pendingList.length
   const newEntryEdits = pendingList.filter((e): e is NewEntryEdit => e.type === 'append')
+  const removeEdits = pendingList.filter((e): e is RemoveEntryEdit => e.type === 'remove')
 
   const focusedIdx = pendingList.findIndex((e) => e.id === focusedId)
   const displayIdx = focusedIdx === -1 ? 0 : focusedIdx
@@ -46,7 +47,25 @@ export function AgentEditReviewBar() {
   }
 
   const approveAll = () => {
+    if (!formSetValue || !formData) return
     setFocusedId(null)
+
+    // Apply pending removals to the form before marking all as approved
+    const removeMap = new Map<string, Set<number>>()
+    for (const edit of pendingEdits) {
+      if (edit.type === 'remove' && edit.status === 'pending') {
+        if (!removeMap.has(edit.arrayPath)) removeMap.set(edit.arrayPath, new Set())
+        removeMap.get(edit.arrayPath)!.add(edit.entryIndex)
+      }
+    }
+    for (const [arrayPath, indices] of removeMap) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const current = ((formData as any)[arrayPath] ?? []) as unknown[]
+      const filtered = current.filter((_, i) => !indices.has(i))
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      formSetValue(arrayPath as any, filtered as any, { shouldDirty: true, shouldValidate: true })
+    }
+
     setPendingEdits((prev) => prev.map((e) => ({ ...e, status: 'approved' })))
   }
 
@@ -54,6 +73,7 @@ export function AgentEditReviewBar() {
     if (!formSetValue || !formData) return
     setFocusedId(null)
 
+    // Revert pending `set` edits
     for (const edit of pendingEdits) {
       if (edit.type === 'set' && edit.status === 'pending') {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -64,6 +84,7 @@ export function AgentEditReviewBar() {
       }
     }
 
+    // Remove entries added by pending `append` edits
     const indicesToRemove = new Map<string, Set<number>>()
     for (const edit of pendingEdits) {
       if (edit.type === 'append' && edit.status === 'pending') {
@@ -71,7 +92,6 @@ export function AgentEditReviewBar() {
         indicesToRemove.get(edit.arrayPath)!.add(edit.entryIndex)
       }
     }
-
     for (const [arrayPath, indices] of indicesToRemove) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const current = ((formData as any)[arrayPath] ?? []) as unknown[]
@@ -79,6 +99,8 @@ export function AgentEditReviewBar() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       formSetValue(arrayPath as any, filtered as any, { shouldDirty: true, shouldValidate: true })
     }
+
+    // `remove` edits: rejecting means keeping the entry — no form change needed
 
     setPendingEdits((prev) => prev.map((e) => ({ ...e, status: 'rejected' })))
   }
@@ -98,6 +120,26 @@ export function AgentEditReviewBar() {
     const trimmed = current.filter((_, i) => i !== edit.entryIndex)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     formSetValue(edit.arrayPath as any, trimmed as any, { shouldDirty: true, shouldValidate: true })
+    setPendingEdits((prev) =>
+      prev.map((e) => (e.id === edit.id ? { ...e, status: 'rejected' } : e))
+    )
+  }
+
+  const confirmRemoval = (edit: RemoveEntryEdit) => {
+    if (!formSetValue || !formData) return
+    advanceFocusedEdit(edit.id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const current = ((formData as any)[edit.arrayPath] ?? []) as unknown[]
+    const trimmed = current.filter((_, i) => i !== edit.entryIndex)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    formSetValue(edit.arrayPath as any, trimmed as any, { shouldDirty: true, shouldValidate: true })
+    setPendingEdits((prev) =>
+      prev.map((e) => (e.id === edit.id ? { ...e, status: 'approved' } : e))
+    )
+  }
+
+  const keepEntry = (edit: RemoveEntryEdit) => {
+    advanceFocusedEdit(edit.id)
     setPendingEdits((prev) =>
       prev.map((e) => (e.id === edit.id ? { ...e, status: 'rejected' } : e))
     )
@@ -197,6 +239,44 @@ export function AgentEditReviewBar() {
                         className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
                         >
                         <RotateCcw className="h-3 w-3" />
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Removal suggestion cards */}
+            {removeEdits.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {removeEdits.map((edit) => (
+                  <div
+                    key={edit.id}
+                    className="flex items-center gap-2 rounded-lg border border-rose-400/25 bg-rose-400/5 px-3 py-1.5"
+                  >
+                    <span className="text-xs text-rose-300/70 uppercase tracking-wide font-medium">
+                      Remove {ARRAY_LABELS[edit.arrayPath]}
+                    </span>
+                    <span className="text-xs text-slate-300">{entryTitle(edit)}</span>
+                    <span className="text-xs text-slate-500 italic hidden sm:inline">— {edit.reason}</span>
+                    <div className="flex gap-1 ml-1">
+                      <button
+                        type="button"
+                        onClick={() => keepEntry(edit)}
+                        title="Keep this entry"
+                        className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-slate-300 ring-1 ring-slate-500/40 hover:bg-slate-700/50 transition-colors"
+                      >
+                        <Check className="h-3 w-3" />
+                        Keep
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => confirmRemoval(edit)}
+                        title="Confirm removal of this entry"
+                        className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" />
                         Remove
                       </button>
                     </div>

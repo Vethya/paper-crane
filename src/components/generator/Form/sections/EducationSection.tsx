@@ -6,7 +6,7 @@ import { FormSection } from './FormSection'
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton, RemoveButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
-import { agentPendingEditsAtom, type NewEntryEdit } from '../../../../atoms/agentEdits'
+import { agentPendingEditsAtom, type NewEntryEdit, type RemoveEntryEdit } from '../../../../atoms/agentEdits'
 import { AgentEntryEditControls } from '../../../agent/AgentEntryEditControls'
 
 import { Education } from '../../../../types'
@@ -43,14 +43,19 @@ export function EducationSection() {
       )}
       {fields.map((field, index) => {
         const entryEdit = pendingEdits.find(
-          (e): e is NewEntryEdit => e.type === 'append' && e.arrayPath === 'education' && e.entryIndex === index && e.status === 'pending'
+          (e): e is NewEntryEdit | RemoveEntryEdit =>
+            (e.type === 'append' || e.type === 'remove') && e.arrayPath === 'education' && e.entryIndex === index && e.status === 'pending'
         )
         return (
           <div key={field.id}>
             <div
               data-array-path="education"
               data-array-index={index}
-              className={entryEdit ? 'rounded-lg ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]' : undefined}
+              className={entryEdit
+                ? entryEdit.type === 'remove'
+                  ? 'rounded-lg ring-2 ring-rose-400/70 shadow-[0_0_0_3px_rgba(251,113,133,0.12)]'
+                  : 'rounded-lg ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
+                : undefined}
             >
               <LabeledInput
                 name={`education.${index}.institution`}

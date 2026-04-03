@@ -3,7 +3,7 @@
 
 export const MOCK_EDIT_RESPONSE = {
   summary:
-    'Tailored 4 fields to highlight full-stack expertise for a Senior Software Engineer role at Stripe.',
+    'Tailored 4 fields, added a payments project, and flagged an unrelated entry for removal for a Senior Software Engineer role at Stripe.',
   edits: [
     {
       type: 'set' as const,
@@ -35,6 +35,12 @@ export const MOCK_EDIT_RESPONSE = {
         url: 'github.com/yourhandle/payment-dashboard',
       },
       reason: 'A payments-domain project directly demonstrates the infrastructure experience Stripe values.',
+    },
+    {
+      type: 'remove' as const,
+      arrayPath: 'projects' as const,
+      index: 0,
+      reason: 'This unrelated project dilutes the payments focus; removing it keeps the narrative tight for Stripe.',
     },
   ],
 }
