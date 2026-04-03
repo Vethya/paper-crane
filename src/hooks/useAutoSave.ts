@@ -1,14 +1,17 @@
 "use client"
 
 import { useEffect, useRef } from 'react'
-import { useAtom } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import { FormValues } from '@/types'
 import { saveStateAtom } from '@/atoms/saveState'
+import { agentPendingEditsAtom } from '@/atoms/agentEdits'
 
 export type { SaveState } from '@/atoms/saveState'
 
 export function useAutoSave(resumeId: string | null, formData: FormValues | null) {
-  const [saveState, setSaveState] = useAtom(saveStateAtom)
+  const saveState = useAtomValue(saveStateAtom)
+  const setSaveState = useSetAtom(saveStateAtom)
+  const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const latestFormData = useRef(formData)
   const lastKnownData = useRef<string | null>(null)
 
@@ -23,6 +26,10 @@ export function useAutoSave(resumeId: string | null, formData: FormValues | null
 
   useEffect(() => {
     if (!resumeId || !formData) return
+
+    // Pause auto-save while agent edits are pending review.
+    // Any form changes (agent-applied or manual) will save together once resolved.
+    if (pendingEdits.some((e) => e.status === 'pending')) return
 
     const serialized = JSON.stringify(formData)
 
@@ -54,7 +61,7 @@ export function useAutoSave(resumeId: string | null, formData: FormValues | null
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [resumeId, formData, setSaveState])
+  }, [resumeId, formData, pendingEdits, setSaveState])
 
   return saveState
 }
