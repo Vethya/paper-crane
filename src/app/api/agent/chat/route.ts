@@ -3,15 +3,10 @@ import { streamText, type ModelMessage } from 'ai'
 import { NextResponse, type NextRequest } from 'next/server'
 import type { AgentMessage, AgentMode } from '../../../../atoms/agentAtom'
 import { auth } from '../../../../lib/auth'
+import { SYSTEM_PROMPTS } from '../../../../constants/prompts.constants'
 
 // Ensure the env var is validated at startup via src/env.ts
 import '../../../../env'
-
-const SYSTEM_PROMPTS: Record<Exclude<AgentMode, 'Tailoring'>, string> = {
-  Chat: `You are a resume assistant. Help the user with questions about their resume, offer phrasing suggestions, career advice, and content improvements. Communicate only through messages — do not directly edit the resume. Be concise and helpful.`,
-
-  Feedback: `You are a resume reviewer. Analyze the user's resume and deliver structured, actionable feedback. Focus on clarity, impact, completeness, ATS compatibility, and professional presentation. Organize your feedback clearly. You do not edit the resume — only provide feedback through conversation.`,
-}
 
 export async function POST(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers })
