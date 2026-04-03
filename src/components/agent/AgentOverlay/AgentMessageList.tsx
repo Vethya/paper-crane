@@ -12,9 +12,16 @@ interface AgentMessageListProps {
 
 export function AgentMessageList({ messages, isStreaming }: AgentMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
+  const initialScrollDoneRef = useRef(false)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    if (messages.length === 0) {
+      initialScrollDoneRef.current = false
+      return
+    }
+    const behavior = initialScrollDoneRef.current ? 'smooth' : 'instant'
+    initialScrollDoneRef.current = true
+    bottomRef.current?.scrollIntoView({ behavior })
   }, [messages])
 
   if (messages.length === 0) {
