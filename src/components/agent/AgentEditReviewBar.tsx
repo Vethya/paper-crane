@@ -155,7 +155,7 @@ export function AgentEditReviewBar() {
           transition={{ type: 'spring', stiffness: 400, damping: 32 }}
           className="fixed bottom-0 left-0 right-0 z-40 border-t border-amber-400/20 bg-slate-950/95 backdrop-blur-sm shadow-[0_-4px_32px_rgba(0,0,0,0.5)]"
         >
-          <div className="mx-auto max-w-4xl px-4 py-3">
+          <div className="mx-auto max-w-4xl px-4 py-3 mb-12">
             {/* Summary row */}
             <div className="flex items-center gap-3">
               <Sparkles className="h-4 w-4 shrink-0 text-amber-400" />
@@ -208,82 +208,6 @@ export function AgentEditReviewBar() {
                 </button>
               </div>
             </div>
-
-            {/* New entry cards */}
-            {newEntryEdits.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {newEntryEdits.map((edit) => (
-                  <div
-                    key={edit.id}
-                    className="flex items-center gap-2 rounded-lg border border-amber-400/25 bg-amber-400/5 px-3 py-1.5"
-                  >
-                    <span className="text-xs text-amber-300/70 uppercase tracking-wide font-medium">
-                      New {ARRAY_LABELS[edit.arrayPath]}
-                    </span>
-                    <span className="text-xs text-slate-300">{entryTitle(edit)}</span>
-                    <span className="text-xs text-slate-500 italic hidden sm:inline">— {edit.reason}</span>
-                    <div className="flex gap-1 ml-1">
-                      <button
-                        type="button"
-                        onClick={() => approveEntry(edit)}
-                        title="Keep this entry"
-                        className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
-                      >
-                        <Check className="h-3 w-3" />
-                        Keep
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => rejectEntry(edit)}
-                        title="Remove this entry"
-                        className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
-                        >
-                        <RotateCcw className="h-3 w-3" />
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Removal suggestion cards */}
-            {removeEdits.length > 0 && (
-              <div className="mt-2 flex flex-wrap gap-2">
-                {removeEdits.map((edit) => (
-                  <div
-                    key={edit.id}
-                    className="flex items-center gap-2 rounded-lg border border-rose-400/25 bg-rose-400/5 px-3 py-1.5"
-                  >
-                    <span className="text-xs text-rose-300/70 uppercase tracking-wide font-medium">
-                      Remove {ARRAY_LABELS[edit.arrayPath]}
-                    </span>
-                    <span className="text-xs text-slate-300">{entryTitle(edit)}</span>
-                    <span className="text-xs text-slate-500 italic hidden sm:inline">— {edit.reason}</span>
-                    <div className="flex gap-1 ml-1">
-                      <button
-                        type="button"
-                        onClick={() => keepEntry(edit)}
-                        title="Keep this entry"
-                        className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-slate-300 ring-1 ring-slate-500/40 hover:bg-slate-700/50 transition-colors"
-                      >
-                        <Check className="h-3 w-3" />
-                        Keep
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => confirmRemoval(edit)}
-                        title="Confirm removal of this entry"
-                        className="flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Remove
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </motion.div>
       )}
