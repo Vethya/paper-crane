@@ -12,10 +12,16 @@ interface FormInputProps {
 
 export function FormInput({ onSubmit, style, className }: FormInputProps) {
   const [value, setValue] = useState('')
+  const normalizedValue = value.trim()
+  const isDisabled = normalizedValue.length === 0
 
   const handleSubmit = (event: SyntheticEvent) => {
     event.preventDefault()
-    onSubmit(value)
+    if (isDisabled) {
+      return
+    }
+
+    onSubmit(normalizedValue)
     setValue('')
   }
 
@@ -33,6 +39,7 @@ export function FormInput({ onSubmit, style, className }: FormInputProps) {
       <MiniButton
         type="button"
         onClick={handleSubmit}
+        disabled={isDisabled}
         className="col-start-2"
       >
         Add
