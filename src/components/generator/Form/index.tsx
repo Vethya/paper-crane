@@ -51,12 +51,13 @@ function applyPendingEdits(formValues: FormValues, edits: PendingEdit[]) {
     if (edit.type === 'set') {
       setNestedValue(vals, edit.fieldPath, edit.newValue)
     } else if (edit.type === 'append') {
-      const arr = (vals[edit.arrayPath] ?? []) as unknown[]
-      if (edit.entryIndex >= arr.length) {
+      const arr = (vals[edit.arrayPath] ?? []) as Record<string, unknown>[]
+      const existing = arr.find((e) => e._agentEditId === edit.id)
+      if (existing) {
+        Object.assign(existing, edit.entry)
+      } else {
         arr.push(edit.entry)
         vals[edit.arrayPath] = arr
-      } else {
-        Object.assign(arr[edit.entryIndex] as Record<string, unknown>, edit.entry)
       }
     }
   }
@@ -72,6 +73,19 @@ function applyPendingEdits(formValues: FormValues, edits: PendingEdit[]) {
   for (const [arrayPath, indices] of removeMap) {
     const current = (vals[arrayPath] ?? []) as unknown[]
     vals[arrayPath] = current.filter((_, i) => !indices.has(i))
+  }
+}
+
+const ARRAY_PATHS = ['work', 'education', 'skills', 'projects', 'awards'] as const
+
+function stripAgentMarkers(formValues: FormValues) {
+  const vals = formValues as Record<string, unknown>
+  for (const key of ARRAY_PATHS) {
+    const arr = vals[key]
+    if (!Array.isArray(arr)) continue
+    for (const entry of arr) {
+      if (entry && typeof entry === 'object') delete (entry as Record<string, unknown>)._agentEditId
+    }
   }
 }
 
@@ -153,6 +167,7 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
   const handleFormSubmit = useCallback(async () => {
     const formValues = structuredClone(formContext.getValues())
     applyPendingEdits(formValues, pendingEdits)
+    stripAgentMarkers(formValues)
 
     setResume({ ...resume, isLoading: true })
     try {

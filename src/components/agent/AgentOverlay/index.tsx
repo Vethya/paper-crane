@@ -350,13 +350,17 @@ export function AgentOverlay() {
               edit.type === 'appendSkill'
                 ? { name: edit.name, keywords: edit.keywords }
                 : edit.entry
+            const editId = crypto.randomUUID()
+            // Stamp entry so we can find it by identity, not index
+            entry._agentEditId = editId
+
             const currentLatest = getLatestArray(arrayPath)
             const entryIndex = currentLatest.length
             const newArray = [...currentLatest, entry]
             latestArrays[arrayPath] = newArray
 
             const newEntryEdit: NewEntryEdit = {
-              id: crypto.randomUUID(),
+              id: editId,
               type: 'append',
               arrayPath,
               entryIndex,

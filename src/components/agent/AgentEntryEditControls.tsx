@@ -16,12 +16,14 @@ export function AgentEntryEditControls({ edit }: Props) {
   const formData = useAtomValue(formDataAtom)
   const advanceFocusedEdit = useAdvanceFocusedEdit()
 
-  // Shared helper: remove the entry at edit.entryIndex from the form array
+  // Shared helper: remove the entry matching this edit from the form array
   const removeFromForm = () => {
     if (!formSetValue || !formData) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const current = ((formData as any)[edit.arrayPath] ?? []) as unknown[]
-    const trimmed = current.filter((_, i) => i !== edit.entryIndex)
+    const current = ((formData as any)[edit.arrayPath] ?? []) as Record<string, unknown>[]
+    const trimmed = edit.type === 'append'
+      ? current.filter((e) => e._agentEditId !== edit.id)
+      : current.filter((_, i) => i !== edit.entryIndex)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     formSetValue(edit.arrayPath as any, trimmed as any, { shouldDirty: true, shouldValidate: true })
   }
@@ -41,8 +43,10 @@ export function AgentEntryEditControls({ edit }: Props) {
     setPendingEdits((prev) =>
       prev.map((e) => {
         if (e.id === edit.id) return { ...e, status: 'rejected' as const }
+        // Adjust indices for remaining remove edits in the same array,
+        // since the form array just shrank by one
         if (
-          (e.type === 'append' || e.type === 'remove') &&
+          e.type === 'remove' &&
           e.arrayPath === edit.arrayPath &&
           e.status === 'pending' &&
           e.entryIndex > edit.entryIndex
@@ -62,8 +66,10 @@ export function AgentEntryEditControls({ edit }: Props) {
     setPendingEdits((prev) =>
       prev.map((e) => {
         if (e.id === edit.id) return { ...e, status: 'approved' as const }
+        // Adjust indices for remaining remove edits in the same array,
+        // since the form array just shrank by one
         if (
-          (e.type === 'append' || e.type === 'remove') &&
+          e.type === 'remove' &&
           e.arrayPath === edit.arrayPath &&
           e.status === 'pending' &&
           e.entryIndex > edit.entryIndex

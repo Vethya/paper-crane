@@ -60,18 +60,18 @@ export function AgentEditReviewBar() {
       }
     }
 
-    // Remove entries added by pending `append` edits
-    const indicesToRemove = new Map<string, Set<number>>()
+    // Remove entries added by pending `append` edits (match by _agentEditId, not index)
+    const idsToRemove = new Map<string, Set<string>>()
     for (const edit of pendingEdits) {
       if (edit.type === 'append' && edit.status === 'pending') {
-        if (!indicesToRemove.has(edit.arrayPath)) indicesToRemove.set(edit.arrayPath, new Set())
-        indicesToRemove.get(edit.arrayPath)!.add(edit.entryIndex)
+        if (!idsToRemove.has(edit.arrayPath)) idsToRemove.set(edit.arrayPath, new Set())
+        idsToRemove.get(edit.arrayPath)!.add(edit.id)
       }
     }
-    for (const [arrayPath, indices] of indicesToRemove) {
+    for (const [arrayPath, editIds] of idsToRemove) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const current = ((formData as any)[arrayPath] ?? []) as unknown[]
-      const filtered = current.filter((_, i) => !indices.has(i))
+      const current = ((formData as any)[arrayPath] ?? []) as Record<string, unknown>[]
+      const filtered = current.filter((e) => !editIds.has(e._agentEditId as string))
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       formSetValue(arrayPath as any, filtered as any, { shouldDirty: true, shouldValidate: true })
     }
