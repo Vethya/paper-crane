@@ -1,5 +1,5 @@
 import { google } from '@ai-sdk/google'
-import { generateObject } from 'ai'
+import { generateText, Output, NoObjectGeneratedError } from 'ai'
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { auth } from '../../../../lib/auth'
@@ -99,26 +99,43 @@ export async function POST(request: NextRequest) {
     resumeData: Record<string, unknown>
   }
 
-  // Build the user prompt: resume context + conversation
-  const userPrompt = [
-    `Here is the user's current resume in JSON format:\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`,
-    '',
-    'Conversation:',
-    ...messages.map((m) => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`)
-  ].join('\n')
+  const model = google('gemini-3.1-flash-lite-preview')
+  const system = `${TAILORING_SYSTEM_PROMPT}\n\n## User's current resume\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`
 
   try {
-    const { object } = await generateObject({
-      model: google('gemini-3.1-flash-lite-preview'),
-      schema: AgentEditResponseSchema,
-      system: TAILORING_SYSTEM_PROMPT,
-      prompt: userPrompt
+    const { output } = await generateText({
+      model,
+      output: Output.object({ schema: AgentEditResponseSchema }),
+      system,
+      messages: messages.map(({ role, content }) => ({ role, content })),
     })
 
-    console.log('[agent/edit] generateObject response:', JSON.stringify(object, null, 2))
-    return NextResponse.json(object)
+    console.log('[agent/edit] generateText response:', JSON.stringify(output, null, 2))
+    return NextResponse.json(output)
   } catch (err) {
-    console.error('[agent/edit] generateObject error:', err)
+    if (NoObjectGeneratedError.isInstance(err)) {
+      console.warn('[agent/edit] Schema validation failed, attempting repair...')
+      try {
+        const { output: repaired } = await generateText({
+          model,
+          output: Output.object({ schema: AgentEditResponseSchema }),
+          prompt: [
+            'The following JSON was generated but failed schema validation:',
+            err.text,
+            'Validation errors:',
+            JSON.stringify(err.cause, null, 2),
+            'Fix the JSON so it matches the schema exactly. The most common mistake is using a field name other than "newValue" on "set" edits (e.g. writing "keywords" instead of "newValue"). Return only the corrected JSON.',
+          ].join('\n\n'),
+        })
+
+        console.log('[agent/edit] Repair successful:', JSON.stringify(repaired, null, 2))
+        return NextResponse.json(repaired)
+      } catch (repairErr) {
+        console.error('[agent/edit] Repair failed:', repairErr)
+      }
+    }
+
+    console.error('[agent/edit] generateText error:', err)
     return NextResponse.json({ error: 'Failed to generate edits' }, { status: 500 })
   }
 }

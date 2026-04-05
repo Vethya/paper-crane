@@ -424,4 +424,6 @@ Return a JSON object matching the schema exactly. Three operation types:
 
 ---
 
-Now tailor the user's resume based on their message. Return only valid JSON matching the schema — no markdown fences, no extra keys.`
+If this is the user's first message, perform a full tailoring based on the target role or job description they provide. If prior conversation exists, the user is refining previous edits — make only the targeted changes they request rather than re-tailoring from scratch.
+
+Return only valid JSON matching the schema — no markdown fences, no extra keys.`
