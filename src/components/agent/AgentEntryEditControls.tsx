@@ -39,7 +39,18 @@ export function AgentEntryEditControls({ edit }: Props) {
     advanceFocusedEdit(edit.id)
     removeFromForm()
     setPendingEdits((prev) =>
-      prev.map((e) => (e.id === edit.id ? { ...e, status: 'rejected' } : e))
+      prev.map((e) => {
+        if (e.id === edit.id) return { ...e, status: 'rejected' as const }
+        if (
+          (e.type === 'append' || e.type === 'remove') &&
+          e.arrayPath === edit.arrayPath &&
+          e.status === 'pending' &&
+          e.entryIndex > edit.entryIndex
+        ) {
+          return { ...e, entryIndex: e.entryIndex - 1 }
+        }
+        return e
+      })
     )
   }
 
@@ -49,7 +60,18 @@ export function AgentEntryEditControls({ edit }: Props) {
     advanceFocusedEdit(edit.id)
     removeFromForm()
     setPendingEdits((prev) =>
-      prev.map((e) => (e.id === edit.id ? { ...e, status: 'approved' } : e))
+      prev.map((e) => {
+        if (e.id === edit.id) return { ...e, status: 'approved' as const }
+        if (
+          (e.type === 'append' || e.type === 'remove') &&
+          e.arrayPath === edit.arrayPath &&
+          e.status === 'pending' &&
+          e.entryIndex > edit.entryIndex
+        ) {
+          return { ...e, entryIndex: e.entryIndex - 1 }
+        }
+        return e
+      })
     )
   }
 
