@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import { RotateCw } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { AgentMessage } from '../../../atoms/agentAtom'
@@ -8,9 +9,10 @@ import type { AgentMessage } from '../../../atoms/agentAtom'
 interface AgentMessageListProps {
   messages: AgentMessage[]
   isStreaming: boolean
+  onRetry?: () => void
 }
 
-export function AgentMessageList({ messages, isStreaming }: AgentMessageListProps) {
+export function AgentMessageList({ messages, isStreaming, onRetry }: AgentMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const initialScrollDoneRef = useRef(false)
 
@@ -73,6 +75,15 @@ export function AgentMessageList({ messages, isStreaming }: AgentMessageListProp
                       <span className="animate-bounce [animation-delay:150ms]">·</span>
                       <span className="animate-bounce [animation-delay:300ms]">·</span>
                     </span>
+                  )}
+                  {msg.error && onRetry && (
+                    <button
+                      onClick={onRetry}
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-slate-700/60 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+                    >
+                      <RotateCw className="h-3 w-3" />
+                      Retry
+                    </button>
                   )}
                 </>
               ) : (

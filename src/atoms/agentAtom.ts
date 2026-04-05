@@ -13,6 +13,7 @@ export type AgentMessage = {
   id: string
   role: 'user' | 'assistant'
   content: string
+  error?: boolean
 }
 
 export const agentMessagesAtom = atom<AgentMessage[]>([])

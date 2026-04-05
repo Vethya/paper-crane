@@ -180,7 +180,7 @@ export function AgentOverlay() {
   // ---------------------------------------------------------------------------
 
   const handleChatSend = useCallback(
-    async (text: string) => {
+    async (text: string, baseMessages?: AgentMessage[]) => {
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -192,7 +192,7 @@ export function AgentOverlay() {
         content: '',
       }
 
-      const nextMessages = [...messages, userMessage]
+      const nextMessages = [...(baseMessages ?? messages), userMessage]
       setMessages([...nextMessages, assistantMessage])
       setIsStreaming(true)
 
@@ -226,12 +226,12 @@ export function AgentOverlay() {
         finalContent = 'Something went wrong. Please try again.'
         setMessages((prev) => {
           const updated = [...prev]
-          updated[updated.length - 1] = { ...assistantMessage, content: finalContent }
+          updated[updated.length - 1] = { ...assistantMessage, content: finalContent, error: true }
           return updated
         })
       } finally {
         setIsStreaming(false)
-        if (resumeId) {
+        if (resumeId && finalContent) {
           const finalMessages = [...nextMessages, { ...assistantMessage, content: finalContent }]
           try {
             const savedId = await saveSession({ resumeId, sessionId, mode, messages: finalMessages })
@@ -250,7 +250,7 @@ export function AgentOverlay() {
   // ---------------------------------------------------------------------------
 
   const handleEditSend = useCallback(
-    async (text: string) => {
+    async (text: string, baseMessages?: AgentMessage[]) => {
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -262,7 +262,7 @@ export function AgentOverlay() {
         content: 'Tailoring your resume…',
       }
 
-      const nextMessages = [...messages, userMessage]
+      const nextMessages = [...(baseMessages ?? messages), userMessage]
       setMessages([...nextMessages, thinkingMessage])
       setIsStreaming(true)
 
@@ -408,6 +408,7 @@ export function AgentOverlay() {
         const errorMessage: AgentMessage = {
           ...thinkingMessage,
           content: 'Something went wrong while tailoring your resume. Please try again.',
+          error: true,
         }
         setMessages([...nextMessages, errorMessage])
       } finally {
@@ -434,6 +435,19 @@ export function AgentOverlay() {
   // ---------------------------------------------------------------------------
   // Dispatch
   // ---------------------------------------------------------------------------
+
+  const handleRetry = useCallback(() => {
+    const lastUserIdx = messages.findLastIndex((m) => m.role === 'user')
+    if (lastUserIdx === -1) return
+    const lastUserText = messages[lastUserIdx].content
+    // Remove the failed assistant message and the last user message, then resend
+    const restored = messages.slice(0, lastUserIdx)
+    if (mode === 'Tailoring') {
+      handleEditSend(lastUserText, restored)
+    } else {
+      handleChatSend(lastUserText, restored)
+    }
+  }, [messages, mode, handleEditSend, handleChatSend])
 
   const handleSend = useCallback(
     async (text: string) => {
@@ -483,7 +497,7 @@ export function AgentOverlay() {
                 ))}
               </div>
             ) : (
-              <AgentMessageList messages={messages} isStreaming={isStreaming} />
+              <AgentMessageList messages={messages} isStreaming={isStreaming} onRetry={handleRetry} />
             )}
 
             <div className="mx-4 border-t border-slate-700/50" />
