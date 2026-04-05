@@ -2,42 +2,18 @@
 
 import { useAtom, useAtomValue } from 'jotai'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, ChevronLeft, ChevronRight, RotateCcw, Sparkles, Trash2 } from 'lucide-react'
-import { agentPendingEditsAtom, agentEditSummaryAtom, agentFocusedEditIdAtom, type NewEntryEdit, type RemoveEntryEdit } from '../../atoms/agentEdits'
+import { Check, ChevronLeft, ChevronRight, RotateCcw, Sparkles } from 'lucide-react'
+import { agentPendingEditsAtom, agentEditSummaryAtom, agentFocusedEditIdAtom } from '../../atoms/agentEdits'
 import { formSetValueAtom, formDataAtom } from '../../atoms/formData'
-import { useAdvanceFocusedEdit } from '../../hooks/useAdvanceFocusedEdit'
-
-const ARRAY_LABELS: Record<NewEntryEdit['arrayPath'], string> = {
-  work: 'Work Experience',
-  education: 'Education',
-  skills: 'Skills',
-  projects: 'Project',
-  awards: 'Award'
-}
-
-function entryTitle(edit: NewEntryEdit | RemoveEntryEdit): string {
-  const e = edit.entry
-  if (edit.arrayPath === 'work') return `${e.position ?? 'Role'} at ${e.company ?? '?'}`
-  if (edit.arrayPath === 'education') return `${e.area ?? e.studyType ?? 'Degree'} at ${e.institution ?? '?'}`
-  if (edit.arrayPath === 'skills') return `${e.name ?? 'Skill'}`
-  if (edit.arrayPath === 'projects') return `${e.name ?? 'Project'}`
-  if (edit.arrayPath === 'awards') return `${e.title ?? 'Award'}`
-  return 'Entry'
-}
-
 export function AgentEditReviewBar() {
   const [pendingEdits, setPendingEdits] = useAtom(agentPendingEditsAtom)
   const summary = useAtomValue(agentEditSummaryAtom)
   const [focusedId, setFocusedId] = useAtom(agentFocusedEditIdAtom)
   const formSetValue = useAtomValue(formSetValueAtom)
   const formData = useAtomValue(formDataAtom)
-  const advanceFocusedEdit = useAdvanceFocusedEdit()
 
   const pendingList = pendingEdits.filter((e) => e.status === 'pending')
   const pendingCount = pendingList.length
-  const newEntryEdits = pendingList.filter((e): e is NewEntryEdit => e.type === 'append')
-  const removeEdits = pendingList.filter((e): e is RemoveEntryEdit => e.type === 'remove')
-
   const focusedIdx = pendingList.findIndex((e) => e.id === focusedId)
   const displayIdx = focusedIdx === -1 ? 0 : focusedIdx
 
@@ -103,46 +79,6 @@ export function AgentEditReviewBar() {
     // `remove` edits: rejecting means keeping the entry — no form change needed
 
     setPendingEdits((prev) => prev.map((e) => ({ ...e, status: 'rejected' })))
-  }
-
-  const approveEntry = (edit: NewEntryEdit) => {
-    advanceFocusedEdit(edit.id)
-    setPendingEdits((prev) =>
-      prev.map((e) => (e.id === edit.id ? { ...e, status: 'approved' } : e))
-    )
-  }
-
-  const rejectEntry = (edit: NewEntryEdit) => {
-    if (!formSetValue || !formData) return
-    advanceFocusedEdit(edit.id)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const current = ((formData as any)[edit.arrayPath] ?? []) as unknown[]
-    const trimmed = current.filter((_, i) => i !== edit.entryIndex)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formSetValue(edit.arrayPath as any, trimmed as any, { shouldDirty: true, shouldValidate: true })
-    setPendingEdits((prev) =>
-      prev.map((e) => (e.id === edit.id ? { ...e, status: 'rejected' } : e))
-    )
-  }
-
-  const confirmRemoval = (edit: RemoveEntryEdit) => {
-    if (!formSetValue || !formData) return
-    advanceFocusedEdit(edit.id)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const current = ((formData as any)[edit.arrayPath] ?? []) as unknown[]
-    const trimmed = current.filter((_, i) => i !== edit.entryIndex)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formSetValue(edit.arrayPath as any, trimmed as any, { shouldDirty: true, shouldValidate: true })
-    setPendingEdits((prev) =>
-      prev.map((e) => (e.id === edit.id ? { ...e, status: 'approved' } : e))
-    )
-  }
-
-  const keepEntry = (edit: RemoveEntryEdit) => {
-    advanceFocusedEdit(edit.id)
-    setPendingEdits((prev) =>
-      prev.map((e) => (e.id === edit.id ? { ...e, status: 'rejected' } : e))
-    )
   }
 
   return (
