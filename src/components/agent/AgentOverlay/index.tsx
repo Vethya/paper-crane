@@ -396,6 +396,11 @@ export function AgentOverlay() {
               messages: [...nextMessages, doneMessage],
             })
             setSessionId(savedId)
+            // Sync chatId to URL immediately — handleClose() will clear sessionId,
+            // so the useEffect-based sync would never fire for Tailoring mode.
+            const params = new URLSearchParams(searchParams.toString())
+            params.set('chatId', savedId)
+            router.replace(`${pathname}?${params.toString()}`, { scroll: false })
           } catch (err) {
             console.error('[AgentOverlay] Session save error:', err)
           }
@@ -429,6 +434,9 @@ export function AgentOverlay() {
       setEditSummary,
       setFocusedEditId,
       handleClose,
+      searchParams,
+      pathname,
+      router,
     ],
   )
 
