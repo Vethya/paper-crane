@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectDB } from '@/db'
 import { AgentSession } from '@/db/models/agentSession'
+import { Resume } from '@/db/models/resume'
 import type { AgentMode, AgentMessage } from '@/atoms/agentAtom'
 
 export async function GET(request: NextRequest) {
@@ -16,6 +17,11 @@ export async function GET(request: NextRequest) {
   }
 
   await connectDB()
+
+  const resume = await Resume.findOne({ _id: resumeId, userId: session.user.id }).lean()
+  if (!resume) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
 
   const sessions = await AgentSession.find(
     { resumeId, userId: session.user.id },
@@ -50,6 +56,11 @@ export async function POST(request: NextRequest) {
   }
 
   await connectDB()
+
+  const resume = await Resume.findOne({ _id: resumeId, userId: session.user.id }).lean()
+  if (!resume) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
 
   const visibleMessages = messages.map(({ id, role, content }) => ({ id, role, content }))
 
