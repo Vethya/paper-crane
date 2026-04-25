@@ -23,7 +23,6 @@ export function TemplatesSection() {
                 <input
                   type="radio"
                   className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
-                  onMouseDown={(event) => event.preventDefault()}
                   onChange={() => field.onChange(templateId)}
                   value={templateId}
                   checked={field.value === templateId}
