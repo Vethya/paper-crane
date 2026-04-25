@@ -109,7 +109,7 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
   return (
     <FormProvider {...formContext}>
       <form
-        className={twMerge(clsx("overflow-auto xl:h-full", className))}
+        className={twMerge(clsx('overflow-auto xl:h-full', className))}
         id="resume-form"
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
