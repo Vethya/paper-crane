@@ -25,6 +25,7 @@ export default function GeneratorPage() {
 
 function GeneratorContent() {
   const [activeSection, setActiveSection] = useState('basics')
+  const isTemplatesSection = activeSection === 'templates'
   const previewRef = useRef<HTMLDivElement>(null)
   const searchParams = useSearchParams()
   const resumeId = searchParams.get('id')
@@ -71,7 +72,13 @@ function GeneratorContent() {
         </div>
 
         {/* Desktop layout (xl+) */}
-        <div className="hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[15%_minmax(0,1fr)_51%] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8">
+        <div
+          className={
+            isTemplatesSection
+              ? 'hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[15%_minmax(0,1fr)] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8'
+              : 'hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[15%_minmax(0,1fr)_51%] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8'
+          }
+        >
           <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur">
             <Sidebar activeSection={activeSection} onSectionChange={setActiveSection} />
           </div>
@@ -80,14 +87,16 @@ function GeneratorContent() {
             <Form activeSection={activeSection} />
           </div>
 
-          <div className="flex flex-col rounded-3xl border border-blue-600/15 bg-slate-950/60 backdrop-blur">
-            <div className="border-b border-blue-600/10 px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-blue-400/80">
-              Live preview
+          {!isTemplatesSection && (
+            <div className="flex flex-col rounded-3xl border border-blue-600/15 bg-slate-950/60 backdrop-blur">
+              <div className="border-b border-blue-600/10 px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-blue-400/80">
+                Live preview
+              </div>
+              <div className="flex flex-1 overflow-hidden">
+                <Preview />
+              </div>
             </div>
-            <div className="flex flex-1 overflow-hidden">
-              <Preview />
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
