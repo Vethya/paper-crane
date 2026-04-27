@@ -43,7 +43,7 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
   const currSection = activeSection
   const resumeId = searchParams.get('id')
 
-  const [resume, setResume] = useAtom(resumeAtom)
+  const [, setResume] = useAtom(resumeAtom)
   const [, setFormData] = useAtom(formDataAtom)
   const [, setResumeTags] = useAtom(resumeTagsAtom)
   const [isLoadingResume, setIsLoadingResume] = useAtom(isLoadingResumeAtom)
@@ -94,17 +94,34 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
     }
   }, [resumeId, formContext, setFormData, setResumeTags, setIsLoadingResume])
 
-  const handleFormSubmit = useCallback(async () => {
-    const formValues = formContext.getValues()
-    setResume({ ...resume, isLoading: true })
-    try {
-      const newResumeUrl = await generateResume(formValues)
-      setResume({ ...resume, url: newResumeUrl, isLoading: false })
-    } catch (error) {
-      console.error(error)
-      setResume({ ...resume, isError: true, isLoading: false })
-    }
-  }, [formContext, resume, setResume])
+  const handleFormSubmit = useCallback(
+    async (formValues: FormValues) => {
+      setFormData(formValues)
+      setResume((current) => ({
+        ...current,
+        url: '',
+        isLoading: true,
+        isError: false
+      }))
+      try {
+        const newResumeUrl = await generateResume(formValues)
+        setResume((current) => ({
+          ...current,
+          url: newResumeUrl,
+          isLoading: false,
+          isError: false
+        }))
+      } catch (error) {
+        console.error(error)
+        setResume((current) => ({
+          ...current,
+          isError: true,
+          isLoading: false
+        }))
+      }
+    },
+    [setFormData, setResume]
+  )
 
   return (
     <FormProvider {...formContext}>
