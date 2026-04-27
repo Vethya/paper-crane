@@ -15,6 +15,7 @@ import { ProjectsSection } from './sections/projectsSection'
 import { resumeAtom, isLoadingResumeAtom } from '../../../atoms/resume'
 import { formDataAtom } from '../../../atoms/formData'
 import { resumeTagsAtom } from '../../../atoms/resumeTags'
+import { resumeTitleAtom } from '../../../atoms/resumeTitle'
 import { FormValues } from '../../../types'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -46,6 +47,7 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
   const [resume, setResume] = useAtom(resumeAtom)
   const [, setFormData] = useAtom(formDataAtom)
   const [, setResumeTags] = useAtom(resumeTagsAtom)
+  const [, setResumeTitle] = useAtom(resumeTitleAtom)
   const [isLoadingResume, setIsLoadingResume] = useAtom(isLoadingResumeAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
 
@@ -64,10 +66,12 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
           formContext.reset(content)
           setFormData(content)
           setResumeTags(data.tags ?? [])
+          setResumeTitle(data.title ?? null)
         } finally {
           if (!cancelled) setIsLoadingResume(false)
         }
       } else {
+        setResumeTitle(null)
         const lastSession = localStorage.getItem('jsonResume')
         if (lastSession) {
           const jsonResume = JSON.parse(lastSession) as FormValues
@@ -92,7 +96,14 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
       cancelled = true
       subscription.unsubscribe()
     }
-  }, [resumeId, formContext, setFormData, setResumeTags, setIsLoadingResume])
+  }, [
+    resumeId,
+    formContext,
+    setFormData,
+    setResumeTags,
+    setResumeTitle,
+    setIsLoadingResume
+  ])
 
   const handleFormSubmit = useCallback(async () => {
     const formValues = formContext.getValues()

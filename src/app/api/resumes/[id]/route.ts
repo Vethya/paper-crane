@@ -34,12 +34,17 @@ export async function PATCH(
 
   const { id } = await params
   const body = await request.json()
+  const title = typeof body.title === "string" ? body.title.trim() : undefined
+
+  if (typeof body.title === "string" && !title) {
+    return NextResponse.json({ error: "Title is required" }, { status: 400 })
+  }
 
   await connectDB()
 
   const resume = await Resume.findOneAndUpdate(
     { _id: id, userId: session.user.id },
-    { $set: { ...(body.content && { content: body.content }), ...(body.title && { title: body.title }), ...(Array.isArray(body.tags) && { tags: body.tags }) } },
+    { $set: { ...(body.content && { content: body.content }), ...(title && { title }), ...(Array.isArray(body.tags) && { tags: body.tags }) } },
     { new: true, select: { content: 0 } }
   ).lean()
 

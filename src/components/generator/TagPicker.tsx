@@ -56,7 +56,7 @@ export function TagPicker() {
   useEffect(() => {
     fetch('/api/tags')
       .then(res => res.json())
-      .then(setAllTags)
+      .then(data => setAllTags(Array.isArray(data) ? data : []))
       .catch(() => {})
   }, [])
 
