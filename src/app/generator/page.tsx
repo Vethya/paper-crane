@@ -42,7 +42,7 @@ function GeneratorContent() {
         <Header className="border-b border-white/5 bg-slate-950/80 backdrop-blur z-10" />
 
         {/* Mobile layout (below xl) */}
-        <div className="flex flex-col gap-4 px-4 py-6 xl:hidden">
+        <div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 py-6 xl:hidden">
           <MobileNav
             activeSection={activeSection}
             onSectionChange={setActiveSection}
@@ -79,7 +79,7 @@ function GeneratorContent() {
         </div>
 
         {/* Desktop layout (xl+) */}
-        <div className="hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[15%_minmax(0,1fr)_51%] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8">
+        <div className="mx-auto hidden w-full max-w-[1440px] xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[15%_minmax(0,1fr)_51%] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8">
           <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur">
             <Sidebar
               activeSection={activeSection}
