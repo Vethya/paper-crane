@@ -1,17 +1,18 @@
-"use client"
+'use client'
 
-import { useRef, useState } from "react"
-import { useRouter } from "next/navigation"
-import { FiUpload } from "react-icons/fi"
+import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { FiUpload } from 'react-icons/fi'
+import { Loader2 } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+  DialogFooter
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 interface ImportResumeDialogProps {
   children: React.ReactNode
@@ -22,35 +23,38 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [open, setOpen] = useState(false)
-  const [title, setTitle] = useState("")
+  const [title, setTitle] = useState('')
   const [parsedContent, setParsedContent] = useState<object | null>(null)
   const [fileName, setFileName] = useState<string | null>(null)
   const [dragging, setDragging] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [openingGenerator, setOpeningGenerator] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const isBusy = loading || openingGenerator
 
   function reset() {
-    setTitle("")
+    setTitle('')
     setParsedContent(null)
     setFileName(null)
     setDragging(false)
+    setOpeningGenerator(false)
     setError(null)
   }
 
   function handleOpenChange(next: boolean) {
-    if (!loading) {
+    if (!isBusy) {
       setOpen(next)
       if (!next) reset()
     }
   }
 
   function processFile(file: File) {
-    if (!file.name.endsWith(".json")) {
-      setError("Please select a .json file.")
+    if (!file.name.endsWith('.json')) {
+      setError('Please select a .json file.')
       return
     }
     const reader = new FileReader()
-    reader.onload = e => {
+    reader.onload = (e) => {
       try {
         const parsed = JSON.parse(e.target?.result as string)
         setParsedContent(parsed)
@@ -60,7 +64,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
         const name = (parsed as { basics?: { name?: string } }).basics?.name
         if (name && !title) setTitle(name)
       } catch {
-        setError("Invalid JSON file.")
+        setError('Invalid JSON file.')
         setParsedContent(null)
         setFileName(null)
       }
@@ -71,7 +75,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (file) processFile(file)
-    e.target.value = ""
+    e.target.value = ''
   }
 
   function handleDrop(e: React.DragEvent) {
@@ -86,20 +90,20 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
     setLoading(true)
     setError(null)
     try {
-      const res = await fetch("/api/resumes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: title.trim(), content: parsedContent }),
+      const res = await fetch('/api/resumes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title.trim(), content: parsedContent })
       })
       if (!res.ok) {
         const data = await res.json()
-        throw new Error(data.error ?? "Failed to import resume")
+        throw new Error(data.error ?? 'Failed to import resume')
       }
       const { _id } = await res.json()
-      setOpen(false)
+      setOpeningGenerator(true)
       router.push(`/generator?id=${_id}`)
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong")
+      setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
       setLoading(false)
     }
@@ -121,19 +125,27 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              onDragOver={e => { e.preventDefault(); setDragging(true) }}
+              onDragOver={(e) => {
+                e.preventDefault()
+                setDragging(true)
+              }}
               onDragLeave={() => setDragging(false)}
               onDrop={handleDrop}
+              disabled={isBusy}
               className={[
-                "flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition",
+                'flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition',
+                isBusy ? 'cursor-wait opacity-70' : '',
                 dragging
-                  ? "border-blue-500 bg-blue-500/10 text-blue-300"
+                  ? 'border-blue-500 bg-blue-500/10 text-blue-300'
                   : parsedContent
-                  ? "border-green-500/50 bg-green-500/5 text-slate-300"
-                  : "border-white/10 bg-slate-800/50 text-slate-400 hover:border-white/20 hover:text-slate-300",
-              ].join(" ")}
+                    ? 'border-green-500/50 bg-green-500/5 text-slate-300'
+                    : 'border-white/10 bg-slate-800/50 text-slate-400 hover:border-white/20 hover:text-slate-300'
+              ].join(' ')}
             >
-              <FiUpload size={22} className={parsedContent ? "text-green-400" : undefined} />
+              <FiUpload
+                size={22}
+                className={parsedContent ? 'text-green-400' : undefined}
+              />
               {parsedContent ? (
                 <span className="text-sm">
                   <span className="font-medium text-green-400">{fileName}</span>
@@ -141,7 +153,9 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
                 </span>
               ) : (
                 <span className="text-sm">
-                  Drop a <span className="font-medium text-slate-200">.json</span> file here, or{" "}
+                  Drop a{' '}
+                  <span className="font-medium text-slate-200">.json</span> file
+                  here, or{' '}
                   <span className="font-medium text-blue-400">browse</span>
                 </span>
               )}
@@ -157,16 +171,19 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
             {/* Title field — only shown once a file is loaded */}
             {parsedContent && (
               <div className="flex flex-col gap-2">
-                <Label htmlFor="import-title" className="text-slate-300 text-sm">
+                <Label
+                  htmlFor="import-title"
+                  className="text-slate-300 text-sm"
+                >
                   Title
                 </Label>
                 <Input
                   id="import-title"
                   placeholder="e.g. Software Engineer – Google"
                   value={title}
-                  onChange={e => setTitle(e.target.value)}
-                  onKeyDown={e => e.key === "Enter" && handleImport()}
-                  disabled={loading}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleImport()}
+                  disabled={isBusy}
                   autoFocus
                   className="bg-slate-800 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:border-blue-500 focus-visible:ring-blue-500/30"
                 />
@@ -179,17 +196,22 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
           <DialogFooter className="gap-2 sm:gap-0 bg-transparent border-t-0 pt-2">
             <button
               onClick={() => handleOpenChange(false)}
-              disabled={loading}
+              disabled={isBusy}
               className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/5 disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleImport}
-              disabled={loading || !parsedContent || !title.trim()}
-              className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 disabled:opacity-50"
+              disabled={isBusy || !parsedContent || !title.trim()}
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 disabled:opacity-50"
             >
-              {loading ? "Importing…" : "Import"}
+              {isBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+              {openingGenerator
+                ? 'Opening generator…'
+                : loading
+                  ? 'Importing…'
+                  : 'Import'}
             </button>
           </DialogFooter>
         </DialogContent>
