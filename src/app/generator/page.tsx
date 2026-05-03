@@ -49,13 +49,13 @@ function GeneratorContent() {
           />
 
           <div className="rounded-3xl border border-white/10 bg-slate-900/50 backdrop-blur">
-            <Form activeSection={activeSection} />
+            <Form activeSection={activeSection} formId="resume-form-mobile" />
           </div>
 
           <div className="flex justify-center">
             <PrimaryButton
               type="submit"
-              form="resume-form"
+              form="resume-form-mobile"
               className="w-full"
               onClick={() =>
                 previewRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -84,11 +84,12 @@ function GeneratorContent() {
             <Sidebar
               activeSection={activeSection}
               onSectionChange={setActiveSection}
+              formId="resume-form-desktop"
             />
           </div>
 
           <div className="rounded-3xl border border-white/10 bg-slate-900/50 backdrop-blur xl:overflow-hidden">
-            <Form activeSection={activeSection} />
+            <Form activeSection={activeSection} formId="resume-form-desktop" />
           </div>
 
           <div className="flex flex-col rounded-3xl border border-blue-600/15 bg-slate-950/60 backdrop-blur">
