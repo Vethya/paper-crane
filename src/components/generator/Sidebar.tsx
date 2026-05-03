@@ -19,9 +19,14 @@ const sectionLinks = [
 interface SidebarProps {
   activeSection: string
   onSectionChange: (section: string) => void
+  formId?: string
 }
 
-export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
+export function Sidebar({
+  activeSection,
+  onSectionChange,
+  formId = 'resume-form'
+}: SidebarProps) {
   const isLoadingResume = useAtomValue(isLoadingResumeAtom)
 
   return (
@@ -45,7 +50,7 @@ export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
       </nav>
 
       <PrimaryButton
-        form="resume-form"
+        form={formId}
         disabled={isLoadingResume}
         className="w-full min-w-0 px-3"
       >
