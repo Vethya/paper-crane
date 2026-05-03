@@ -1,16 +1,27 @@
 import { Fragment } from 'react'
-import { useFieldArray } from 'react-hook-form'
+import { useWatch } from 'react-hook-form'
 
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton, RemoveButton } from '../../../core/Button'
+import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
+import {
+  CollapsibleFormItem,
+  CollapsibleFormItemSummary
+} from './CollapsibleFormItem'
+import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import Keywords from './Keywords'
 
 import { Project } from '../../../../types'
 
 export function ProjectsSection() {
-  const { fields, append, remove } = useFieldArray({ name: 'projects' })
+  const {
+    fields,
+    expandedIndex,
+    appendAndExpand,
+    removeAndAdjustExpanded,
+    toggleExpanded
+  } = useCollapsibleFieldArray('projects')
 
   const handleAdd = () => {
     const defaultProject: Project = {
@@ -20,7 +31,7 @@ export function ProjectsSection() {
       url: ''
     }
 
-    append(defaultProject)
+    appendAndExpand(defaultProject)
   }
 
   return (
@@ -35,41 +46,56 @@ export function ProjectsSection() {
           <Divider />
         </Fragment>
       )}
-      {fields.map((field, index) => (
-        <Fragment key={field.id}>
-          <LabeledInput
-            name={`projects.${index}.name`}
-            label="Project Name"
-            placeholder="Piper Chat"
-          />
-          <LabeledInput
-            name={`projects.${index}.description`}
-            label="Project Description"
-            placeholder="A video chat app with great picture quality."
-          />
-          <LabeledInput
-            name={`projects.${index}.url`}
-            label="Link to Project"
-            placeholder="http://piperchat.com"
-          />
-          <Keywords
-            label="Tools Used"
-            placeholder="TypeScript"
-            name={`projects.${index}.keywords`}
-          />
-          <RemoveButton
-            type="button"
-            disabled={fields.length === 1}
-            onClick={() => remove(index)}
+      {fields.map((field, index) => {
+        return (
+          <CollapsibleFormItem
+            key={field.id}
+            isExpanded={expandedIndex === index}
+            onToggle={() => toggleExpanded(index)}
+            onRemove={() => removeAndAdjustExpanded(index)}
+            removeDisabled={fields.length === 1}
+            removeLabel="Remove project"
+            summary={<ProjectSummary index={index} />}
           >
-            - Remove Project
-          </RemoveButton>
-          <Divider />
-        </Fragment>
-      ))}
+            <LabeledInput
+              name={`projects.${index}.name`}
+              label="Project Name"
+              placeholder="Piper Chat"
+            />
+            <LabeledInput
+              name={`projects.${index}.description`}
+              label="Project Description"
+              placeholder="A video chat app with great picture quality."
+            />
+            <LabeledInput
+              name={`projects.${index}.url`}
+              label="Link to Project"
+              placeholder="http://piperchat.com"
+            />
+            <Keywords
+              label="Tools Used"
+              placeholder="TypeScript"
+              name={`projects.${index}.keywords`}
+            />
+          </CollapsibleFormItem>
+        )
+      })}
       <AddButton type="button" onClick={handleAdd}>
         + Add Project
       </AddButton>
     </FormSection>
+  )
+}
+
+function ProjectSummary({ index }: { index: number }) {
+  const item = useWatch({ name: `projects.${index}` }) as Project | undefined
+  const summaryDetail =
+    item?.description || item?.keywords?.filter(Boolean).join(', ')
+
+  return (
+    <CollapsibleFormItemSummary
+      title={item?.name || `Project ${index + 1}`}
+      detail={summaryDetail}
+    />
   )
 }
