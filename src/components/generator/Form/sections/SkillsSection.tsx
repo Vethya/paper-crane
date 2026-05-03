@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useFieldArray, useWatch } from 'react-hook-form'
 
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton, RemoveButton } from '../../../core/Button'
+import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
 import { CollapsibleFormItem } from './CollapsibleFormItem'
@@ -14,7 +14,7 @@ import { Skill } from '../../../../types'
 export function SkillsSection() {
   const { fields, append, remove } = useFieldArray({ name: 'skills' })
   const skills = useWatch({ name: 'skills' }) as Skill[] | undefined
-  const [expandedIndex, setExpandedIndex] = useState(0)
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
 
   const handleAdd = () => {
     const defaultSkill: Skill = {
@@ -29,6 +29,7 @@ export function SkillsSection() {
   const handleRemove = (index: number) => {
     remove(index)
     setExpandedIndex((current) => {
+      if (current === null) return null
       if (current === index) return Math.max(0, index - 1)
       if (current > index) return current - 1
       return current
@@ -55,7 +56,12 @@ export function SkillsSection() {
           <CollapsibleFormItem
             key={field.id}
             isExpanded={expandedIndex === index}
-            onExpand={() => setExpandedIndex(index)}
+            onToggle={() =>
+              setExpandedIndex((current) => (current === index ? null : index))
+            }
+            onRemove={() => handleRemove(index)}
+            removeDisabled={fields.length === 1}
+            removeLabel="Remove skill"
             summaryTitle={item?.name || `Skill ${index + 1}`}
             summaryDetail={summaryDetail}
           >
@@ -69,14 +75,6 @@ export function SkillsSection() {
               placeholder="TypeScript"
               name={`skills.${index}.keywords`}
             />
-            <RemoveButton
-              type="button"
-              disabled={fields.length === 1}
-              onClick={() => handleRemove(index)}
-            >
-              - Remove Skill
-            </RemoveButton>
-            <Divider />
           </CollapsibleFormItem>
         )
       })}

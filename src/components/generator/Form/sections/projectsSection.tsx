@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useFieldArray, useWatch } from 'react-hook-form'
 
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton, RemoveButton } from '../../../core/Button'
+import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
 import { CollapsibleFormItem } from './CollapsibleFormItem'
@@ -14,7 +14,7 @@ import { Project } from '../../../../types'
 export function ProjectsSection() {
   const { fields, append, remove } = useFieldArray({ name: 'projects' })
   const projects = useWatch({ name: 'projects' }) as Project[] | undefined
-  const [expandedIndex, setExpandedIndex] = useState(0)
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
 
   const handleAdd = () => {
     const defaultProject: Project = {
@@ -31,6 +31,7 @@ export function ProjectsSection() {
   const handleRemove = (index: number) => {
     remove(index)
     setExpandedIndex((current) => {
+      if (current === null) return null
       if (current === index) return Math.max(0, index - 1)
       if (current > index) return current - 1
       return current
@@ -58,7 +59,12 @@ export function ProjectsSection() {
           <CollapsibleFormItem
             key={field.id}
             isExpanded={expandedIndex === index}
-            onExpand={() => setExpandedIndex(index)}
+            onToggle={() =>
+              setExpandedIndex((current) => (current === index ? null : index))
+            }
+            onRemove={() => handleRemove(index)}
+            removeDisabled={fields.length === 1}
+            removeLabel="Remove project"
             summaryTitle={item?.name || `Project ${index + 1}`}
             summaryDetail={summaryDetail}
           >
@@ -82,14 +88,6 @@ export function ProjectsSection() {
               placeholder="TypeScript"
               name={`projects.${index}.keywords`}
             />
-            <RemoveButton
-              type="button"
-              disabled={fields.length === 1}
-              onClick={() => handleRemove(index)}
-            >
-              - Remove Project
-            </RemoveButton>
-            <Divider />
           </CollapsibleFormItem>
         )
       })}
