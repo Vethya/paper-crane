@@ -1,9 +1,12 @@
 import { Fragment } from 'react'
-import { useState } from 'react'
-import { useFieldArray, useWatch } from 'react-hook-form'
+import { useWatch } from 'react-hook-form'
 
 import { FormSection } from './FormSection'
-import { CollapsibleFormItem } from './CollapsibleFormItem'
+import {
+  CollapsibleFormItem,
+  CollapsibleFormItemSummary
+} from './CollapsibleFormItem'
+import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
@@ -11,9 +14,13 @@ import { Divider } from '../../../core/Divider'
 import { Award } from '../../../../types'
 
 export function AwardSection() {
-  const { fields, append, remove } = useFieldArray({ name: 'awards' })
-  const awards = useWatch({ name: 'awards' }) as Award[] | undefined
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
+  const {
+    fields,
+    expandedIndex,
+    appendAndExpand,
+    removeAndAdjustExpanded,
+    toggleExpanded
+  } = useCollapsibleFieldArray('awards')
 
   const handleAdd = () => {
     const defaultAward: Award = {
@@ -23,18 +30,7 @@ export function AwardSection() {
       summary: ''
     }
 
-    append(defaultAward)
-    setExpandedIndex(fields.length)
-  }
-
-  const handleRemove = (index: number) => {
-    remove(index)
-    setExpandedIndex((current) => {
-      if (current === null) return null
-      if (current === index) return Math.max(0, index - 1)
-      if (current > index) return current - 1
-      return current
-    })
+    appendAndExpand(defaultAward)
   }
 
   return (
@@ -50,23 +46,15 @@ export function AwardSection() {
         </Fragment>
       )}
       {fields.map((field, index) => {
-        const item = awards?.[index]
-        const summaryDetail = [item?.awarder, item?.date]
-          .filter(Boolean)
-          .join(' - ')
-
         return (
           <CollapsibleFormItem
             key={field.id}
             isExpanded={expandedIndex === index}
-            onToggle={() =>
-              setExpandedIndex((current) => (current === index ? null : index))
-            }
-            onRemove={() => handleRemove(index)}
+            onToggle={() => toggleExpanded(index)}
+            onRemove={() => removeAndAdjustExpanded(index)}
             removeDisabled={fields.length === 1}
             removeLabel="Remove award"
-            summaryTitle={item?.title || `Award ${index + 1}`}
-            summaryDetail={summaryDetail}
+            summary={<AwardSummary index={index} />}
           >
             <LabeledInput
               name={`awards.${index}.title`}
@@ -95,5 +83,17 @@ export function AwardSection() {
         + Add Award
       </AddButton>
     </FormSection>
+  )
+}
+
+function AwardSummary({ index }: { index: number }) {
+  const item = useWatch({ name: `awards.${index}` }) as Award | undefined
+  const summaryDetail = [item?.awarder, item?.date].filter(Boolean).join(' - ')
+
+  return (
+    <CollapsibleFormItemSummary
+      title={item?.title || `Award ${index + 1}`}
+      detail={summaryDetail}
+    />
   )
 }

@@ -1,20 +1,27 @@
 import { Fragment } from 'react'
-import { useState } from 'react'
-import { useFieldArray, useWatch } from 'react-hook-form'
+import { useWatch } from 'react-hook-form'
 
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
-import { CollapsibleFormItem } from './CollapsibleFormItem'
+import {
+  CollapsibleFormItem,
+  CollapsibleFormItemSummary
+} from './CollapsibleFormItem'
+import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import Keywords from './Keywords'
 
 import { Skill } from '../../../../types'
 
 export function SkillsSection() {
-  const { fields, append, remove } = useFieldArray({ name: 'skills' })
-  const skills = useWatch({ name: 'skills' }) as Skill[] | undefined
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
+  const {
+    fields,
+    expandedIndex,
+    appendAndExpand,
+    removeAndAdjustExpanded,
+    toggleExpanded
+  } = useCollapsibleFieldArray('skills')
 
   const handleAdd = () => {
     const defaultSkill: Skill = {
@@ -22,18 +29,7 @@ export function SkillsSection() {
       keywords: []
     }
 
-    append(defaultSkill)
-    setExpandedIndex(fields.length)
-  }
-
-  const handleRemove = (index: number) => {
-    remove(index)
-    setExpandedIndex((current) => {
-      if (current === null) return null
-      if (current === index) return Math.max(0, index - 1)
-      if (current > index) return current - 1
-      return current
-    })
+    appendAndExpand(defaultSkill)
   }
 
   return (
@@ -49,21 +45,15 @@ export function SkillsSection() {
         </Fragment>
       )}
       {fields.map((field, index) => {
-        const item = skills?.[index]
-        const summaryDetail = item?.keywords?.filter(Boolean).join(', ')
-
         return (
           <CollapsibleFormItem
             key={field.id}
             isExpanded={expandedIndex === index}
-            onToggle={() =>
-              setExpandedIndex((current) => (current === index ? null : index))
-            }
-            onRemove={() => handleRemove(index)}
+            onToggle={() => toggleExpanded(index)}
+            onRemove={() => removeAndAdjustExpanded(index)}
             removeDisabled={fields.length === 1}
             removeLabel="Remove skill"
-            summaryTitle={item?.name || `Skill ${index + 1}`}
-            summaryDetail={summaryDetail}
+            summary={<SkillSummary index={index} />}
           >
             <LabeledInput
               name={`skills.${index}.name`}
@@ -82,5 +72,17 @@ export function SkillsSection() {
         + Add Skill
       </AddButton>
     </FormSection>
+  )
+}
+
+function SkillSummary({ index }: { index: number }) {
+  const item = useWatch({ name: `skills.${index}` }) as Skill | undefined
+  const summaryDetail = item?.keywords?.filter(Boolean).join(', ')
+
+  return (
+    <CollapsibleFormItemSummary
+      title={item?.name || `Skill ${index + 1}`}
+      detail={summaryDetail}
+    />
   )
 }

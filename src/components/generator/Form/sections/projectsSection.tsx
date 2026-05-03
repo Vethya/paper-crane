@@ -1,20 +1,27 @@
 import { Fragment } from 'react'
-import { useState } from 'react'
-import { useFieldArray, useWatch } from 'react-hook-form'
+import { useWatch } from 'react-hook-form'
 
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
-import { CollapsibleFormItem } from './CollapsibleFormItem'
+import {
+  CollapsibleFormItem,
+  CollapsibleFormItemSummary
+} from './CollapsibleFormItem'
+import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import Keywords from './Keywords'
 
 import { Project } from '../../../../types'
 
 export function ProjectsSection() {
-  const { fields, append, remove } = useFieldArray({ name: 'projects' })
-  const projects = useWatch({ name: 'projects' }) as Project[] | undefined
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
+  const {
+    fields,
+    expandedIndex,
+    appendAndExpand,
+    removeAndAdjustExpanded,
+    toggleExpanded
+  } = useCollapsibleFieldArray('projects')
 
   const handleAdd = () => {
     const defaultProject: Project = {
@@ -24,18 +31,7 @@ export function ProjectsSection() {
       url: ''
     }
 
-    append(defaultProject)
-    setExpandedIndex(fields.length)
-  }
-
-  const handleRemove = (index: number) => {
-    remove(index)
-    setExpandedIndex((current) => {
-      if (current === null) return null
-      if (current === index) return Math.max(0, index - 1)
-      if (current > index) return current - 1
-      return current
-    })
+    appendAndExpand(defaultProject)
   }
 
   return (
@@ -51,22 +47,15 @@ export function ProjectsSection() {
         </Fragment>
       )}
       {fields.map((field, index) => {
-        const item = projects?.[index]
-        const summaryDetail =
-          item?.description || item?.keywords?.filter(Boolean).join(', ')
-
         return (
           <CollapsibleFormItem
             key={field.id}
             isExpanded={expandedIndex === index}
-            onToggle={() =>
-              setExpandedIndex((current) => (current === index ? null : index))
-            }
-            onRemove={() => handleRemove(index)}
+            onToggle={() => toggleExpanded(index)}
+            onRemove={() => removeAndAdjustExpanded(index)}
             removeDisabled={fields.length === 1}
             removeLabel="Remove project"
-            summaryTitle={item?.name || `Project ${index + 1}`}
-            summaryDetail={summaryDetail}
+            summary={<ProjectSummary index={index} />}
           >
             <LabeledInput
               name={`projects.${index}.name`}
@@ -95,5 +84,18 @@ export function ProjectsSection() {
         + Add Project
       </AddButton>
     </FormSection>
+  )
+}
+
+function ProjectSummary({ index }: { index: number }) {
+  const item = useWatch({ name: `projects.${index}` }) as Project | undefined
+  const summaryDetail =
+    item?.description || item?.keywords?.filter(Boolean).join(', ')
+
+  return (
+    <CollapsibleFormItemSummary
+      title={item?.name || `Project ${index + 1}`}
+      detail={summaryDetail}
+    />
   )
 }

@@ -10,8 +10,7 @@ interface CollapsibleFormItemProps {
   onRemove?: () => void
   removeDisabled?: boolean
   removeLabel?: string
-  summaryTitle: string
-  summaryDetail?: string
+  summary: ReactNode
 }
 
 export function CollapsibleFormItem({
@@ -21,8 +20,7 @@ export function CollapsibleFormItem({
   onRemove,
   removeDisabled = false,
   removeLabel = 'Remove item',
-  summaryTitle,
-  summaryDetail
+  summary
 }: CollapsibleFormItemProps) {
   const Icon = isExpanded ? ChevronUp : ChevronDown
 
@@ -36,16 +34,7 @@ export function CollapsibleFormItem({
             aria-expanded={isExpanded}
             className="block w-full min-w-0 overflow-hidden text-left focus:outline-none"
           >
-            <span className="block w-full min-w-0 overflow-hidden">
-              <span className="block w-full min-w-0 truncate text-sm font-medium text-slate-100">
-                {summaryTitle}
-              </span>
-              {summaryDetail && (
-                <span className="mt-1 block w-full min-w-0 truncate text-xs text-slate-400">
-                  {summaryDetail}
-                </span>
-              )}
-            </span>
+            {summary}
           </button>
           {onRemove && (
             <button
@@ -76,13 +65,32 @@ export function CollapsibleFormItem({
           }`}
         >
           <div className="overflow-hidden">
-            <div className="min-w-0 px-1.5 pb-4 pt-2 sm:px-3">
-              {children}
-            </div>
+            <div className="min-w-0 px-1.5 pb-4 pt-2 sm:px-3">{children}</div>
           </div>
         </div>
       </div>
       <Divider />
     </>
+  )
+}
+
+export function CollapsibleFormItemSummary({
+  title,
+  detail
+}: {
+  title: string
+  detail?: string
+}) {
+  return (
+    <span className="block w-full min-w-0 overflow-hidden">
+      <span className="block w-full min-w-0 truncate text-sm font-medium text-slate-100">
+        {title}
+      </span>
+      {detail && (
+        <span className="mt-1 block w-full min-w-0 truncate text-xs text-slate-400">
+          {detail}
+        </span>
+      )}
+    </span>
   )
 }

@@ -1,20 +1,27 @@
 import { Fragment } from 'react'
-import { useState } from 'react'
-import { useFieldArray, useWatch } from 'react-hook-form'
+import { useWatch } from 'react-hook-form'
 
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
-import { CollapsibleFormItem } from './CollapsibleFormItem'
+import {
+  CollapsibleFormItem,
+  CollapsibleFormItemSummary
+} from './CollapsibleFormItem'
+import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import Highlights from './Highlights'
 
 import { Work } from '../../../../types'
 
 export function WorkSection() {
-  const { fields, append, remove } = useFieldArray({ name: 'work' })
-  const work = useWatch({ name: 'work' }) as Work[] | undefined
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
+  const {
+    fields,
+    expandedIndex,
+    appendAndExpand,
+    removeAndAdjustExpanded,
+    toggleExpanded
+  } = useCollapsibleFieldArray('work')
 
   const handleAdd = () => {
     const defaultWork: Work = {
@@ -26,18 +33,7 @@ export function WorkSection() {
       highlights: []
     }
 
-    append(defaultWork)
-    setExpandedIndex(fields.length)
-  }
-
-  const handleRemove = (index: number) => {
-    remove(index)
-    setExpandedIndex((current) => {
-      if (current === null) return null
-      if (current === index) return Math.max(0, index - 1)
-      if (current > index) return current - 1
-      return current
-    })
+    appendAndExpand(defaultWork)
   }
 
   return (
@@ -53,23 +49,15 @@ export function WorkSection() {
         </Fragment>
       )}
       {fields.map((field, index) => {
-        const item = work?.[index]
-        const summaryDetail = [item?.position, item?.location]
-          .filter(Boolean)
-          .join(' - ')
-
         return (
           <CollapsibleFormItem
             key={field.id}
             isExpanded={expandedIndex === index}
-            onToggle={() =>
-              setExpandedIndex((current) => (current === index ? null : index))
-            }
-            onRemove={() => handleRemove(index)}
+            onToggle={() => toggleExpanded(index)}
+            onRemove={() => removeAndAdjustExpanded(index)}
             removeDisabled={fields.length === 1}
             removeLabel="Remove work experience"
-            summaryTitle={item?.company || `Work Experience ${index + 1}`}
-            summaryDetail={summaryDetail}
+            summary={<WorkSummary index={index} />}
           >
             <LabeledInput
               name={`work.${index}.company`}
@@ -108,5 +96,19 @@ export function WorkSection() {
         + Add Work Experience
       </AddButton>
     </FormSection>
+  )
+}
+
+function WorkSummary({ index }: { index: number }) {
+  const item = useWatch({ name: `work.${index}` }) as Work | undefined
+  const summaryDetail = [item?.position, item?.location]
+    .filter(Boolean)
+    .join(' - ')
+
+  return (
+    <CollapsibleFormItemSummary
+      title={item?.company || `Work Experience ${index + 1}`}
+      detail={summaryDetail}
+    />
   )
 }

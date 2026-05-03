@@ -1,9 +1,12 @@
 import { Fragment } from 'react'
-import { useState } from 'react'
-import { useFieldArray, useWatch } from 'react-hook-form'
+import { useWatch } from 'react-hook-form'
 
 import { FormSection } from './FormSection'
-import { CollapsibleFormItem } from './CollapsibleFormItem'
+import {
+  CollapsibleFormItem,
+  CollapsibleFormItemSummary
+} from './CollapsibleFormItem'
+import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
@@ -11,9 +14,13 @@ import { Divider } from '../../../core/Divider'
 import { Education } from '../../../../types'
 
 export function EducationSection() {
-  const { fields, append, remove } = useFieldArray({ name: 'education' })
-  const education = useWatch({ name: 'education' }) as Education[] | undefined
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
+  const {
+    fields,
+    expandedIndex,
+    appendAndExpand,
+    removeAndAdjustExpanded,
+    toggleExpanded
+  } = useCollapsibleFieldArray('education')
 
   const handleAdd = () => {
     const defaultEducation: Education = {
@@ -26,18 +33,7 @@ export function EducationSection() {
       endDate: ''
     }
 
-    append(defaultEducation)
-    setExpandedIndex(fields.length)
-  }
-
-  const handleRemove = (index: number) => {
-    remove(index)
-    setExpandedIndex((current) => {
-      if (current === null) return null
-      if (current === index) return Math.max(0, index - 1)
-      if (current > index) return current - 1
-      return current
-    })
+    appendAndExpand(defaultEducation)
   }
 
   return (
@@ -53,23 +49,15 @@ export function EducationSection() {
         </Fragment>
       )}
       {fields.map((field, index) => {
-        const item = education?.[index]
-        const summaryDetail = [item?.studyType, item?.area]
-          .filter(Boolean)
-          .join(' - ')
-
         return (
           <CollapsibleFormItem
             key={field.id}
             isExpanded={expandedIndex === index}
-            onToggle={() =>
-              setExpandedIndex((current) => (current === index ? null : index))
-            }
-            onRemove={() => handleRemove(index)}
+            onToggle={() => toggleExpanded(index)}
+            onRemove={() => removeAndAdjustExpanded(index)}
             removeDisabled={fields.length === 1}
             removeLabel="Remove school"
-            summaryTitle={item?.institution || `School ${index + 1}`}
-            summaryDetail={summaryDetail}
+            summary={<EducationSummary index={index} />}
           >
             <LabeledInput
               name={`education.${index}.institution`}
@@ -113,5 +101,19 @@ export function EducationSection() {
         + Add School
       </AddButton>
     </FormSection>
+  )
+}
+
+function EducationSummary({ index }: { index: number }) {
+  const item = useWatch({ name: `education.${index}` }) as Education | undefined
+  const summaryDetail = [item?.studyType, item?.area]
+    .filter(Boolean)
+    .join(' - ')
+
+  return (
+    <CollapsibleFormItemSummary
+      title={item?.institution || `School ${index + 1}`}
+      detail={summaryDetail}
+    />
   )
 }
