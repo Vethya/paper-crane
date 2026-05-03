@@ -114,7 +114,9 @@ export function Form({
   return (
     <FormProvider {...formContext}>
       <form
-        className={twMerge(clsx('overflow-auto xl:h-full', className))}
+        className={twMerge(
+          clsx('overflow-x-hidden overflow-y-auto xl:h-full', className)
+        )}
         id={formId}
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >

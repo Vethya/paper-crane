@@ -1,15 +1,26 @@
 import { Fragment } from 'react'
-import { useFieldArray } from 'react-hook-form'
+import { useWatch } from 'react-hook-form'
 
 import { FormSection } from './FormSection'
+import {
+  CollapsibleFormItem,
+  CollapsibleFormItemSummary
+} from './CollapsibleFormItem'
+import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton, RemoveButton } from '../../../core/Button'
+import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 
 import { Award } from '../../../../types'
 
 export function AwardSection() {
-  const { fields, append, remove } = useFieldArray({ name: 'awards' })
+  const {
+    fields,
+    expandedIndex,
+    appendAndExpand,
+    removeAndAdjustExpanded,
+    toggleExpanded
+  } = useCollapsibleFieldArray('awards')
 
   const handleAdd = () => {
     const defaultAward: Award = {
@@ -19,7 +30,7 @@ export function AwardSection() {
       summary: ''
     }
 
-    append(defaultAward)
+    appendAndExpand(defaultAward)
   }
 
   return (
@@ -34,41 +45,55 @@ export function AwardSection() {
           <Divider />
         </Fragment>
       )}
-      {fields.map((field, index) => (
-        <Fragment key={field.id}>
-          <LabeledInput
-            name={`awards.${index}.title`}
-            label="Award Name"
-            placeholder="Supreme hacker"
-          />
-          <LabeledInput
-            name={`awards.${index}.date`}
-            label="Award Date"
-            placeholder="May 2015"
-          />
-          <LabeledInput
-            name={`awards.${index}.awarder`}
-            label="Awarder"
-            placeholder="HackNY"
-          />
-          <LabeledInput
-            name={`awards.${index}.summary`}
-            label="Summary"
-            placeholder="Recognized for creating the most awesome project at a hackathon."
-          />
-          <RemoveButton
-            type="button"
-            disabled={fields.length === 1}
-            onClick={() => remove(index)}
+      {fields.map((field, index) => {
+        return (
+          <CollapsibleFormItem
+            key={field.id}
+            isExpanded={expandedIndex === index}
+            onToggle={() => toggleExpanded(index)}
+            onRemove={() => removeAndAdjustExpanded(index)}
+            removeDisabled={fields.length === 1}
+            removeLabel="Remove award"
+            summary={<AwardSummary index={index} />}
           >
-            - Remove Award
-          </RemoveButton>
-          <Divider />
-        </Fragment>
-      ))}
+            <LabeledInput
+              name={`awards.${index}.title`}
+              label="Award Name"
+              placeholder="Supreme hacker"
+            />
+            <LabeledInput
+              name={`awards.${index}.date`}
+              label="Award Date"
+              placeholder="May 2015"
+            />
+            <LabeledInput
+              name={`awards.${index}.awarder`}
+              label="Awarder"
+              placeholder="HackNY"
+            />
+            <LabeledInput
+              name={`awards.${index}.summary`}
+              label="Summary"
+              placeholder="Recognized for creating the most awesome project at a hackathon."
+            />
+          </CollapsibleFormItem>
+        )
+      })}
       <AddButton type="button" onClick={handleAdd}>
         + Add Award
       </AddButton>
     </FormSection>
+  )
+}
+
+function AwardSummary({ index }: { index: number }) {
+  const item = useWatch({ name: `awards.${index}` }) as Award | undefined
+  const summaryDetail = [item?.awarder, item?.date].filter(Boolean).join(' - ')
+
+  return (
+    <CollapsibleFormItemSummary
+      title={item?.title || `Award ${index + 1}`}
+      detail={summaryDetail}
+    />
   )
 }

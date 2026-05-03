@@ -79,8 +79,8 @@ function GeneratorContent() {
         </div>
 
         {/* Desktop layout (xl+) */}
-        <div className="hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[15%_minmax(0,1fr)_51%] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8">
-          <div className="rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur">
+        <div className="hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(14rem,15%)_minmax(0,1fr)_minmax(0,51%)] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8">
+          <div className="min-w-0 rounded-3xl border border-white/10 bg-slate-900/40 p-6 backdrop-blur">
             <Sidebar
               activeSection={activeSection}
               onSectionChange={setActiveSection}
