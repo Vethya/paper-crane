@@ -145,7 +145,7 @@ export default function Highlights({
   }
 
   return (
-    <div className={twMerge(clsx('', className))}>
+    <div className={twMerge(className)}>
       <label className="mb-2 block text-white">{label}</label>
       <div className="my-2 flex flex-col gap-2">
         {fields.map((field, i) => (
@@ -178,7 +178,7 @@ export default function Highlights({
             <Input
               name={`${name}.${i}`}
               placeholder={placeholder}
-              className="min-w-0 border-slate-700/80"
+              className="min-w-0"
             />
             <IconButton
               type="button"
