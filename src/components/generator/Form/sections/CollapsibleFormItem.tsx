@@ -28,20 +28,20 @@ export function CollapsibleFormItem({
 
   return (
     <>
-      <div className="-mx-1.5 overflow-hidden rounded-lg border border-white/10 bg-slate-900/60 transition hover:border-blue-500/40 sm:-mx-3">
-        <div className="flex w-full items-center gap-2 px-1.5 py-3 transition hover:bg-slate-900 sm:px-3">
+      <div className="-mx-1.5 max-w-none overflow-hidden rounded-lg border border-white/10 bg-slate-900/60 transition hover:border-blue-500/40 sm:-mx-3">
+        <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-slate-900 sm:px-3">
           <button
             type="button"
             onClick={onToggle}
             aria-expanded={isExpanded}
-            className="min-w-0 max-w-full flex-1 overflow-hidden text-left focus:outline-none"
+            className="block w-full min-w-0 overflow-hidden text-left focus:outline-none"
           >
-            <span className="block min-w-0 max-w-full overflow-hidden">
-              <span className="block truncate text-sm font-medium text-slate-100">
+            <span className="block w-full min-w-0 overflow-hidden">
+              <span className="block w-full min-w-0 truncate text-sm font-medium text-slate-100">
                 {summaryTitle}
               </span>
               {summaryDetail && (
-                <span className="mt-1 block max-w-full truncate text-xs text-slate-400">
+                <span className="mt-1 block w-full min-w-0 truncate text-xs text-slate-400">
                   {summaryDetail}
                 </span>
               )}
@@ -76,7 +76,9 @@ export function CollapsibleFormItem({
           }`}
         >
           <div className="overflow-hidden">
-            <div className="px-1.5 pb-4 pt-2 sm:px-3">{children}</div>
+            <div className="min-w-0 px-1.5 pb-4 pt-2 sm:px-3">
+              {children}
+            </div>
           </div>
         </div>
       </div>
