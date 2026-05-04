@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
-import { useAtom } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { Loader2 } from 'lucide-react'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { ProfileSection } from './sections/ProfileSection'
@@ -13,7 +13,12 @@ import { SkillsSection } from './sections/SkillsSection'
 import { AwardSection } from './sections/AwardsSection'
 import { ProjectsSection } from './sections/projectsSection'
 import { resumeAtom, isLoadingResumeAtom } from '../../../atoms/resume'
-import { formDataAtom } from '../../../atoms/formData'
+import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
+import { AgentFieldFocuser } from '../../agent/AgentFieldFocuser'
+import {
+  agentPendingEditsAtom,
+  type PendingEdit
+} from '../../../atoms/agentEdits'
 import { resumeTagsAtom } from '../../../atoms/resumeTags'
 import { FormValues } from '../../../types'
 import clsx from 'clsx'
@@ -25,6 +30,79 @@ import getTemplateData from '../../../lib/templates'
 async function generateResume(formData: FormValues): Promise<string> {
   const { texDoc, opts } = getTemplateData(formData)
   return latex(texDoc, opts)
+}
+
+function setNestedValue(
+  obj: Record<string, unknown>,
+  path: string,
+  value: unknown
+) {
+  const parts = path.split('.')
+  let target: Record<string, unknown> = obj
+  for (let i = 0; i < parts.length - 1; i++) {
+    const key = parts[i]
+    const idx = Number(key)
+    const next =
+      !isNaN(idx) && Array.isArray(target) ? target[idx] : target[key]
+    target = next as Record<string, unknown>
+    if (target == null) return
+  }
+  target[parts[parts.length - 1]] = value
+}
+
+function applyPendingEdits(formValues: FormValues, edits: PendingEdit[]) {
+  const vals = formValues as Record<string, unknown>
+
+  for (const edit of edits) {
+    if (edit.status !== 'pending') continue
+
+    if (edit.type === 'set') {
+      setNestedValue(vals, edit.fieldPath, edit.newValue)
+    } else if (edit.type === 'append') {
+      const arr = (vals[edit.arrayPath] ?? []) as Record<string, unknown>[]
+      const existing = arr.find((e) => e._agentEditId === edit.id)
+      if (existing) {
+        Object.assign(existing, edit.entry)
+      } else {
+        arr.push(edit.entry)
+        vals[edit.arrayPath] = arr
+      }
+    }
+  }
+
+  // Apply removes last so indices stay valid during set/append passes
+  const removeMap = new Map<string, Set<number>>()
+  for (const edit of edits) {
+    if (edit.type === 'remove' && edit.status === 'pending') {
+      if (!removeMap.has(edit.arrayPath))
+        removeMap.set(edit.arrayPath, new Set())
+      removeMap.get(edit.arrayPath)!.add(edit.entryIndex)
+    }
+  }
+  for (const [arrayPath, indices] of removeMap) {
+    const current = (vals[arrayPath] ?? []) as unknown[]
+    vals[arrayPath] = current.filter((_, i) => !indices.has(i))
+  }
+}
+
+const ARRAY_PATHS = [
+  'work',
+  'education',
+  'skills',
+  'projects',
+  'awards'
+] as const
+
+function stripAgentMarkers(formValues: FormValues) {
+  const vals = formValues as Record<string, unknown>
+  for (const key of ARRAY_PATHS) {
+    const arr = vals[key]
+    if (!Array.isArray(arr)) continue
+    for (const entry of arr) {
+      if (entry && typeof entry === 'object')
+        delete (entry as Record<string, unknown>)._agentEditId
+    }
+  }
 }
 
 const initialFormValues: FormValues = {
@@ -52,6 +130,8 @@ export function Form({
   const [, setFormData] = useAtom(formDataAtom)
   const [, setResumeTags] = useAtom(resumeTagsAtom)
   const [isLoadingResume, setIsLoadingResume] = useAtom(isLoadingResumeAtom)
+  const setFormSetValue = useSetAtom(formSetValueAtom)
+  const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
 
   useEffect(() => {
@@ -99,8 +179,17 @@ export function Form({
     }
   }, [resumeId, formContext, setFormData, setResumeTags, setIsLoadingResume])
 
+  // Register setValue so the agent edit system can apply / restore values from outside the form
+  useEffect(() => {
+    setFormSetValue(() => formContext.setValue)
+    return () => setFormSetValue(null)
+  }, [setFormSetValue, formContext.setValue])
+
   const handleFormSubmit = useCallback(async () => {
-    const formValues = formContext.getValues()
+    const formValues = structuredClone(formContext.getValues())
+    applyPendingEdits(formValues, pendingEdits)
+    stripAgentMarkers(formValues)
+
     setResume({ ...resume, isLoading: true })
     try {
       const newResumeUrl = await generateResume(formValues)
@@ -109,7 +198,7 @@ export function Form({
       console.error(error)
       setResume({ ...resume, isError: true, isLoading: false })
     }
-  }, [formContext, resume, setResume])
+  }, [formContext, resume, setResume, pendingEdits])
 
   return (
     <FormProvider {...formContext}>
@@ -117,6 +206,7 @@ export function Form({
         className={twMerge(
           clsx('overflow-x-hidden overflow-y-auto xl:h-full', className)
         )}
+        data-resume-form
         id={formId}
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
@@ -126,6 +216,7 @@ export function Form({
           </div>
         ) : (
           <>
+            <AgentFieldFocuser />
             {currSection === 'templates' && <TemplatesSection />}
             {currSection === 'basics' && <ProfileSection />}
             {currSection === 'education' && <EducationSection />}

@@ -1,10 +1,16 @@
-import type { NextRequest } from 'next/server'
+import { NextResponse, type NextRequest } from 'next/server'
 import Archiver from 'archiver'
 import { stripIndent } from 'common-tags'
+import { auth } from '../../../lib/auth'
 import getTemplateData from '../../../lib/templates'
 import { FormValues } from '../../../types'
 
 export async function POST(request: NextRequest) {
+  const session = await auth.api.getSession({ headers: request.headers })
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const body = await request.json()
   try {
     const buffer = await generateSourceCode(body as FormValues)

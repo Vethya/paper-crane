@@ -1,9 +1,19 @@
+'use client'
+
 import { PointerEvent, useRef, useState } from 'react'
 import { useFieldArray } from 'react-hook-form'
+import { useAtom, useAtomValue } from 'jotai'
 import { MdClose, MdDragIndicator } from 'react-icons/md'
+import { Check, RotateCcw } from 'lucide-react'
 import { Input } from '../../../core/Input'
 import { FormInput } from '../../../core/FormInput'
 import { IconButton } from '../../../core/Button'
+import {
+  agentPendingEditsAtom,
+  type FieldEdit
+} from '../../../../atoms/agentEdits'
+import { formSetValueAtom } from '../../../../atoms/formData'
+import { useAdvanceFocusedEdit } from '../../../../hooks/useAdvanceFocusedEdit'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -21,6 +31,9 @@ export default function Highlights({
   className
 }: HighlightsProps) {
   const { fields, append, move, remove } = useFieldArray({ name })
+  const [pendingEdits, setPendingEdits] = useAtom(agentPendingEditsAtom)
+  const formSetValue = useAtomValue(formSetValueAtom)
+  const advanceFocusedEdit = useAdvanceFocusedEdit()
   const rowRefs = useRef<Array<HTMLDivElement | null>>([])
   const [dragState, setDragState] = useState<{
     sourceIndex: number
@@ -30,6 +43,34 @@ export default function Highlights({
     itemTops: number[]
     itemMidpoints: number[]
   } | null>(null)
+
+  const getFieldEdit = (index: number): FieldEdit | undefined =>
+    pendingEdits.find(
+      (e): e is FieldEdit =>
+        e.type === 'set' &&
+        e.fieldPath === `${name}.${index}` &&
+        e.status === 'pending'
+    )
+
+  const handleApprove = (edit: FieldEdit) => {
+    advanceFocusedEdit(edit.id)
+    setPendingEdits((prev) =>
+      prev.map((e) => (e.id === edit.id ? { ...e, status: 'approved' } : e))
+    )
+  }
+
+  const handleReject = (edit: FieldEdit) => {
+    if (!formSetValue) return
+    advanceFocusedEdit(edit.id)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    formSetValue(edit.fieldPath as any, (edit.originalValue ?? '') as string, {
+      shouldDirty: true,
+      shouldValidate: true
+    })
+    setPendingEdits((prev) =>
+      prev.map((e) => (e.id === edit.id ? { ...e, status: 'rejected' } : e))
+    )
+  }
 
   const getTargetIndex = (
     pointerY: number,
@@ -148,48 +189,90 @@ export default function Highlights({
     <div className={twMerge(className)}>
       <label className="mb-2 block text-white">{label}</label>
       <div className="my-2 flex flex-col gap-2">
-        {fields.map((field, i) => (
-          <div
-            key={field.id}
-            ref={(node) => {
-              rowRefs.current[i] = node
-            }}
-            style={{ transform: getRowTransform(i) }}
-            className={twMerge(
-              clsx(
-                'relative grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-center gap-2 rounded-lg bg-slate-950/40 p-1 transition-[transform,background-color,box-shadow] duration-200 ease-out',
-                dragState?.sourceIndex === i
-                  ? 'z-20 bg-slate-900 shadow-lg shadow-black/20 transition-none'
-                  : dragState && 'z-10'
-              )
-            )}
-          >
-            <IconButton
-              type="button"
-              aria-label={`Reorder ${label.toLowerCase()} ${i + 1}`}
-              onPointerDown={(event) => handlePointerDown(event, i)}
-              onPointerMove={handlePointerMove}
-              onPointerUp={finishDrag}
-              onPointerCancel={finishDrag}
-              className="h-11 touch-none justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-white"
+        {fields.map((field, i) => {
+          const edit = getFieldEdit(i)
+
+          return (
+            <div
+              key={field.id}
+              ref={(node) => {
+                rowRefs.current[i] = node
+              }}
+              style={{ transform: getRowTransform(i) }}
+              className={twMerge(
+                clsx(
+                  'relative grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-2 rounded-lg bg-slate-950/40 p-1 transition-[transform,background-color,box-shadow] duration-200 ease-out',
+                  dragState?.sourceIndex === i
+                    ? 'z-20 bg-slate-900 shadow-lg shadow-black/20 transition-none'
+                    : dragState && 'z-10'
+                )
+              )}
             >
-              <MdDragIndicator />
-            </IconButton>
-            <Input
-              name={`${name}.${i}`}
-              placeholder={placeholder}
-              className="min-w-0"
-            />
-            <IconButton
-              type="button"
-              aria-label={`Remove ${label.toLowerCase()} ${i + 1}`}
-              onClick={() => remove(i)}
-              className="h-11 justify-center text-slate-300 hover:text-white"
-            >
-              <MdClose />
-            </IconButton>
-          </div>
-        ))}
+              <IconButton
+                type="button"
+                aria-label={`Reorder ${label.toLowerCase()} ${i + 1}`}
+                onPointerDown={(event) => handlePointerDown(event, i)}
+                onPointerMove={handlePointerMove}
+                onPointerUp={finishDrag}
+                onPointerCancel={finishDrag}
+                className="h-11 touch-none justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-white"
+              >
+                <MdDragIndicator />
+              </IconButton>
+              <div
+                className="flex min-w-0 flex-col gap-1"
+                data-field-path={`${name}.${i}`}
+              >
+                <div
+                  className={clsx(
+                    'rounded transition-shadow',
+                    edit &&
+                      'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
+                  )}
+                >
+                  <Input
+                    name={`${name}.${i}`}
+                    placeholder={placeholder}
+                    className="min-w-0"
+                  />
+                </div>
+                {edit && (
+                  <div className="flex items-start gap-2">
+                    <p className="flex-1 text-xs text-amber-300/80 italic leading-snug">
+                      {edit.reason}
+                    </p>
+                    <div className="flex shrink-0 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleApprove(edit)}
+                        className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
+                      >
+                        <Check className="h-3 w-3" />
+                        Keep
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleReject(edit)}
+                        className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
+                      >
+                        <RotateCcw className="h-3 w-3" />
+                        Restore
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+              <IconButton
+                type="button"
+                aria-label={`Remove ${label.toLowerCase()} ${i + 1}`}
+                onClick={() => remove(i)}
+                className="h-11 justify-center text-slate-300 hover:text-white"
+              >
+                <MdClose />
+              </IconButton>
+            </div>
+          )
+        })}
         <FormInput
           className={fields.length > 0 ? 'ml-[3.25rem]' : ''}
           onSubmit={append}

@@ -1,5 +1,6 @@
 import { Fragment } from 'react'
 import { useWatch } from 'react-hook-form'
+import { useAtomValue } from 'jotai'
 
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
@@ -11,6 +12,12 @@ import {
 } from './CollapsibleFormItem'
 import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import Keywords from './Keywords'
+import {
+  agentPendingEditsAtom,
+  type NewEntryEdit,
+  type RemoveEntryEdit
+} from '../../../../atoms/agentEdits'
+import { AgentEntryEditControls } from '../../../agent/AgentEntryEditControls'
 
 import { Skill } from '../../../../types'
 
@@ -22,6 +29,7 @@ export function SkillsSection() {
     removeAndAdjustExpanded,
     toggleExpanded
   } = useCollapsibleFieldArray('skills')
+  const pendingEdits = useAtomValue(agentPendingEditsAtom)
 
   const handleAdd = () => {
     const defaultSkill: Skill = {
@@ -34,6 +42,14 @@ export function SkillsSection() {
 
   return (
     <FormSection title="Your Skills">
+      {fields.length === 0 && (
+        <Fragment>
+          <p className="text-gray-400">No skills added yet.</p>
+          <AddButton type="button" onClick={handleAdd}>
+            + Add Skill
+          </AddButton>
+        </Fragment>
+      )}
       {fields.length > 0 && (
         <Fragment>
           <LabeledInput
@@ -45,9 +61,29 @@ export function SkillsSection() {
         </Fragment>
       )}
       {fields.map((field, index) => {
+        const entryEdit = pendingEdits.find(
+          (e): e is NewEntryEdit | RemoveEntryEdit =>
+            (e.type === 'append' || e.type === 'remove') &&
+            e.arrayPath === 'skills' &&
+            e.entryIndex === index &&
+            e.status === 'pending'
+        )
+
         return (
           <CollapsibleFormItem
             key={field.id}
+            className={
+              entryEdit
+                ? entryEdit.type === 'remove'
+                  ? 'ring-2 ring-rose-400/70 shadow-[0_0_0_3px_rgba(251,113,133,0.12)]'
+                  : 'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
+                : undefined
+            }
+            footer={
+              entryEdit ? (
+                <AgentEntryEditControls edit={entryEdit} />
+              ) : undefined
+            }
             isExpanded={expandedIndex === index}
             onToggle={() => toggleExpanded(index)}
             onRemove={() => removeAndAdjustExpanded(index)}
@@ -55,16 +91,18 @@ export function SkillsSection() {
             removeLabel="Remove skill"
             summary={<SkillSummary index={index} />}
           >
-            <LabeledInput
-              name={`skills.${index}.name`}
-              label="Skill name"
-              placeholder="Programming Languages"
-            />
-            <Keywords
-              label="Skill Details"
-              placeholder="TypeScript"
-              name={`skills.${index}.keywords`}
-            />
+            <div data-array-path="skills" data-array-index={index}>
+              <LabeledInput
+                name={`skills.${index}.name`}
+                label="Skill name"
+                placeholder="Programming Languages"
+              />
+              <Keywords
+                label="Skill Details"
+                placeholder="TypeScript"
+                name={`skills.${index}.keywords`}
+              />
+            </div>
           </CollapsibleFormItem>
         )
       })}

@@ -1,10 +1,14 @@
 import { ReactNode } from 'react'
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 import { Divider } from '../../../core/Divider'
 
 interface CollapsibleFormItemProps {
   children: ReactNode
+  className?: string
+  footer?: ReactNode
   isExpanded: boolean
   onToggle: () => void
   onRemove?: () => void
@@ -15,6 +19,8 @@ interface CollapsibleFormItemProps {
 
 export function CollapsibleFormItem({
   children,
+  className,
+  footer,
   isExpanded,
   onToggle,
   onRemove,
@@ -26,7 +32,14 @@ export function CollapsibleFormItem({
 
   return (
     <>
-      <div className="-mx-1.5 max-w-none overflow-hidden rounded-lg border border-white/10 bg-slate-900/60 transition hover:border-blue-500/40 sm:-mx-3">
+      <div
+        className={twMerge(
+          clsx(
+            '-mx-1.5 max-w-none overflow-hidden rounded-lg border border-white/10 bg-slate-900/60 transition hover:border-blue-500/40 sm:-mx-3',
+            className
+          )
+        )}
+      >
         <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-slate-900 sm:px-3">
           <button
             type="button"
@@ -68,6 +81,7 @@ export function CollapsibleFormItem({
             <div className="min-w-0 px-1.5 pb-4 pt-2 sm:px-3">{children}</div>
           </div>
         </div>
+        {footer && <div className="px-1.5 pb-3 sm:px-3">{footer}</div>}
       </div>
       <Divider />
     </>
