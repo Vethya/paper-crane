@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       messages: messages.map(({ role, content }) => ({ role, content })),
     })
 
-    console.log('[agent/edit] generateText response:', JSON.stringify(output, null, 2))
+    console.log('[agent/edit] Generated edits:', { editCount: output.edits.length })
     return NextResponse.json(output)
   } catch (err) {
     if (NoObjectGeneratedError.isInstance(err)) {
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
           ].join('\n\n'),
         })
 
-        console.log('[agent/edit] Repair successful:', JSON.stringify(repaired, null, 2))
+        console.log('[agent/edit] Repair successful:', { editCount: repaired.edits.length })
         return NextResponse.json(repaired)
       } catch (repairErr) {
         console.error('[agent/edit] Repair failed:', repairErr)
