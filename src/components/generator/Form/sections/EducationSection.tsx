@@ -1,36 +1,59 @@
 import { Fragment } from 'react'
-import { useFieldArray } from 'react-hook-form'
+import { useWatch } from 'react-hook-form'
 import { useAtomValue } from 'jotai'
 
 import { FormSection } from './FormSection'
+import {
+  CollapsibleFormItem,
+  CollapsibleFormItemSummary
+} from './CollapsibleFormItem'
+import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton, RemoveButton } from '../../../core/Button'
+import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
-import { agentPendingEditsAtom, type NewEntryEdit, type RemoveEntryEdit } from '../../../../atoms/agentEdits'
+import {
+  agentPendingEditsAtom,
+  type NewEntryEdit,
+  type RemoveEntryEdit
+} from '../../../../atoms/agentEdits'
 import { AgentEntryEditControls } from '../../../agent/AgentEntryEditControls'
 
 import { Education } from '../../../../types'
 
 export function EducationSection() {
-  const { fields, append, remove } = useFieldArray({ name: 'education' })
+  const {
+    fields,
+    expandedIndex,
+    appendAndExpand,
+    removeAndAdjustExpanded,
+    toggleExpanded
+  } = useCollapsibleFieldArray('education')
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
 
   const handleAdd = () => {
     const defaultEducation: Education = {
       institution: '',
       location: '',
-      studyType: '',
       area: '',
+      studyType: '',
       score: '',
       startDate: '',
       endDate: ''
     }
 
-    append(defaultEducation)
+    appendAndExpand(defaultEducation)
   }
 
   return (
     <FormSection title="Your Educational Background">
+      {fields.length === 0 && (
+        <Fragment>
+          <p className="text-gray-400">No education added yet.</p>
+          <AddButton type="button" onClick={handleAdd}>
+            + Add School
+          </AddButton>
+        </Fragment>
+      )}
       {fields.length > 0 && (
         <Fragment>
           <LabeledInput
@@ -44,19 +67,35 @@ export function EducationSection() {
       {fields.map((field, index) => {
         const entryEdit = pendingEdits.find(
           (e): e is NewEntryEdit | RemoveEntryEdit =>
-            (e.type === 'append' || e.type === 'remove') && e.arrayPath === 'education' && e.entryIndex === index && e.status === 'pending'
+            (e.type === 'append' || e.type === 'remove') &&
+            e.arrayPath === 'education' &&
+            e.entryIndex === index &&
+            e.status === 'pending'
         )
+
         return (
-          <div key={field.id}>
-            <div
-              data-array-path="education"
-              data-array-index={index}
-              className={entryEdit
+          <CollapsibleFormItem
+            key={field.id}
+            className={
+              entryEdit
                 ? entryEdit.type === 'remove'
-                  ? 'rounded-lg ring-2 ring-rose-400/70 shadow-[0_0_0_3px_rgba(251,113,133,0.12)]'
-                  : 'rounded-lg ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
-                : undefined}
-            >
+                  ? 'ring-2 ring-rose-400/70 shadow-[0_0_0_3px_rgba(251,113,133,0.12)]'
+                  : 'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
+                : undefined
+            }
+            footer={
+              entryEdit ? (
+                <AgentEntryEditControls edit={entryEdit} />
+              ) : undefined
+            }
+            isExpanded={expandedIndex === index}
+            onToggle={() => toggleExpanded(index)}
+            onRemove={() => removeAndAdjustExpanded(index)}
+            removeDisabled={fields.length === 1}
+            removeLabel="Remove school"
+            summary={<EducationSummary index={index} />}
+          >
+            <div data-array-path="education" data-array-index={index}>
               <LabeledInput
                 name={`education.${index}.institution`}
                 label="School name"
@@ -92,22 +131,27 @@ export function EducationSection() {
                 label="End Date"
                 placeholder="Jun 2019"
               />
-              <RemoveButton
-                type="button"
-                disabled={fields.length === 1}
-                onClick={() => remove(index)}
-              >
-                - Remove School
-              </RemoveButton>
             </div>
-            {entryEdit && <AgentEntryEditControls edit={entryEdit} />}
-            <Divider />
-          </div>
+          </CollapsibleFormItem>
         )
       })}
       <AddButton type="button" onClick={handleAdd}>
         + Add School
       </AddButton>
     </FormSection>
+  )
+}
+
+function EducationSummary({ index }: { index: number }) {
+  const item = useWatch({ name: `education.${index}` }) as Education | undefined
+  const summaryDetail = [item?.studyType, item?.area]
+    .filter(Boolean)
+    .join(' - ')
+
+  return (
+    <CollapsibleFormItemSummary
+      title={item?.institution || `School ${index + 1}`}
+      detail={summaryDetail}
+    />
   )
 }

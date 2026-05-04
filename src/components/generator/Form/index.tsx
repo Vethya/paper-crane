@@ -98,9 +98,14 @@ const initialFormValues: FormValues = {
 interface FormProps {
   className?: string
   activeSection?: string
+  formId?: string
 }
 
-export function Form({ className, activeSection = 'basics' }: FormProps) {
+export function Form({
+  className,
+  activeSection = 'basics',
+  formId = 'resume-form'
+}: FormProps) {
   const searchParams = useSearchParams()
   const currSection = activeSection
   const resumeId = searchParams.get('id')
@@ -182,8 +187,10 @@ export function Form({ className, activeSection = 'basics' }: FormProps) {
   return (
     <FormProvider {...formContext}>
       <form
-        className={twMerge(clsx("overflow-auto xl:h-full", className))}
-        id="resume-form"
+        className={twMerge(
+          clsx('overflow-x-hidden overflow-y-auto xl:h-full', className)
+        )}
+        id={formId}
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
         {isLoadingResume ? (

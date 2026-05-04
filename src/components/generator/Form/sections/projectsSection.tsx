@@ -1,19 +1,34 @@
 import { Fragment } from 'react'
-import { useFieldArray } from 'react-hook-form'
+import { useWatch } from 'react-hook-form'
 import { useAtomValue } from 'jotai'
 
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton, RemoveButton } from '../../../core/Button'
+import { AddButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
+import {
+  CollapsibleFormItem,
+  CollapsibleFormItemSummary
+} from './CollapsibleFormItem'
+import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import Keywords from './Keywords'
-import { agentPendingEditsAtom, type NewEntryEdit, type RemoveEntryEdit } from '../../../../atoms/agentEdits'
+import {
+  agentPendingEditsAtom,
+  type NewEntryEdit,
+  type RemoveEntryEdit
+} from '../../../../atoms/agentEdits'
 import { AgentEntryEditControls } from '../../../agent/AgentEntryEditControls'
 
 import { Project } from '../../../../types'
 
 export function ProjectsSection() {
-  const { fields, append, remove } = useFieldArray({ name: 'projects' })
+  const {
+    fields,
+    expandedIndex,
+    appendAndExpand,
+    removeAndAdjustExpanded,
+    toggleExpanded
+  } = useCollapsibleFieldArray('projects')
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
 
   const handleAdd = () => {
@@ -24,11 +39,19 @@ export function ProjectsSection() {
       url: ''
     }
 
-    append(defaultProject)
+    appendAndExpand(defaultProject)
   }
 
   return (
     <FormSection title="Your Projects">
+      {fields.length === 0 && (
+        <Fragment>
+          <p className="text-gray-400">No projects added yet.</p>
+          <AddButton type="button" onClick={handleAdd}>
+            + Add Project
+          </AddButton>
+        </Fragment>
+      )}
       {fields.length > 0 && (
         <Fragment>
           <LabeledInput
@@ -42,19 +65,35 @@ export function ProjectsSection() {
       {fields.map((field, index) => {
         const entryEdit = pendingEdits.find(
           (e): e is NewEntryEdit | RemoveEntryEdit =>
-            (e.type === 'append' || e.type === 'remove') && e.arrayPath === 'projects' && e.entryIndex === index && e.status === 'pending'
+            (e.type === 'append' || e.type === 'remove') &&
+            e.arrayPath === 'projects' &&
+            e.entryIndex === index &&
+            e.status === 'pending'
         )
+
         return (
-          <div key={field.id}>
-            <div
-              data-array-path="projects"
-              data-array-index={index}
-              className={entryEdit
+          <CollapsibleFormItem
+            key={field.id}
+            className={
+              entryEdit
                 ? entryEdit.type === 'remove'
-                  ? 'rounded-lg ring-2 ring-rose-400/70 shadow-[0_0_0_3px_rgba(251,113,133,0.12)]'
-                  : 'rounded-lg ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
-                : undefined}
-            >
+                  ? 'ring-2 ring-rose-400/70 shadow-[0_0_0_3px_rgba(251,113,133,0.12)]'
+                  : 'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
+                : undefined
+            }
+            footer={
+              entryEdit ? (
+                <AgentEntryEditControls edit={entryEdit} />
+              ) : undefined
+            }
+            isExpanded={expandedIndex === index}
+            onToggle={() => toggleExpanded(index)}
+            onRemove={() => removeAndAdjustExpanded(index)}
+            removeDisabled={fields.length === 1}
+            removeLabel="Remove project"
+            summary={<ProjectSummary index={index} />}
+          >
+            <div data-array-path="projects" data-array-index={index}>
               <LabeledInput
                 name={`projects.${index}.name`}
                 label="Project Name"
@@ -75,22 +114,26 @@ export function ProjectsSection() {
                 placeholder="TypeScript"
                 name={`projects.${index}.keywords`}
               />
-              <RemoveButton
-                type="button"
-                disabled={fields.length === 1}
-                onClick={() => remove(index)}
-              >
-                - Remove Project
-              </RemoveButton>
             </div>
-            {entryEdit && <AgentEntryEditControls edit={entryEdit} />}
-            <Divider />
-          </div>
+          </CollapsibleFormItem>
         )
       })}
       <AddButton type="button" onClick={handleAdd}>
         + Add Project
       </AddButton>
     </FormSection>
+  )
+}
+
+function ProjectSummary({ index }: { index: number }) {
+  const item = useWatch({ name: `projects.${index}` }) as Project | undefined
+  const summaryDetail =
+    item?.description || item?.keywords?.filter(Boolean).join(', ')
+
+  return (
+    <CollapsibleFormItemSummary
+      title={item?.name || `Project ${index + 1}`}
+      detail={summaryDetail}
+    />
   )
 }

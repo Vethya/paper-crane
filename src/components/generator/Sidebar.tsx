@@ -19,30 +19,43 @@ const sectionLinks = [
 interface SidebarProps {
   activeSection: string
   onSectionChange: (section: string) => void
+  formId?: string
 }
 
-export function Sidebar({ activeSection, onSectionChange }: SidebarProps) {
+export function Sidebar({
+  activeSection,
+  onSectionChange,
+  formId = 'resume-form'
+}: SidebarProps) {
   const isLoadingResume = useAtomValue(isLoadingResumeAtom)
 
   return (
-    <aside>
-      <nav className="flex flex-col items-start justify-center gap-6 mb-7">
+    <aside className="min-w-0">
+      <nav className="mb-7 flex w-full min-w-0 flex-col items-start justify-center gap-6">
         {sectionLinks.map(({ label, section }) => (
           <button
             key={section}
             type="button"
             onClick={() => onSectionChange(section)}
-            className={twMerge(clsx(
-              "font-light text-white text-left",
-              activeSection === section && "text-green"
-            ))}
+            className={twMerge(
+              clsx(
+                'max-w-full break-words text-left font-light leading-snug text-white',
+                activeSection === section && 'text-green'
+              )
+            )}
           >
             {label}
           </button>
         ))}
       </nav>
 
-      <PrimaryButton form="resume-form" disabled={isLoadingResume}>MAKE</PrimaryButton>
+      <PrimaryButton
+        form={formId}
+        disabled={isLoadingResume}
+        className="w-full min-w-0 px-3"
+      >
+        MAKE
+      </PrimaryButton>
     </aside>
   )
 }
@@ -61,10 +74,10 @@ export function MobileNav({ activeSection, onSectionChange }: MobileNavProps) {
           type="button"
           onClick={() => onSectionChange(section)}
           className={clsx(
-            "shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            'shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors',
             activeSection === section
-              ? "bg-blue-600 text-white"
-              : "bg-slate-800/60 text-slate-400 hover:text-slate-200"
+              ? 'bg-blue-600 text-white'
+              : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
           )}
         >
           {label}

@@ -7,7 +7,10 @@ import { MdClose } from 'react-icons/md'
 import { Check, RotateCcw } from 'lucide-react'
 import { IconButton } from '../../../core/Button'
 import { FormInput } from '../../../core/FormInput'
-import { agentPendingEditsAtom, type FieldEdit } from '../../../../atoms/agentEdits'
+import {
+  agentPendingEditsAtom,
+  type FieldEdit
+} from '../../../../atoms/agentEdits'
 import { useAdvanceFocusedEdit } from '../../../../hooks/useAdvanceFocusedEdit'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -19,7 +22,12 @@ interface KeywordProps {
   className?: string
 }
 
-export default function Keywords({ name, label, placeholder, className }: KeywordProps) {
+export default function Keywords({
+  name,
+  label,
+  placeholder,
+  className
+}: KeywordProps) {
   const { getValues } = useFormContext()
   const { fields, append, remove, replace } = useFieldArray({ name })
   const [pendingEdits, setPendingEdits] = useAtom(agentPendingEditsAtom)
@@ -31,7 +39,6 @@ export default function Keywords({ name, label, placeholder, className }: Keywor
       e.type === 'set' && e.fieldPath === name && e.status === 'pending'
   )
 
-  // Apply the new keywords array via replace() when the pending edit arrives
   useEffect(() => {
     if (!fieldEdit || appliedEditId.current === fieldEdit.id) return
     if (Array.isArray(fieldEdit.newValue)) {
@@ -45,7 +52,9 @@ export default function Keywords({ name, label, placeholder, className }: Keywor
     advanceFocusedEdit(fieldEdit.id)
     appliedEditId.current = null
     setPendingEdits((prev) =>
-      prev.map((e) => (e.id === fieldEdit.id ? { ...e, status: 'approved' } : e))
+      prev.map((e) =>
+        e.id === fieldEdit.id ? { ...e, status: 'approved' } : e
+      )
     )
   }
 
@@ -56,30 +65,38 @@ export default function Keywords({ name, label, placeholder, className }: Keywor
     appliedEditId.current = null
     replace(Array.isArray(original) ? (original as string[]) : [])
     setPendingEdits((prev) =>
-      prev.map((e) => (e.id === fieldEdit.id ? { ...e, status: 'rejected' } : e))
+      prev.map((e) =>
+        e.id === fieldEdit.id ? { ...e, status: 'rejected' } : e
+      )
     )
   }
 
   return (
-    <div className={twMerge(clsx('', className))} data-field-path={name}>
-      <label className="inline-block text-white mb-2">{label}</label>
+    <div className={twMerge(clsx('min-w-0', className))} data-field-path={name}>
+      <label className="mb-2 inline-block text-white">{label}</label>
       <FormInput onSubmit={append} />
-
       <div
         className={clsx(
-          'rounded transition-shadow my-2',
-          fieldEdit && 'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)] p-2'
+          'my-2 rounded transition-shadow',
+          fieldEdit &&
+            'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)] p-2'
         )}
       >
-        <div className="flex gap-1 items-start flex-wrap">
+        <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-1 overflow-hidden">
           {fields.map((field, i) => (
             <Fragment key={field.id}>
               <div
-                className="inline-flex border rounded-full px-4 py-2 pr-1 gap-1"
+                className="inline-flex max-w-full min-w-0 items-center gap-1 rounded-full border px-4 py-2 pr-1"
                 style={{ borderColor: '#4b5563' }}
               >
-                {getValues(`${name}.${i}`)}
-                <IconButton type="button" onClick={() => remove(i)}>
+                <span className="block min-w-0 max-w-full truncate">
+                  {getValues(`${name}.${i}`)}
+                </span>
+                <IconButton
+                  type="button"
+                  onClick={() => remove(i)}
+                  className="shrink-0"
+                >
                   <MdClose />
                 </IconButton>
               </div>
@@ -89,7 +106,9 @@ export default function Keywords({ name, label, placeholder, className }: Keywor
 
         {fieldEdit && (
           <div className="mt-2 flex items-start gap-2">
-            <p className="flex-1 text-xs text-amber-300/80 italic leading-snug">{fieldEdit.reason}</p>
+            <p className="flex-1 text-xs text-amber-300/80 italic leading-snug">
+              {fieldEdit.reason}
+            </p>
             <div className="flex shrink-0 gap-1">
               <button
                 type="button"

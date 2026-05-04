@@ -19,17 +19,17 @@ export function TemplatesSection() {
             control={control}
             name="selectedTemplate"
             render={({ field }) => (
-              <label className="cursor-pointer">
+              <label className="relative block cursor-pointer rounded">
                 <input
                   type="radio"
-                  className="sr-only"
+                  className="peer absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                   onChange={() => field.onChange(templateId)}
                   value={templateId}
                   checked={field.value === templateId}
                 />
                 <div
                   className={clsx(
-                    'border-2 rounded overflow-hidden',
+                    'overflow-hidden rounded border-2 transition peer-focus-visible:ring-2 peer-focus-visible:ring-blue-400 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-slate-900',
                     field.value === templateId
                       ? 'border-primary'
                       : 'border-transparent'
