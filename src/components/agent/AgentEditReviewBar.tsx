@@ -187,6 +187,22 @@ export function AgentEditReviewBar() {
     ) => void
     setFocusedId(null)
 
+    // Apply pending array-valued sets before marking all as approved. Text sets
+    // are applied immediately when edits are generated, but keyword arrays are
+    // normally applied by the Keywords component when that section mounts.
+    for (const edit of pendingEdits) {
+      if (
+        edit.type === 'set' &&
+        edit.status === 'pending' &&
+        Array.isArray(edit.newValue)
+      ) {
+        setFormValue(edit.fieldPath, edit.newValue, {
+          shouldDirty: true,
+          shouldValidate: true
+        })
+      }
+    }
+
     // Apply pending removals to the form before marking all as approved
     const removeMap = new Map<string, Set<number>>()
     for (const edit of pendingEdits) {
