@@ -92,14 +92,14 @@ export function CreateResumeDialog({ children }: CreateResumeDialogProps) {
             <button
               onClick={() => handleOpenChange(false)}
               disabled={loading}
-              className="rounded-full border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover disabled:opacity-50"
+              className="rounded-app-button border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleCreate}
               disabled={loading || !title.trim()}
-              className="rounded-full border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 disabled:opacity-50"
+              className="rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create'}
             </button>

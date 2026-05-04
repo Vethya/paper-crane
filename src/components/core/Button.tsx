@@ -13,7 +13,7 @@ export function Button({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          'flex h-11 min-w-[175px] items-center justify-center rounded-full border border-app-controlBorder bg-app-control px-5 text-sm font-medium text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-app-borderStrong hover:bg-app-controlHover',
+          'flex h-11 min-w-[175px] items-center justify-center rounded-app-button border border-app-controlBorder bg-app-control px-5 text-sm font-medium text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-app-borderStrong hover:bg-app-controlHover',
           className
         )
       )}
@@ -33,7 +33,7 @@ export function PrimaryButton({
     <button
       className={twMerge(
         clsx(
-          'flex h-11 min-w-[175px] items-center justify-center rounded-full border border-white/90 bg-white px-5 text-sm font-semibold text-app-background shadow-[0_18px_45px_-25px_rgba(255,255,255,0.35)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-app-background hover:bg-zinc-200 disabled:border-app-border disabled:bg-app-surfaceElevated disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-60',
+          'flex h-11 min-w-[175px] items-center justify-center rounded-app-button border border-white/90 bg-white px-5 text-sm font-semibold text-app-background shadow-[0_18px_45px_-25px_rgba(255,255,255,0.35)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-app-background hover:bg-zinc-200 disabled:border-app-border disabled:bg-app-surfaceElevated disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-60',
           className
         )
       )}
@@ -49,7 +49,7 @@ export function MiniButton({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          'flex justify-center items-center font-inherit text-sm text-center no-underline px-6 py-[6px] text-white rounded border-none hover:cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-40',
+          'flex justify-center items-center font-inherit text-sm text-center no-underline px-6 py-[6px] text-white rounded-app-button border-none hover:cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-40',
           className
         )
       )}

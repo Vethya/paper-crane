@@ -49,7 +49,7 @@ export function AgentMessageList({
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+              className={`max-w-[85%] rounded-app-card px-4 py-2.5 text-sm leading-relaxed ${
                 msg.role === 'user'
                   ? 'rounded-br-sm bg-white text-app-background whitespace-pre-wrap'
                   : 'rounded-bl-sm border border-app-controlBorder bg-app-control text-slate-100'
@@ -125,7 +125,7 @@ export function AgentMessageList({
                   {msg.error && onRetry && (
                     <button
                       onClick={onRetry}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-app-controlBorder bg-app-control px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-app-button border border-app-controlBorder bg-app-control px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
                     >
                       <RotateCw className="h-3 w-3" />
                       Retry

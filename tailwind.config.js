@@ -69,6 +69,9 @@ module.exports = {
         green: '#F4F4F5'
       },
       borderRadius: {
+        'app-button': '0.625rem',
+        'app-card': '0.875rem',
+        'app-panel': '1rem',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)'

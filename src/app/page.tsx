@@ -86,7 +86,7 @@ export default function Home() {
 
               <label
                 htmlFor="import-json"
-                className="group inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-app-controlBorder bg-app-control px-8 py-3 text-base font-medium text-white transition hover:border-app-borderStrong hover:bg-app-controlHover sm:w-auto"
+                className="group inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-app-button border border-app-controlBorder bg-app-control px-8 py-3 text-base font-medium text-white transition hover:border-app-borderStrong hover:bg-app-controlHover sm:w-auto"
               >
                 <span className="inline-flex h-2 w-2 rounded-full bg-white/70 group-hover:bg-white" />
                 Import JSON
@@ -105,7 +105,7 @@ export default function Home() {
               {featureHighlights.map((feature) => (
                 <div
                   key={feature.title}
-                  className="rounded-2xl border border-app-border bg-app-surface p-6 transition hover:border-app-borderStrong hover:bg-app-surfaceElevated"
+                  className="rounded-app-card border border-app-border bg-app-surface p-6 transition hover:border-app-borderStrong hover:bg-app-surfaceElevated"
                 >
                   <h2 className="text-lg font-semibold text-white">
                     {feature.title}

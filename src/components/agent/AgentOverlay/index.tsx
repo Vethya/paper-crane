@@ -583,7 +583,7 @@ export function AgentOverlay() {
                 </p>
                 <a
                   href="/login"
-                  className="mt-2 rounded-full border border-white/90 bg-white px-6 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="mt-2 rounded-app-button border border-white/90 bg-white px-6 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   Sign in
                 </a>
@@ -593,7 +593,7 @@ export function AgentOverlay() {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className={`h-10 animate-pulse rounded-2xl bg-app-surfaceElevated ${i % 2 === 0 ? 'self-end w-2/3' : 'self-start w-3/4'}`}
+                    className={`h-10 animate-pulse rounded-app-card bg-app-surfaceElevated ${i % 2 === 0 ? 'self-end w-2/3' : 'self-start w-3/4'}`}
                   />
                 ))}
               </div>

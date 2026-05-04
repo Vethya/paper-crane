@@ -201,7 +201,7 @@ export default function Highlights({
               style={{ transform: getRowTransform(i) }}
               className={twMerge(
                 clsx(
-                  'relative grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-2 rounded-lg bg-app-background/40 p-1 transition-[transform,background-color,box-shadow] duration-200 ease-out',
+                  'relative grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-2 rounded-app-button bg-app-background/40 p-1 transition-[transform,background-color,box-shadow] duration-200 ease-out',
                   dragState?.sourceIndex === i
                     ? 'z-20 bg-app-surface shadow-lg shadow-black/20 transition-none'
                     : dragState && 'z-10'

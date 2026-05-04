@@ -45,7 +45,7 @@ export function AgentHistoryItem({
     <div className="group relative">
       <button
         onClick={() => onSelect(session._id)}
-        className="flex w-full flex-col gap-1.5 rounded-xl border border-app-controlBorder bg-app-control px-4 py-3 text-left transition hover:border-app-borderStrong hover:bg-app-controlHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex w-full flex-col gap-1.5 rounded-app-card border border-app-controlBorder bg-app-control px-4 py-3 text-left transition hover:border-app-borderStrong hover:bg-app-controlHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <div className="flex items-center justify-between gap-2 pr-6">
           <span

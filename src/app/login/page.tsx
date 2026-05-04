@@ -36,10 +36,10 @@ export default function LoginPage() {
           </Link>
         </div>
 
-        <div className="rounded-2xl border border-app-border bg-app-surface p-8">
+        <div className="rounded-app-panel border border-app-border bg-app-surface p-8">
           <Button
             type="button"
-            className="w-full min-w-0 gap-2 rounded-lg"
+            className="w-full min-w-0 gap-2 rounded-app-button"
             onClick={handleGoogle}
           >
             <FcGoogle size={18} />

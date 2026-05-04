@@ -82,7 +82,7 @@ export default function ResumesPage() {
             </div>
 
             <CreateResumeDialog>
-              <button className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 cursor-pointer sm:hidden">
+              <button className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 cursor-pointer sm:hidden">
                 <FiPlus size={16} />
                 New Resume
               </button>
@@ -91,13 +91,13 @@ export default function ResumesPage() {
 
           <div className="flex items-center gap-2 sm:justify-end">
             <ImportResumeDialog>
-              <button className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-app-controlBorder bg-app-control px-4 py-2 text-sm font-medium text-white transition hover:bg-app-controlHover cursor-pointer">
+              <button className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-app-button border border-app-controlBorder bg-app-control px-4 py-2 text-sm font-medium text-white transition hover:bg-app-controlHover cursor-pointer">
                 <FiUpload size={15} />
                 Import
               </button>
             </ImportResumeDialog>
             <CreateResumeDialog>
-              <button className="hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-full border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 cursor-pointer sm:flex">
+              <button className="hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 cursor-pointer sm:flex">
                 <FiPlus size={16} />
                 New Resume
               </button>
@@ -110,25 +110,25 @@ export default function ResumesPage() {
             {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
-                className="h-36 animate-pulse rounded-2xl border border-app-border bg-app-surface"
+                className="h-36 animate-pulse rounded-app-card border border-app-border bg-app-surface"
               />
             ))}
           </div>
         )}
 
         {error && (
-          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-400">
+          <div className="rounded-app-card border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-400">
             {error}
           </div>
         )}
 
         {!loading && !error && resumes.length === 0 && (
-          <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 py-24 text-center">
+          <div className="flex flex-col items-center justify-center rounded-app-card border border-dashed border-white/10 py-24 text-center">
             <p className="mb-4 text-slate-400">
               You haven&apos;t created any resumes yet.
             </p>
             <CreateResumeDialog>
-              <button className="flex items-center gap-2 rounded-full border border-app-controlBorder bg-app-control px-5 py-2 text-sm text-white transition hover:border-app-borderStrong hover:bg-app-controlHover cursor-pointer">
+              <button className="flex items-center gap-2 rounded-app-button border border-app-controlBorder bg-app-control px-5 py-2 text-sm text-white transition hover:border-app-borderStrong hover:bg-app-controlHover cursor-pointer">
                 <FiPlus size={15} />
                 Create your first resume
               </button>

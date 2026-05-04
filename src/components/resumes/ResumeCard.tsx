@@ -67,11 +67,11 @@ export function ResumeCard({
     <>
       <Link
         href={`/generator?id=${id}`}
-        className="group relative flex flex-col gap-4 rounded-2xl border border-app-border bg-app-surface p-5 transition hover:border-app-borderStrong hover:bg-app-surfaceElevated"
+        className="group relative flex flex-col gap-4 rounded-app-card border border-app-border bg-app-surface p-5 transition hover:border-app-borderStrong hover:bg-app-surfaceElevated"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-white/10 text-slate-200">
+            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-app-button bg-white/10 text-slate-200">
               <FiFileText size={18} />
             </span>
             <span className="font-medium text-slate-100 group-hover:text-white transition-colors line-clamp-2 leading-snug">
@@ -87,7 +87,7 @@ export function ResumeCard({
                   e.stopPropagation()
                 }}
                 disabled={deleting}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-slate-400 transition hover:border-app-controlBorder hover:bg-app-controlHover hover:text-white data-[state=open]:border-app-controlBorder data-[state=open]:bg-app-controlHover data-[state=open]:text-white"
+                className="flex h-7 w-7 items-center justify-center rounded-app-button border border-transparent text-slate-400 transition hover:border-app-controlBorder hover:bg-app-controlHover hover:text-white data-[state=open]:border-app-controlBorder data-[state=open]:bg-app-controlHover data-[state=open]:text-white"
               >
                 <FiMoreVertical size={15} />
               </button>
@@ -98,7 +98,7 @@ export function ResumeCard({
                 e.preventDefault()
                 e.stopPropagation()
               }}
-              className="min-w-[130px] rounded-xl border border-app-controlBorder bg-app-surface py-1 shadow-xl"
+              className="min-w-[130px] rounded-app-card border border-app-controlBorder bg-app-surface py-1 shadow-xl"
             >
               <DropdownMenuItem
                 onClick={() => setConfirmOpen(true)}
@@ -150,14 +150,14 @@ export function ResumeCard({
             <button
               onClick={() => setConfirmOpen(false)}
               disabled={deleting}
-              className="rounded-lg border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover disabled:opacity-50"
+              className="rounded-app-button border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleDelete}
               disabled={deleting}
-              className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50"
+              className="rounded-app-button bg-red-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-500 disabled:opacity-50"
             >
               {deleting ? 'Deleting…' : 'Delete'}
             </button>

@@ -133,7 +133,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
               onDrop={handleDrop}
               disabled={isBusy}
               className={[
-                'flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition',
+                'flex flex-col items-center justify-center gap-2 rounded-app-card border-2 border-dashed px-6 py-10 text-center transition',
                 isBusy ? 'cursor-wait opacity-70' : '',
                 dragging
                   ? 'border-app-borderStrong bg-app-hover text-slate-200'
@@ -197,14 +197,14 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
             <button
               onClick={() => handleOpenChange(false)}
               disabled={isBusy}
-              className="rounded-full border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover disabled:opacity-50"
+              className="rounded-app-button border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={handleImport}
               disabled={isBusy || !parsedContent || !title.trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 disabled:opacity-50"
             >
               {isBusy && <Loader2 className="h-4 w-4 animate-spin" />}
               {openingGenerator

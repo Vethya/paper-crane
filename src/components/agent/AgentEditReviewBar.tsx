@@ -287,7 +287,7 @@ export function AgentEditReviewBar() {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 12, opacity: 0 }}
                 transition={{ duration: 0.16 }}
-                className="fixed bottom-[6rem] left-4 right-4 z-50 mx-auto max-h-[min(60vh,24rem)] max-w-2xl overflow-hidden rounded-lg border border-amber-400/25 bg-app-background shadow-2xl shadow-black/50"
+                className="fixed bottom-[6rem] left-4 right-4 z-50 mx-auto max-h-[min(60vh,24rem)] max-w-2xl overflow-hidden rounded-app-panel border border-amber-400/25 bg-app-background shadow-2xl shadow-black/50"
               >
                 <div className="border-b border-white/10 px-4 py-3">
                   <p className="text-sm font-medium text-slate-100">
@@ -336,7 +336,7 @@ export function AgentEditReviewBar() {
               <button
                 type="button"
                 onClick={() => setLocationsOpen((open) => !open)}
-                className="flex h-6 w-32 items-center justify-center rounded-full border border-app-controlBorder bg-app-control text-white transition-colors hover:border-app-borderStrong hover:bg-app-controlHover"
+                className="flex h-6 w-32 items-center justify-center rounded-app-button border border-app-controlBorder bg-app-control text-white transition-colors hover:border-app-borderStrong hover:bg-app-controlHover"
                 title={
                   locationsOpen
                     ? 'Hide review locations'
@@ -398,7 +398,7 @@ export function AgentEditReviewBar() {
                 <button
                   type="button"
                   onClick={rejectAll}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
+                  className="flex items-center gap-1.5 rounded-app-button px-3 py-1.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
                 >
                   <RotateCcw className="h-3 w-3" />
                   Reject All
@@ -406,7 +406,7 @@ export function AgentEditReviewBar() {
                 <button
                   type="button"
                   onClick={approveAll}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
+                  className="flex items-center gap-1.5 rounded-app-button px-3 py-1.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
                 >
                   <Check className="h-3 w-3" />
                   Approve All

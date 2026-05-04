@@ -60,7 +60,7 @@ function GeneratorContent() {
             onSectionChange={setActiveSection}
           />
 
-          <div className="rounded-3xl border border-app-border bg-app-surface">
+          <div className="rounded-app-panel border border-app-border bg-app-surface">
             <Form activeSection={activeSection} formId="resume-form-mobile" />
           </div>
 
@@ -79,7 +79,7 @@ function GeneratorContent() {
 
           <div
             ref={previewRef}
-            className="flex min-h-[70svh] flex-col rounded-3xl border border-app-border bg-app-surface"
+            className="flex min-h-[70svh] flex-col rounded-app-panel border border-app-border bg-app-surface"
           >
             <div className="border-b border-app-border px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-slate-400">
               Live preview
@@ -92,7 +92,7 @@ function GeneratorContent() {
 
         {/* Desktop layout (xl+) */}
         <div className="hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(14rem,15%)_minmax(0,1fr)_minmax(0,51%)] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8">
-          <div className="min-w-0 rounded-3xl border border-app-border bg-app-surface p-6">
+          <div className="min-w-0 rounded-app-panel border border-app-border bg-app-surface p-6">
             <Sidebar
               activeSection={activeSection}
               onSectionChange={setActiveSection}
@@ -100,11 +100,11 @@ function GeneratorContent() {
             />
           </div>
 
-          <div className="rounded-3xl border border-app-border bg-app-surface xl:overflow-hidden">
+          <div className="rounded-app-panel border border-app-border bg-app-surface xl:overflow-hidden">
             <Form activeSection={activeSection} formId="resume-form-desktop" />
           </div>
 
-          <div className="flex flex-col rounded-3xl border border-app-border bg-app-surface">
+          <div className="flex flex-col rounded-app-panel border border-app-border bg-app-surface">
             <div className="border-b border-app-border px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-slate-400">
               Live preview
             </div>

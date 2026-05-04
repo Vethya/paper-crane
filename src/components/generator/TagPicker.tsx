@@ -128,7 +128,7 @@ export function TagPicker() {
           setOpen((o) => !o)
           setSearch('')
         }}
-        className="flex items-center gap-1.5 rounded-full border border-app-controlBorder bg-app-control px-3 py-1.5 text-sm text-white transition-colors hover:bg-app-controlHover"
+        className="flex items-center gap-1.5 rounded-app-button border border-app-controlBorder bg-app-control px-3 py-1.5 text-sm text-white transition-colors hover:bg-app-controlHover"
       >
         <FiTag size={13} />
         {attachedTags.length > 0 ? (
@@ -150,14 +150,14 @@ export function TagPicker() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-app-controlBorder bg-app-surface shadow-xl">
+        <div className="absolute right-0 top-10 z-50 w-64 rounded-app-card border border-app-controlBorder bg-app-surface shadow-xl">
           <div className="border-b border-white/5 p-2">
             <input
               autoFocus
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search or create…"
-              className="w-full rounded-lg border border-app-controlBorder bg-app-control px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none"
+              className="w-full rounded-app-button border border-app-controlBorder bg-app-control px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none"
             />
           </div>
 
@@ -169,7 +169,7 @@ export function TagPicker() {
                 <div
                   key={tag._id}
                   onClick={() => toggleTag(tag.name)}
-                  className="group mx-1 flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 hover:bg-app-control"
+                  className="group mx-1 flex cursor-pointer items-center justify-between rounded-app-button px-2 py-1.5 hover:bg-app-control"
                 >
                   <div className="flex items-center gap-2">
                     <span
@@ -205,7 +205,7 @@ export function TagPicker() {
             {showCreate ? (
               <button
                 onClick={() => openCreate(search.trim())}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-white transition hover:bg-app-control"
+                className="flex w-full items-center gap-2 rounded-app-button px-3 py-2 text-sm text-white transition hover:bg-app-control"
               >
                 <FiPlus size={14} />
                 Create &ldquo;{search.trim()}&rdquo;
@@ -213,7 +213,7 @@ export function TagPicker() {
             ) : (
               <button
                 onClick={() => openCreate()}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-white transition hover:bg-app-control"
+                className="flex w-full items-center gap-2 rounded-app-button px-3 py-2 text-sm text-white transition hover:bg-app-control"
               >
                 <FiPlus size={14} />
                 New tag

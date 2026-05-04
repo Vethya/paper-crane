@@ -75,7 +75,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-full border border-app-controlBorder bg-app-control px-2 py-1 text-sm text-white transition hover:bg-app-controlHover focus:outline-none">
+                  <button className="flex items-center gap-2 rounded-app-button border border-app-controlBorder bg-app-control px-2 py-1 text-sm text-white transition hover:bg-app-controlHover focus:outline-none">
                     {user.image ? (
                       <img
                         src={user.image}
@@ -95,7 +95,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-44 rounded-lg border border-app-controlBorder bg-app-surfaceElevated py-1"
+                  className="w-44 rounded-app-card border border-app-controlBorder bg-app-surfaceElevated py-1"
                 >
                   <DropdownMenuItem asChild>
                     <Link
@@ -116,7 +116,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
             ) : (
               <Link
                 href="/login"
-                className="rounded-full border border-app-controlBorder bg-app-control px-4 py-1.5 text-sm text-white transition-colors hover:border-app-borderStrong hover:bg-app-controlHover"
+                className="rounded-app-button border border-app-controlBorder bg-app-control px-4 py-1.5 text-sm text-white transition-colors hover:border-app-borderStrong hover:bg-app-controlHover"
               >
                 Login
               </Link>

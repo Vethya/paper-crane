@@ -35,7 +35,7 @@ export function CollapsibleFormItem({
       <div
         className={twMerge(
           clsx(
-            '-mx-1.5 max-w-none overflow-hidden rounded-lg border border-app-border bg-app-surface transition hover:border-app-borderStrong sm:-mx-3',
+            '-mx-1.5 max-w-none overflow-hidden rounded-app-card border border-app-border bg-app-surface transition hover:border-app-borderStrong sm:-mx-3',
             className
           )
         )}

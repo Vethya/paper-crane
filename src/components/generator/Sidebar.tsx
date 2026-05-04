@@ -74,7 +74,7 @@ export function MobileNav({ activeSection, onSectionChange }: MobileNavProps) {
           type="button"
           onClick={() => onSectionChange(section)}
           className={clsx(
-            'shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors',
+            'shrink-0 whitespace-nowrap rounded-app-button px-4 py-2 text-sm font-medium transition-colors',
             activeSection === section
               ? 'bg-white text-app-background'
               : 'border border-app-controlBorder bg-app-control text-slate-300 hover:bg-app-controlHover hover:text-white'
