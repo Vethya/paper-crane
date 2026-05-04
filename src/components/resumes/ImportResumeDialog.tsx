@@ -139,7 +139,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
                   ? 'border-app-borderStrong bg-app-hover text-slate-200'
                   : parsedContent
                     ? 'border-green-500/50 bg-green-500/5 text-slate-300'
-                    : 'border-app-border bg-app-surfaceElevated text-slate-400 hover:border-app-borderStrong hover:text-slate-300'
+                    : 'border-app-controlBorder bg-app-control text-slate-300 hover:border-app-borderStrong hover:bg-app-controlHover hover:text-white'
               ].join(' ')}
             >
               <FiUpload
@@ -185,7 +185,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
                   onKeyDown={(e) => e.key === 'Enter' && handleImport()}
                   disabled={isBusy}
                   autoFocus
-                  className="border-app-border bg-app-surfaceElevated text-slate-100 placeholder:text-slate-500 focus-visible:border-app-borderStrong focus-visible:ring-ring/30"
+                  className="border-app-controlBorder bg-app-control text-slate-100 placeholder:text-slate-500 focus-visible:border-app-borderStrong focus-visible:ring-ring/30"
                 />
               </div>
             )}
@@ -197,7 +197,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
             <button
               onClick={() => handleOpenChange(false)}
               disabled={isBusy}
-              className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/5 disabled:opacity-50"
+              className="rounded-full border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover disabled:opacity-50"
             >
               Cancel
             </button>

@@ -83,7 +83,7 @@ export function AgentHistoryDialog({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 8 }}
           transition={{ duration: 0.15 }}
-          className="flex h-[520px] w-full max-w-[460px] flex-col rounded-2xl border border-app-border bg-app-surface shadow-2xl shadow-black/60"
+          className="flex h-[520px] w-full max-w-[460px] flex-col rounded-2xl border border-app-controlBorder bg-app-surface shadow-2xl shadow-black/60"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -93,7 +93,7 @@ export function AgentHistoryDialog({
             </span>
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-app-hover hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="rounded-lg border border-transparent p-1.5 text-slate-300 transition hover:border-app-controlBorder hover:bg-app-control hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Close history"
             >
               <X className="h-5 w-5" />
@@ -104,7 +104,7 @@ export function AgentHistoryDialog({
 
           {/* Search */}
           <div className="px-4 py-3">
-            <div className="flex items-center gap-2 rounded-xl border border-app-border bg-app-surfaceElevated px-3 py-2">
+            <div className="flex items-center gap-2 rounded-xl border border-app-controlBorder bg-app-control px-3 py-2">
               <Search className="h-4 w-4 shrink-0 text-slate-500" />
               <input
                 autoFocus
@@ -124,7 +124,7 @@ export function AgentHistoryDialog({
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className="h-16 animate-pulse rounded-xl bg-app-surfaceElevated"
+                    className="h-16 animate-pulse rounded-xl bg-app-control"
                   />
                 ))}
               </div>
@@ -168,7 +168,7 @@ export function AgentHistoryDialog({
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96, y: 8 }}
                   transition={{ duration: 0.1 }}
-                  className="flex w-full max-w-xs flex-col gap-4 rounded-2xl border border-app-border bg-app-surface p-6 shadow-2xl shadow-black/60"
+                  className="flex w-full max-w-xs flex-col gap-4 rounded-2xl border border-app-controlBorder bg-app-surface p-6 shadow-2xl shadow-black/60"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <div className="flex flex-col gap-1">
@@ -182,7 +182,7 @@ export function AgentHistoryDialog({
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => setDeletingId(null)}
-                      className="rounded-lg px-4 py-2 text-sm text-slate-400 transition hover:bg-app-hover hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className="rounded-lg border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     >
                       Cancel
                     </button>

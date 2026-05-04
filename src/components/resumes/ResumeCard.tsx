@@ -87,7 +87,7 @@ export function ResumeCard({
                   e.stopPropagation()
                 }}
                 disabled={deleting}
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-app-hover hover:text-slate-300 data-[state=open]:bg-app-hover data-[state=open]:text-slate-300"
+                className="flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-slate-400 transition hover:border-app-controlBorder hover:bg-app-controlHover hover:text-white data-[state=open]:border-app-controlBorder data-[state=open]:bg-app-controlHover data-[state=open]:text-white"
               >
                 <FiMoreVertical size={15} />
               </button>
@@ -98,11 +98,11 @@ export function ResumeCard({
                 e.preventDefault()
                 e.stopPropagation()
               }}
-              className="min-w-[130px] rounded-xl border border-app-border bg-app-surface py-1 shadow-xl"
+              className="min-w-[130px] rounded-xl border border-app-controlBorder bg-app-surface py-1 shadow-xl"
             >
               <DropdownMenuItem
                 onClick={() => setConfirmOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 transition hover:bg-app-hover focus:bg-app-hover focus:text-red-400 cursor-pointer"
+                className="flex items-center gap-2 px-3 py-2 text-sm text-red-400 transition hover:bg-app-control focus:bg-app-control focus:text-red-400 cursor-pointer"
               >
                 <FiTrash2 size={13} />
                 Delete
@@ -150,7 +150,7 @@ export function ResumeCard({
             <button
               onClick={() => setConfirmOpen(false)}
               disabled={deleting}
-              className="rounded-lg border border-app-border bg-app-surfaceElevated px-4 py-2 text-sm text-slate-300 transition hover:bg-app-hover disabled:opacity-50"
+              className="rounded-lg border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover disabled:opacity-50"
             >
               Cancel
             </button>

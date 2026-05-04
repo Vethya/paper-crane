@@ -52,7 +52,7 @@ export function AgentMessageList({
               className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                 msg.role === 'user'
                   ? 'rounded-br-sm bg-white text-app-background whitespace-pre-wrap'
-                  : 'rounded-bl-sm bg-app-surfaceElevated text-slate-200'
+                  : 'rounded-bl-sm border border-app-controlBorder bg-app-control text-slate-100'
               }`}
             >
               {msg.role === 'assistant' ? (
@@ -96,12 +96,12 @@ export function AgentMessageList({
                         </h3>
                       ),
                       code: ({ children }) => (
-                        <code className="rounded bg-app-hover px-1 font-mono text-xs">
+                        <code className="rounded bg-app-controlHover px-1 font-mono text-xs">
                           {children}
                         </code>
                       ),
                       pre: ({ children }) => (
-                        <pre className="mb-2 overflow-x-auto rounded bg-app-hover p-2 font-mono text-xs">
+                        <pre className="mb-2 overflow-x-auto rounded bg-app-controlHover p-2 font-mono text-xs">
                           {children}
                         </pre>
                       )
@@ -125,7 +125,7 @@ export function AgentMessageList({
                   {msg.error && onRetry && (
                     <button
                       onClick={onRetry}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-app-hover px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-app-surface hover:text-white"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-app-controlBorder bg-app-control px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
                     >
                       <RotateCw className="h-3 w-3" />
                       Retry

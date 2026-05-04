@@ -45,7 +45,7 @@ export function AgentHistoryItem({
     <div className="group relative">
       <button
         onClick={() => onSelect(session._id)}
-        className="flex w-full flex-col gap-1.5 rounded-xl border border-app-border bg-app-surface px-4 py-3 text-left transition hover:border-app-borderStrong hover:bg-app-surfaceElevated focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="flex w-full flex-col gap-1.5 rounded-xl border border-app-controlBorder bg-app-control px-4 py-3 text-left transition hover:border-app-borderStrong hover:bg-app-controlHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <div className="flex items-center justify-between gap-2 pr-6">
           <span
@@ -67,7 +67,7 @@ export function AgentHistoryItem({
           e.stopPropagation()
           onDelete(session._id)
         }}
-        className="absolute right-3 top-3 rounded-md p-1 text-slate-600 opacity-0 transition hover:bg-app-hover hover:text-red-400 group-hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="absolute right-3 top-3 rounded-md border border-transparent p-1 text-slate-500 opacity-0 transition hover:border-app-controlBorder hover:bg-app-controlHover hover:text-red-400 group-hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         aria-label="Delete chat"
       >
         <Trash2 className="h-3.5 w-3.5" />

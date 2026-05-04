@@ -110,7 +110,7 @@ export function AgentEntryEditControls({ edit }: Props) {
             type="button"
             onClick={handleRemoveKeep}
             title="Keep this entry"
-            className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-slate-300 ring-1 ring-app-border hover:bg-app-hover transition-colors"
+            className="flex items-center gap-1 rounded bg-app-control px-2 py-0.5 text-xs font-medium text-white ring-1 ring-app-controlBorder transition-colors hover:bg-app-controlHover"
           >
             <Check className="h-3 w-3" />
             Keep

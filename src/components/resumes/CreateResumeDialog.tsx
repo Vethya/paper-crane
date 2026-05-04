@@ -83,7 +83,7 @@ export function CreateResumeDialog({ children }: CreateResumeDialogProps) {
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
               disabled={loading}
               autoFocus
-              className="border-app-border bg-app-surfaceElevated text-slate-100 placeholder:text-slate-500 focus-visible:border-app-borderStrong focus-visible:ring-ring/30"
+              className="border-app-controlBorder bg-app-control text-slate-100 placeholder:text-slate-500 focus-visible:border-app-borderStrong focus-visible:ring-ring/30"
             />
             {error && <p className="text-xs text-red-400">{error}</p>}
           </div>
@@ -92,7 +92,7 @@ export function CreateResumeDialog({ children }: CreateResumeDialogProps) {
             <button
               onClick={() => handleOpenChange(false)}
               disabled={loading}
-              className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300 transition hover:bg-white/5 disabled:opacity-50"
+              className="rounded-full border border-app-controlBorder bg-app-control px-4 py-2 text-sm text-white transition hover:bg-app-controlHover disabled:opacity-50"
             >
               Cancel
             </button>

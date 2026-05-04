@@ -40,7 +40,7 @@ export function CollapsibleFormItem({
           )
         )}
       >
-        <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-app-hover sm:px-3">
+        <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-app-control sm:px-3">
           <button
             type="button"
             onClick={onToggle}
@@ -65,7 +65,7 @@ export function CollapsibleFormItem({
             onClick={onToggle}
             aria-label={isExpanded ? 'Collapse item' : 'Expand item'}
             aria-expanded={isExpanded}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-slate-400 transition hover:bg-app-hover hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-transparent text-slate-300 transition hover:border-app-controlBorder hover:bg-app-control hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
           </button>

@@ -13,7 +13,7 @@ export function Button({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          'flex h-11 min-w-[175px] items-center justify-center rounded-full border border-app-border bg-transparent px-5 text-sm font-medium text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-app-borderStrong hover:bg-app-hover',
+          'flex h-11 min-w-[175px] items-center justify-center rounded-full border border-app-controlBorder bg-app-control px-5 text-sm font-medium text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-app-borderStrong hover:bg-app-controlHover',
           className
         )
       )}
@@ -101,7 +101,7 @@ export function IconButton({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          'flex items-center outline-none border-none bg-transparent text-white rounded hover:bg-app-hover focus:bg-app-hover focus:outline-none',
+          'flex items-center outline-none border-none bg-transparent text-white rounded hover:bg-app-controlHover focus:bg-app-controlHover focus:outline-none',
           className
         )
       )}

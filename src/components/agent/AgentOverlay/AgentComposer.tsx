@@ -113,7 +113,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
 
   return (
     <div className="shrink-0 p-4">
-      <div className="flex flex-col gap-5 rounded-2xl border border-app-border bg-app-surface px-4 pb-3 pt-4">
+      <div className="flex flex-col gap-5 rounded-2xl border border-app-controlBorder bg-app-surfaceElevated px-4 pb-3 pt-4 shadow-[0_18px_60px_-36px_rgba(255,255,255,0.35)]">
         <textarea
           ref={textareaRef}
           rows={1}
@@ -131,7 +131,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
           <div ref={dropdownRef} className="relative">
             <button
               onClick={() => setDropdownOpen((v) => !v)}
-              className="flex items-center gap-1.5 rounded-lg border border-app-border bg-app-surfaceElevated px-3 py-2 text-xs font-medium text-slate-300 transition hover:border-app-borderStrong hover:bg-app-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex items-center gap-1.5 rounded-lg border border-app-controlBorder bg-app-control px-3 py-2 text-xs font-medium text-white transition hover:border-app-borderStrong hover:bg-app-controlHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ActiveIcon className="h-3.5 w-3.5" />
               {mode}
@@ -141,14 +141,14 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute bottom-full left-0 mb-2 w-36 overflow-hidden rounded-xl border border-app-border bg-app-surfaceElevated shadow-xl">
+              <div className="absolute bottom-full left-0 mb-2 w-36 overflow-hidden rounded-xl border border-app-controlBorder bg-app-surfaceElevated shadow-xl">
                 {AGENT_MODES.map((m) => {
                   const Icon = MODE_ICONS[m]
                   return (
                     <button
                       key={m}
                       onClick={() => selectMode(m)}
-                      className="flex w-full items-center justify-between px-3 py-2.5 text-left text-xs font-medium text-slate-300 transition hover:bg-white/5 hover:text-slate-100"
+                      className="flex w-full items-center justify-between px-3 py-2.5 text-left text-xs font-medium text-slate-300 transition hover:bg-app-control hover:text-white"
                     >
                       <span className="flex items-center gap-2">
                         <Icon className="h-3.5 w-3.5 text-slate-400" />

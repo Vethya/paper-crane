@@ -110,7 +110,7 @@ export function TagDialog({
             }}
             placeholder="Tag name"
             autoFocus
-            className="rounded-lg border border-app-border bg-app-surfaceElevated px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-app-borderStrong"
+            className="rounded-lg border border-app-controlBorder bg-app-control px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-app-borderStrong"
           />
 
           <div className="flex flex-wrap gap-2">
@@ -143,7 +143,7 @@ export function TagDialog({
           <div className="flex gap-2">
             <button
               onClick={() => onOpenChange(false)}
-              className="rounded-lg border border-app-border bg-app-surfaceElevated px-3 py-1.5 text-xs text-slate-300 transition-colors hover:bg-app-hover"
+              className="rounded-lg border border-app-controlBorder bg-app-control px-3 py-1.5 text-xs text-white transition-colors hover:bg-app-controlHover"
             >
               Cancel
             </button>

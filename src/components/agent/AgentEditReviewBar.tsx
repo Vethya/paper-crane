@@ -310,7 +310,7 @@ export function AgentEditReviewBar() {
                         className={`flex w-full min-w-0 items-start gap-3 rounded-md px-3 py-2.5 text-left transition-colors ${
                           isFocused
                             ? 'bg-amber-400/10 text-amber-100'
-                            : 'text-slate-200 hover:bg-app-hover'
+                            : 'text-slate-200 hover:bg-app-control'
                         }`}
                       >
                         <span className="mt-0.5 min-w-[2rem] text-xs tabular-nums text-slate-500">
@@ -336,7 +336,7 @@ export function AgentEditReviewBar() {
               <button
                 type="button"
                 onClick={() => setLocationsOpen((open) => !open)}
-                className="flex h-6 w-32 items-center justify-center rounded-full border border-app-border bg-app-background text-slate-300 transition-colors hover:border-app-borderStrong hover:bg-app-hover hover:text-slate-100"
+                className="flex h-6 w-32 items-center justify-center rounded-full border border-app-controlBorder bg-app-control text-white transition-colors hover:border-app-borderStrong hover:bg-app-controlHover"
                 title={
                   locationsOpen
                     ? 'Hide review locations'
@@ -375,7 +375,7 @@ export function AgentEditReviewBar() {
                   type="button"
                   onClick={() => goTo(displayIdx - 1)}
                   disabled={displayIdx === 0}
-                  className="rounded p-1 text-slate-400 transition-colors hover:bg-app-hover hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="rounded p-1 text-slate-300 transition-colors hover:bg-app-control hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Previous change"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -387,7 +387,7 @@ export function AgentEditReviewBar() {
                   type="button"
                   onClick={() => goTo(displayIdx + 1)}
                   disabled={displayIdx >= pendingCount - 1}
-                  className="rounded p-1 text-slate-400 transition-colors hover:bg-app-hover hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="rounded p-1 text-slate-300 transition-colors hover:bg-app-control hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Next change"
                 >
                   <ChevronRight className="h-4 w-4" />

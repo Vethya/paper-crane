@@ -48,7 +48,10 @@ module.exports = {
           surface: '#0B0B0D',
           surfaceElevated: '#111114',
           hover: 'rgba(255,255,255,0.06)',
+          control: 'rgba(255,255,255,0.08)',
+          controlHover: 'rgba(255,255,255,0.12)',
           border: 'rgba(255,255,255,0.10)',
+          controlBorder: 'rgba(255,255,255,0.18)',
           borderStrong: 'rgba(255,255,255,0.16)',
           textMuted: '#A1A1AA'
         },

@@ -78,7 +78,7 @@ export default function Home() {
 
               {hasSession && (
                 <Link href="/generator" className="w-full sm:w-auto">
-                  <Button className="!w-full border-app-border px-8 py-3 text-base font-medium text-slate-200 transition hover:border-app-borderStrong sm:!w-auto">
+                  <Button className="!w-full px-8 py-3 text-base font-medium sm:!w-auto">
                     Continue Session
                   </Button>
                 </Link>
@@ -86,7 +86,7 @@ export default function Home() {
 
               <label
                 htmlFor="import-json"
-                className="group inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-app-border px-8 py-3 text-base font-medium text-slate-200 transition hover:border-app-borderStrong hover:bg-app-hover sm:w-auto"
+                className="group inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-app-controlBorder bg-app-control px-8 py-3 text-base font-medium text-white transition hover:border-app-borderStrong hover:bg-app-controlHover sm:w-auto"
               >
                 <span className="inline-flex h-2 w-2 rounded-full bg-white/70 group-hover:bg-white" />
                 Import JSON

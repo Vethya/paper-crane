@@ -75,7 +75,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 text-sm text-white hover:opacity-80 transition-opacity focus:outline-none">
+                  <button className="flex items-center gap-2 rounded-full border border-app-controlBorder bg-app-control px-2 py-1 text-sm text-white transition hover:bg-app-controlHover focus:outline-none">
                     {user.image ? (
                       <img
                         src={user.image}
@@ -95,19 +95,19 @@ export function Header({ className, showTags = true }: HeaderProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
-                  className="w-44 rounded-lg border border-app-border bg-app-surfaceElevated py-1"
+                  className="w-44 rounded-lg border border-app-controlBorder bg-app-surfaceElevated py-1"
                 >
                   <DropdownMenuItem asChild>
                     <Link
                       href="/resumes"
-                      className="block px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 focus:bg-white/5 focus:text-slate-300 transition-colors cursor-pointer"
+                      className="block px-4 py-2.5 text-sm text-slate-300 hover:bg-app-control focus:bg-app-control focus:text-white transition-colors cursor-pointer"
                     >
                       My Resumes
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={handleLogout}
-                    className="px-4 py-2.5 text-sm text-slate-300 hover:bg-white/5 focus:bg-white/5 focus:text-slate-300 transition-colors cursor-pointer"
+                    className="px-4 py-2.5 text-sm text-slate-300 hover:bg-app-control focus:bg-app-control focus:text-white transition-colors cursor-pointer"
                   >
                     Logout
                   </DropdownMenuItem>
@@ -116,7 +116,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
             ) : (
               <Link
                 href="/login"
-                className="text-sm text-slate-300 border border-slate-600 rounded-full px-4 py-1.5 hover:text-white hover:border-slate-400 transition-colors"
+                className="rounded-full border border-app-controlBorder bg-app-control px-4 py-1.5 text-sm text-white transition-colors hover:border-app-borderStrong hover:bg-app-controlHover"
               >
                 Login
               </Link>
