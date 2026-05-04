@@ -2,19 +2,31 @@
 
 import { useEffect, useRef } from 'react'
 import { useAtomValue } from 'jotai'
-import { agentFocusedEditIdAtom, agentPendingEditsAtom } from '../../atoms/agentEdits'
+import {
+  agentFocusedEditIdAtom,
+  agentPendingEditsAtom
+} from '../../atoms/agentEdits'
 import { activeSectionSetterAtom } from '../../atoms/activeSection'
 
 function fieldPathToSection(fieldPath: string): string {
   const prefix = fieldPath.split('.')[0]
+  if (prefix === 'headings') return fieldPath.split('.')[1] ?? 'basics'
+
   switch (prefix) {
-    case 'basics': return 'basics'
-    case 'work': return 'work'
-    case 'education': return 'education'
-    case 'skills': return 'skills'
-    case 'projects': return 'projects'
-    case 'awards': return 'awards'
-    default: return 'basics'
+    case 'basics':
+      return 'basics'
+    case 'work':
+      return 'work'
+    case 'education':
+      return 'education'
+    case 'skills':
+      return 'skills'
+    case 'projects':
+      return 'projects'
+    case 'awards':
+      return 'awards'
+    default:
+      return 'basics'
   }
 }
 
@@ -28,7 +40,7 @@ function waitForElement(
   container: HTMLElement,
   selector: string,
   onFound: (el: Element) => void,
-  maxWait = 500,
+  maxWait = 500
 ): () => void {
   // `cancelled` is set only by external cleanup (React effect teardown).
   // Separating it from `stopWatching` fixes the bug where finish() → stopWatching()
@@ -44,7 +56,9 @@ function waitForElement(
 
   function finish(el: Element) {
     stopWatching()
-    const id = requestAnimationFrame(() => { if (!cancelled) onFound(el) })
+    const id = requestAnimationFrame(() => {
+      if (!cancelled) onFound(el)
+    })
     cleanupRaf = () => cancelAnimationFrame(id)
   }
 
@@ -59,12 +73,19 @@ function waitForElement(
   const immediate = container.querySelector(selector)
   if (immediate) {
     finish(immediate)
-    return () => { cancelled = true; cleanupRaf?.() }
+    return () => {
+      cancelled = true
+      cleanupRaf?.()
+    }
   }
 
   observer.observe(container, { childList: true, subtree: true })
 
-  return () => { cancelled = true; stopWatching(); cleanupRaf?.() }
+  return () => {
+    cancelled = true
+    stopWatching()
+    cleanupRaf?.()
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -73,17 +94,22 @@ function waitForElement(
 // Bypasses scrollIntoView / scrollTo which Chrome silently drops inside
 // nested overflow-hidden > overflow-auto containers.
 // ---------------------------------------------------------------------------
-function easeOutCubic(t: number) { return 1 - Math.pow(1 - t, 3) }
+function easeOutCubic(t: number) {
+  return 1 - Math.pow(1 - t, 3)
+}
 
 function smoothScrollTo(
   el: HTMLElement,
   target: number,
-  cancelRef: React.MutableRefObject<(() => void) | null>,
+  cancelRef: React.MutableRefObject<(() => void) | null>
 ) {
   cancelRef.current?.()
   cancelRef.current = null
 
-  const clamped = Math.max(0, Math.min(target, el.scrollHeight - el.clientHeight))
+  const clamped = Math.max(
+    0,
+    Math.min(target, el.scrollHeight - el.clientHeight)
+  )
   const from = el.scrollTop
   const delta = clamped - from
   if (Math.abs(delta) < 1) return
@@ -124,13 +150,17 @@ export function AgentFieldFocuser() {
     const edit = pendingEdits.find((e) => e.id === focusedId)
     if (!edit) return
 
-    const section = edit.type === 'set' ? fieldPathToSection(edit.fieldPath) : edit.arrayPath
+    const section =
+      edit.type === 'set' ? fieldPathToSection(edit.fieldPath) : edit.arrayPath
     const sectionChanged = prevSectionRef.current !== section
     prevSectionRef.current = section
     setActiveSection(section)
 
-    const forms = document.querySelectorAll('#resume-form')
-    const formEl = (Array.from(forms).find(f => (f as HTMLElement).clientHeight > 0) as HTMLElement) ?? null
+    const forms = document.querySelectorAll('[data-resume-form]')
+    const formEl =
+      (Array.from(forms).find(
+        (f) => (f as HTMLElement).clientHeight > 0
+      ) as HTMLElement) ?? null
 
     scrollCancelRef.current?.()
     scrollCancelRef.current = null
@@ -152,7 +182,8 @@ export function AgentFieldFocuser() {
         // is a no-op if the delta is < 1 px, so no extra guard needed.
         const formRect = formEl.getBoundingClientRect()
         const elRect = el.getBoundingClientRect()
-        const target = formEl.scrollTop + (elRect.top - formRect.top) - PADDING_TOP
+        const target =
+          formEl.scrollTop + (elRect.top - formRect.top) - PADDING_TOP
         smoothScrollTo(formEl, target, scrollCancelRef)
       } else {
         // Mobile: form expands to content, window is the scroll container.

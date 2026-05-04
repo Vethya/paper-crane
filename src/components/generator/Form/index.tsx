@@ -15,7 +15,10 @@ import { ProjectsSection } from './sections/projectsSection'
 import { resumeAtom, isLoadingResumeAtom } from '../../../atoms/resume'
 import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
 import { AgentFieldFocuser } from '../../agent/AgentFieldFocuser'
-import { agentPendingEditsAtom, type PendingEdit } from '../../../atoms/agentEdits'
+import {
+  agentPendingEditsAtom,
+  type PendingEdit
+} from '../../../atoms/agentEdits'
 import { resumeTagsAtom } from '../../../atoms/resumeTags'
 import { FormValues } from '../../../types'
 import clsx from 'clsx'
@@ -29,13 +32,18 @@ async function generateResume(formData: FormValues): Promise<string> {
   return latex(texDoc, opts)
 }
 
-function setNestedValue(obj: Record<string, unknown>, path: string, value: unknown) {
+function setNestedValue(
+  obj: Record<string, unknown>,
+  path: string,
+  value: unknown
+) {
   const parts = path.split('.')
   let target: Record<string, unknown> = obj
   for (let i = 0; i < parts.length - 1; i++) {
     const key = parts[i]
     const idx = Number(key)
-    const next = !isNaN(idx) && Array.isArray(target) ? target[idx] : target[key]
+    const next =
+      !isNaN(idx) && Array.isArray(target) ? target[idx] : target[key]
     target = next as Record<string, unknown>
     if (target == null) return
   }
@@ -66,7 +74,8 @@ function applyPendingEdits(formValues: FormValues, edits: PendingEdit[]) {
   const removeMap = new Map<string, Set<number>>()
   for (const edit of edits) {
     if (edit.type === 'remove' && edit.status === 'pending') {
-      if (!removeMap.has(edit.arrayPath)) removeMap.set(edit.arrayPath, new Set())
+      if (!removeMap.has(edit.arrayPath))
+        removeMap.set(edit.arrayPath, new Set())
       removeMap.get(edit.arrayPath)!.add(edit.entryIndex)
     }
   }
@@ -76,7 +85,13 @@ function applyPendingEdits(formValues: FormValues, edits: PendingEdit[]) {
   }
 }
 
-const ARRAY_PATHS = ['work', 'education', 'skills', 'projects', 'awards'] as const
+const ARRAY_PATHS = [
+  'work',
+  'education',
+  'skills',
+  'projects',
+  'awards'
+] as const
 
 function stripAgentMarkers(formValues: FormValues) {
   const vals = formValues as Record<string, unknown>
@@ -84,7 +99,8 @@ function stripAgentMarkers(formValues: FormValues) {
     const arr = vals[key]
     if (!Array.isArray(arr)) continue
     for (const entry of arr) {
-      if (entry && typeof entry === 'object') delete (entry as Record<string, unknown>)._agentEditId
+      if (entry && typeof entry === 'object')
+        delete (entry as Record<string, unknown>)._agentEditId
     }
   }
 }
@@ -190,6 +206,7 @@ export function Form({
         className={twMerge(
           clsx('overflow-x-hidden overflow-y-auto xl:h-full', className)
         )}
+        data-resume-form
         id={formId}
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
