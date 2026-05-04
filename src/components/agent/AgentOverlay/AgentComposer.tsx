@@ -3,13 +3,13 @@
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
 import {
-  Send,
   ChevronDown,
   Check,
   MessageCircle,
   ClipboardList,
   Wand,
-  type LucideIcon
+  type LucideIcon,
+  ArrowUp
 } from 'lucide-react'
 import {
   agentModeAtom,
@@ -170,7 +170,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
             disabled={!canSend}
             className="flex items-center justify-center rounded-app-button border border-white/90 bg-white p-2 text-app-background transition hover:bg-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
           >
-            <Send className="h-4 w-4" />
+            <ArrowUp className="h-4 w-4" />
           </button>
         </div>
       </div>
