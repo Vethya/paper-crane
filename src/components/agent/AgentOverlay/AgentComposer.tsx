@@ -2,19 +2,32 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
-import { Send, ChevronDown, Check, MessageCircle, ClipboardList, Wand, type LucideIcon } from 'lucide-react'
-import { agentModeAtom, agentIsStreamingAtom, AGENT_MODES, type AgentMode } from '../../../atoms/agentAtom'
+import {
+  Send,
+  ChevronDown,
+  Check,
+  MessageCircle,
+  ClipboardList,
+  Wand,
+  type LucideIcon
+} from 'lucide-react'
+import {
+  agentModeAtom,
+  agentIsStreamingAtom,
+  AGENT_MODES,
+  type AgentMode
+} from '../../../atoms/agentAtom'
 
 const MODE_ICONS: Record<AgentMode, LucideIcon> = {
   Chat: MessageCircle,
   Feedback: ClipboardList,
-  Tailoring: Wand,
+  Tailoring: Wand
 }
 
 const MODE_PLACEHOLDERS: Record<AgentMode, string> = {
   Chat: 'Ask anything about your resume…',
   Feedback: 'Ask for feedback on a section or the whole resume…',
-  Tailoring: 'Describe the role — the agent will tailor your resume…',
+  Tailoring: 'Describe the role — the agent will tailor your resume…'
 }
 
 interface AgentComposerProps {
@@ -50,7 +63,10 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setDropdownOpen(false)
       }
     }
@@ -69,7 +85,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
         })
       }
     },
-    [setMode],
+    [setMode]
   )
 
   useEffect(() => {
@@ -97,7 +113,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
 
   return (
     <div className="shrink-0 p-4">
-      <div className="flex flex-col gap-5 rounded-2xl border border-white/10 bg-slate-900/70 px-4 pb-3 pt-4">
+      <div className="flex flex-col gap-5 rounded-2xl border border-app-border bg-app-surface px-4 pb-3 pt-4">
         <textarea
           ref={textareaRef}
           rows={1}
@@ -115,7 +131,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
           <div ref={dropdownRef} className="relative">
             <button
               onClick={() => setDropdownOpen((v) => !v)}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-slate-800/80 px-3 py-2 text-xs font-medium text-slate-300 transition hover:border-white/20 hover:bg-slate-700/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+              className="flex items-center gap-1.5 rounded-lg border border-app-border bg-app-surfaceElevated px-3 py-2 text-xs font-medium text-slate-300 transition hover:border-app-borderStrong hover:bg-app-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ActiveIcon className="h-3.5 w-3.5" />
               {mode}
@@ -125,7 +141,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
             </button>
 
             {dropdownOpen && (
-              <div className="absolute bottom-full left-0 mb-2 w-36 overflow-hidden rounded-xl border border-white/10 bg-slate-800 shadow-xl">
+              <div className="absolute bottom-full left-0 mb-2 w-36 overflow-hidden rounded-xl border border-app-border bg-app-surfaceElevated shadow-xl">
                 {AGENT_MODES.map((m) => {
                   const Icon = MODE_ICONS[m]
                   return (
@@ -138,7 +154,9 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
                         <Icon className="h-3.5 w-3.5 text-slate-400" />
                         {m}
                       </span>
-                      {m === mode && <Check className="h-3.5 w-3.5 text-blue-400" />}
+                      {m === mode && (
+                        <Check className="h-3.5 w-3.5 text-white" />
+                      )}
                     </button>
                   )
                 })}
@@ -150,13 +168,15 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
           <button
             onClick={submit}
             disabled={!canSend}
-            className="flex items-center justify-center rounded-lg bg-blue-600 p-2 text-white transition hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:opacity-40"
+            className="flex items-center justify-center rounded-lg border border-white/90 bg-white p-2 text-app-background transition hover:bg-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
           >
             <Send className="h-4 w-4" />
           </button>
         </div>
       </div>
-      <p className="mt-2 text-center text-xs text-slate-600">Shift+Tab to cycle modes · Enter to send · Shift+Enter for newline</p>
+      <p className="mt-2 text-center text-xs text-slate-600">
+        Shift+Tab to cycle modes · Enter to send · Shift+Enter for newline
+      </p>
     </div>
   )
 }

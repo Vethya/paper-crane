@@ -12,7 +12,11 @@ interface AgentMessageListProps {
   onRetry?: () => void
 }
 
-export function AgentMessageList({ messages, isStreaming, onRetry }: AgentMessageListProps) {
+export function AgentMessageList({
+  messages,
+  isStreaming,
+  onRetry
+}: AgentMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const initialScrollDoneRef = useRef(false)
 
@@ -29,7 +33,9 @@ export function AgentMessageList({ messages, isStreaming, onRetry }: AgentMessag
   if (messages.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center px-4">
-        <p className="text-center text-sm text-slate-500">Ask anything about your resume</p>
+        <p className="text-center text-sm text-slate-500">
+          Ask anything about your resume
+        </p>
       </div>
     )
   }
@@ -45,8 +51,8 @@ export function AgentMessageList({ messages, isStreaming, onRetry }: AgentMessag
             <div
               className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
                 msg.role === 'user'
-                  ? 'rounded-br-sm bg-blue-600 text-white whitespace-pre-wrap'
-                  : 'rounded-bl-sm bg-slate-800/80 text-slate-200'
+                  ? 'rounded-br-sm bg-white text-app-background whitespace-pre-wrap'
+                  : 'rounded-bl-sm bg-app-surfaceElevated text-slate-200'
               }`}
             >
               {msg.role === 'assistant' ? (
@@ -54,32 +60,72 @@ export function AgentMessageList({ messages, isStreaming, onRetry }: AgentMessag
                   <ReactMarkdown
                     remarkPlugins={[remarkGfm]}
                     components={{
-                      p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                      ul: ({ children }) => <ul className="mb-2 ml-4 list-disc">{children}</ul>,
-                      ol: ({ children }) => <ol className="mb-2 ml-4 list-decimal">{children}</ol>,
-                      li: ({ children }) => <li className="mb-0.5">{children}</li>,
-                      strong: ({ children }) => <strong className="font-semibold text-white">{children}</strong>,
-                      em: ({ children }) => <em className="italic">{children}</em>,
-                      h1: ({ children }) => <h1 className="mb-2 text-base font-bold text-white">{children}</h1>,
-                      h2: ({ children }) => <h2 className="mb-1.5 text-sm font-bold text-white">{children}</h2>,
-                      h3: ({ children }) => <h3 className="mb-1 text-sm font-semibold text-white">{children}</h3>,
-                      code: ({ children }) => <code className="rounded bg-slate-700 px-1 font-mono text-xs">{children}</code>,
-                      pre: ({ children }) => <pre className="mb-2 overflow-x-auto rounded bg-slate-700 p-2 font-mono text-xs">{children}</pre>,
+                      p: ({ children }) => (
+                        <p className="mb-2 last:mb-0">{children}</p>
+                      ),
+                      ul: ({ children }) => (
+                        <ul className="mb-2 ml-4 list-disc">{children}</ul>
+                      ),
+                      ol: ({ children }) => (
+                        <ol className="mb-2 ml-4 list-decimal">{children}</ol>
+                      ),
+                      li: ({ children }) => (
+                        <li className="mb-0.5">{children}</li>
+                      ),
+                      strong: ({ children }) => (
+                        <strong className="font-semibold text-white">
+                          {children}
+                        </strong>
+                      ),
+                      em: ({ children }) => (
+                        <em className="italic">{children}</em>
+                      ),
+                      h1: ({ children }) => (
+                        <h1 className="mb-2 text-base font-bold text-white">
+                          {children}
+                        </h1>
+                      ),
+                      h2: ({ children }) => (
+                        <h2 className="mb-1.5 text-sm font-bold text-white">
+                          {children}
+                        </h2>
+                      ),
+                      h3: ({ children }) => (
+                        <h3 className="mb-1 text-sm font-semibold text-white">
+                          {children}
+                        </h3>
+                      ),
+                      code: ({ children }) => (
+                        <code className="rounded bg-app-hover px-1 font-mono text-xs">
+                          {children}
+                        </code>
+                      ),
+                      pre: ({ children }) => (
+                        <pre className="mb-2 overflow-x-auto rounded bg-app-hover p-2 font-mono text-xs">
+                          {children}
+                        </pre>
+                      )
                     }}
                   >
                     {msg.content}
                   </ReactMarkdown>
                   {isStreaming && msg.content === '' && (
                     <span className="inline-flex gap-1">
-                      <span className="animate-bounce [animation-delay:0ms]">·</span>
-                      <span className="animate-bounce [animation-delay:150ms]">·</span>
-                      <span className="animate-bounce [animation-delay:300ms]">·</span>
+                      <span className="animate-bounce [animation-delay:0ms]">
+                        ·
+                      </span>
+                      <span className="animate-bounce [animation-delay:150ms]">
+                        ·
+                      </span>
+                      <span className="animate-bounce [animation-delay:300ms]">
+                        ·
+                      </span>
                     </span>
                   )}
                   {msg.error && onRetry && (
                     <button
                       onClick={onRetry}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-slate-700/60 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-slate-700 hover:text-white"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-app-hover px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-app-surface hover:text-white"
                     >
                       <RotateCw className="h-3 w-3" />
                       Retry

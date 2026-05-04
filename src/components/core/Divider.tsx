@@ -7,11 +7,6 @@ interface DividerProps {
 
 export function Divider({ className }: DividerProps) {
   return (
-    <hr
-      className={twMerge(clsx(
-        "my-6 bg-blue-600 h-1 border-none",
-        className
-      ))}
-    />
+    <hr className={twMerge(clsx('my-6 bg-white h-1 border-none', className))} />
   )
 }

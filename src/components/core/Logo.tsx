@@ -22,11 +22,11 @@ export function Logo({ scale = 1, className, ...props }: Props) {
         letterSpacing: '0.02em',
         display: 'inline-block',
         lineHeight: 1.2,
-        ...props,
+        ...props
       }}
     >
-      <span style={{ color: '#ffffff' }}>Resume </span>
-      <span style={{ color: '#2563EB' }}>Manager</span>
+      <span className="text-white">Resume </span>
+      <span className="text-slate-400">Manager</span>
     </span>
   )
 }

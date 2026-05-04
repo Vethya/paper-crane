@@ -278,7 +278,7 @@ export function AgentEditReviewBar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-          className="fixed bottom-0 left-0 right-0 z-40 border-t border-amber-400/20 bg-slate-950/95 backdrop-blur-sm shadow-[0_-4px_32px_rgba(0,0,0,0.5)]"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-amber-400/20 bg-app-background/95 backdrop-blur-sm shadow-[0_-4px_32px_rgba(0,0,0,0.5)]"
         >
           <AnimatePresence>
             {locationsOpen && (
@@ -287,7 +287,7 @@ export function AgentEditReviewBar() {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 12, opacity: 0 }}
                 transition={{ duration: 0.16 }}
-                className="fixed bottom-[6rem] left-4 right-4 z-50 mx-auto max-h-[min(60vh,24rem)] max-w-2xl overflow-hidden rounded-lg border border-amber-400/25 bg-slate-950 shadow-2xl shadow-black/50"
+                className="fixed bottom-[6rem] left-4 right-4 z-50 mx-auto max-h-[min(60vh,24rem)] max-w-2xl overflow-hidden rounded-lg border border-amber-400/25 bg-app-background shadow-2xl shadow-black/50"
               >
                 <div className="border-b border-white/10 px-4 py-3">
                   <p className="text-sm font-medium text-slate-100">
@@ -310,7 +310,7 @@ export function AgentEditReviewBar() {
                         className={`flex w-full min-w-0 items-start gap-3 rounded-md px-3 py-2.5 text-left transition-colors ${
                           isFocused
                             ? 'bg-amber-400/10 text-amber-100'
-                            : 'text-slate-200 hover:bg-slate-900'
+                            : 'text-slate-200 hover:bg-app-hover'
                         }`}
                       >
                         <span className="mt-0.5 min-w-[2rem] text-xs tabular-nums text-slate-500">
@@ -336,7 +336,7 @@ export function AgentEditReviewBar() {
               <button
                 type="button"
                 onClick={() => setLocationsOpen((open) => !open)}
-                className="flex h-6 w-32 items-center justify-center rounded-full border border-slate-600 bg-slate-950 text-slate-300 transition-colors hover:border-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                className="flex h-6 w-32 items-center justify-center rounded-full border border-app-border bg-app-background text-slate-300 transition-colors hover:border-app-borderStrong hover:bg-app-hover hover:text-slate-100"
                 title={
                   locationsOpen
                     ? 'Hide review locations'
@@ -375,7 +375,7 @@ export function AgentEditReviewBar() {
                   type="button"
                   onClick={() => goTo(displayIdx - 1)}
                   disabled={displayIdx === 0}
-                  className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="rounded p-1 text-slate-400 transition-colors hover:bg-app-hover hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Previous change"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -387,7 +387,7 @@ export function AgentEditReviewBar() {
                   type="button"
                   onClick={() => goTo(displayIdx + 1)}
                   disabled={displayIdx >= pendingCount - 1}
-                  className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="rounded p-1 text-slate-400 transition-colors hover:bg-app-hover hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Next change"
                 >
                   <ChevronRight className="h-4 w-4" />

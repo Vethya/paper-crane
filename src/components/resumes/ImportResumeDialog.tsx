@@ -115,7 +115,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
         {children}
       </span>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="bg-slate-900 border-white/10 text-slate-100 sm:max-w-md">
+        <DialogContent className="border-app-border bg-app-surface text-slate-100 sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-white">Import Resume</DialogTitle>
           </DialogHeader>
@@ -136,10 +136,10 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
                 'flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-6 py-10 text-center transition',
                 isBusy ? 'cursor-wait opacity-70' : '',
                 dragging
-                  ? 'border-blue-500 bg-blue-500/10 text-blue-300'
+                  ? 'border-app-borderStrong bg-app-hover text-slate-200'
                   : parsedContent
                     ? 'border-green-500/50 bg-green-500/5 text-slate-300'
-                    : 'border-white/10 bg-slate-800/50 text-slate-400 hover:border-white/20 hover:text-slate-300'
+                    : 'border-app-border bg-app-surfaceElevated text-slate-400 hover:border-app-borderStrong hover:text-slate-300'
               ].join(' ')}
             >
               <FiUpload
@@ -156,7 +156,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
                   Drop a{' '}
                   <span className="font-medium text-slate-200">.json</span> file
                   here, or{' '}
-                  <span className="font-medium text-blue-400">browse</span>
+                  <span className="font-medium text-white">browse</span>
                 </span>
               )}
             </button>
@@ -185,7 +185,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
                   onKeyDown={(e) => e.key === 'Enter' && handleImport()}
                   disabled={isBusy}
                   autoFocus
-                  className="bg-slate-800 border-white/10 text-slate-100 placeholder:text-slate-500 focus-visible:border-blue-500 focus-visible:ring-blue-500/30"
+                  className="border-app-border bg-app-surfaceElevated text-slate-100 placeholder:text-slate-500 focus-visible:border-app-borderStrong focus-visible:ring-ring/30"
                 />
               </div>
             )}
@@ -204,7 +204,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
             <button
               onClick={handleImport}
               disabled={isBusy || !parsedContent || !title.trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-full border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 disabled:opacity-50"
             >
               {isBusy && <Loader2 className="h-4 w-4 animate-spin" />}
               {openingGenerator

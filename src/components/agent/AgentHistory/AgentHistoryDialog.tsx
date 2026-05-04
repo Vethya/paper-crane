@@ -12,14 +12,20 @@ interface AgentHistoryDialogProps {
   onSelect: (id: string) => void
 }
 
-export function AgentHistoryDialog({ resumeId, onClose, onSelect }: AgentHistoryDialogProps) {
+export function AgentHistoryDialog({
+  resumeId,
+  onClose,
+  onSelect
+}: AgentHistoryDialogProps) {
   const [sessions, setSessions] = useState<SessionPreview[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
-  useEffect(() => { setMounted(true) }, [])
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     async function fetchSessions() {
@@ -41,7 +47,8 @@ export function AgentHistoryDialog({ resumeId, onClose, onSelect }: AgentHistory
     if (!search.trim()) return sessions
     const q = search.toLowerCase()
     return sessions.filter(
-      (s) => s.preview.toLowerCase().includes(q) || s.mode.toLowerCase().includes(q),
+      (s) =>
+        s.preview.toLowerCase().includes(q) || s.mode.toLowerCase().includes(q)
     )
   }, [sessions, search])
 
@@ -76,26 +83,28 @@ export function AgentHistoryDialog({ resumeId, onClose, onSelect }: AgentHistory
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 8 }}
           transition={{ duration: 0.15 }}
-          className="flex h-[520px] w-full max-w-[460px] flex-col rounded-2xl border border-white/10 bg-slate-900 shadow-2xl shadow-black/60"
+          className="flex h-[520px] w-full max-w-[460px] flex-col rounded-2xl border border-app-border bg-app-surface shadow-2xl shadow-black/60"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex h-14 shrink-0 items-center justify-between px-4">
-            <span className="text-sm font-medium text-slate-200">Chat history</span>
+            <span className="text-sm font-medium text-slate-200">
+              Chat history
+            </span>
             <button
               onClick={onClose}
-              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-white/5 hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+              className="rounded-lg p-1.5 text-slate-400 transition hover:bg-app-hover hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Close history"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
-          <div className="mx-4 border-b border-slate-700/50" />
+          <div className="mx-4 border-b border-app-border" />
 
           {/* Search */}
           <div className="px-4 py-3">
-            <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-slate-800/70 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-xl border border-app-border bg-app-surfaceElevated px-3 py-2">
               <Search className="h-4 w-4 shrink-0 text-slate-500" />
               <input
                 autoFocus
@@ -113,7 +122,10 @@ export function AgentHistoryDialog({ resumeId, onClose, onSelect }: AgentHistory
             {loading ? (
               <div className="flex flex-col gap-2">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="h-16 animate-pulse rounded-xl bg-slate-800/50" />
+                  <div
+                    key={i}
+                    className="h-16 animate-pulse rounded-xl bg-app-surfaceElevated"
+                  />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
@@ -139,49 +151,54 @@ export function AgentHistoryDialog({ resumeId, onClose, onSelect }: AgentHistory
       </motion.div>
 
       {/* Delete confirmation dialog — portalled to body to escape framer-motion stacking context */}
-      {mounted && createPortal(
-        <AnimatePresence>
-        {deletingId && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.1 }}
-            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-6"
-            onClick={() => setDeletingId(null)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96, y: 8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 8 }}
-              transition={{ duration: 0.1 }}
-              className="flex w-full max-w-xs flex-col gap-4 rounded-2xl border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-black/60"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-medium text-slate-100">Delete chat?</span>
-                <span className="text-sm text-slate-500">This can&apos;t be undone.</span>
-              </div>
-              <div className="flex justify-end gap-2">
-                <button
-                  onClick={() => setDeletingId(null)}
-                  className="rounded-lg px-4 py-2 text-sm text-slate-400 transition hover:bg-white/5 hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {deletingId && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.1 }}
+                className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 p-6"
+                onClick={() => setDeletingId(null)}
+              >
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.96, y: 8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: 8 }}
+                  transition={{ duration: 0.1 }}
+                  className="flex w-full max-w-xs flex-col gap-4 rounded-2xl border border-app-border bg-app-surface p-6 shadow-2xl shadow-black/60"
+                  onClick={(e) => e.stopPropagation()}
                 >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmDelete}
-                  className="rounded-lg bg-red-600/90 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
-                >
-                  Delete
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium text-slate-100">
+                      Delete chat?
+                    </span>
+                    <span className="text-sm text-slate-500">
+                      This can&apos;t be undone.
+                    </span>
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <button
+                      onClick={() => setDeletingId(null)}
+                      className="rounded-lg px-4 py-2 text-sm text-slate-400 transition hover:bg-app-hover hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmDelete}
+                      className="rounded-lg bg-red-600/90 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-        </AnimatePresence>,
-        document.body
-      )}
     </>
   )
 }

@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
@@ -40,7 +40,7 @@ export function TagPicker() {
         const res = await fetch(`/api/resumes/${resumeId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tags: pendingTagsRef.current }),
+          body: JSON.stringify({ tags: pendingTagsRef.current })
         })
         if (!res.ok) throw new Error()
         setSaveState('saved')
@@ -55,21 +55,23 @@ export function TagPicker() {
 
   useEffect(() => {
     fetch('/api/tags')
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(setAllTags)
       .catch(() => {})
   }, [])
 
-  const filtered = allTags.filter(t =>
+  const filtered = allTags.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase())
   )
-  const exactMatch = allTags.some(t => t.name.toLowerCase() === search.trim().toLowerCase())
+  const exactMatch = allTags.some(
+    (t) => t.name.toLowerCase() === search.trim().toLowerCase()
+  )
   const showCreate = search.trim() !== '' && !exactMatch
 
   function toggleTag(tagName: string) {
     if (!resumeId) return
     const newTags = resumeTags.includes(tagName)
-      ? resumeTags.filter(t => t !== tagName)
+      ? resumeTags.filter((t) => t !== tagName)
       : [...resumeTags, tagName]
     setResumeTags(newTags)
     scheduleSaveTags(newTags)
@@ -91,7 +93,7 @@ export function TagPicker() {
   }
 
   function handleTagCreated(tag: TagItem) {
-    setAllTags(prev => [...prev, tag])
+    setAllTags((prev) => [...prev, tag])
     // Auto-attach the newly created tag
     if (resumeId) {
       const newTags = [...resumeTags, tag.name]
@@ -102,34 +104,41 @@ export function TagPicker() {
   }
 
   function handleTagUpdated(tag: TagItem) {
-    const old = allTags.find(t => t._id === tag._id)
-    setAllTags(prev => prev.map(t => t._id === tag._id ? tag : t))
+    const old = allTags.find((t) => t._id === tag._id)
+    setAllTags((prev) => prev.map((t) => (t._id === tag._id ? tag : t)))
     if (old && old.name !== tag.name) {
-      setResumeTags(prev => prev.map(n => n === old.name ? tag.name : n))
+      setResumeTags((prev) => prev.map((n) => (n === old.name ? tag.name : n)))
     }
   }
 
   function handleTagDeleted(tagId: string) {
-    const deleted = allTags.find(t => t._id === tagId)
-    setAllTags(prev => prev.filter(t => t._id !== tagId))
+    const deleted = allTags.find((t) => t._id === tagId)
+    setAllTags((prev) => prev.filter((t) => t._id !== tagId))
     if (deleted) {
-      setResumeTags(prev => prev.filter(n => n !== deleted.name))
+      setResumeTags((prev) => prev.filter((n) => n !== deleted.name))
     }
   }
 
-  const attachedTags = allTags.filter(t => resumeTags.includes(t.name))
+  const attachedTags = allTags.filter((t) => resumeTags.includes(t.name))
 
   return (
     <div ref={containerRef} className="relative">
       <button
-        onClick={() => { setOpen(o => !o); setSearch('') }}
+        onClick={() => {
+          setOpen((o) => !o)
+          setSearch('')
+        }}
         className="flex items-center gap-1.5 rounded-full border border-white/10 px-3 py-1.5 text-sm text-slate-400 transition-colors hover:border-white/20 hover:text-slate-300"
       >
         <FiTag size={13} />
         {attachedTags.length > 0 ? (
           <div className="flex items-center gap-1">
-            {attachedTags.slice(0, 3).map(t => (
-              <span key={t._id} style={{ backgroundColor: tagColorMap[t.color].hex }} className="h-2 w-2 rounded-full" />
+            {attachedTags.slice(0, 3).map((t) => (
+              <span
+                key={t._id}
+                style={{ backgroundColor: tagColorMap[t.color].hex }}
+                className="h-2 w-2 rounded-full"
+              />
             ))}
             {attachedTags.length > 3 && (
               <span className="text-xs">+{attachedTags.length - 3}</span>
@@ -141,19 +150,19 @@ export function TagPicker() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-white/10 bg-slate-900 shadow-xl">
+        <div className="absolute right-0 top-10 z-50 w-64 rounded-xl border border-app-border bg-app-surface shadow-xl">
           <div className="border-b border-white/5 p-2">
             <input
               autoFocus
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search or create…"
-              className="w-full rounded-lg bg-slate-800 px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none"
+              className="w-full rounded-lg bg-app-surfaceElevated px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none"
             />
           </div>
 
           <div className="max-h-52 overflow-y-auto py-1">
-            {filtered.map(tag => {
+            {filtered.map((tag) => {
               const attached = resumeTags.includes(tag.name)
               const { badgeBg, badgeText } = tagColorMap[tag.color]
               return (
@@ -163,15 +172,20 @@ export function TagPicker() {
                   className="group mx-1 flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 hover:bg-white/5"
                 >
                   <div className="flex items-center gap-2">
-                    <span className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-sm border transition-colors ${attached ? 'border-blue-500 bg-blue-600' : 'border-white/20'}`}>
+                    <span
+                      className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-sm border transition-colors ${attached ? 'border-white bg-white' : 'border-white/20'}`}
+                    >
                       {attached && <FiCheck size={10} className="text-white" />}
                     </span>
-                    <span className="rounded-full px-2 py-0.5 text-xs" style={{ backgroundColor: badgeBg, color: badgeText }}>
+                    <span
+                      className="rounded-full px-2 py-0.5 text-xs"
+                      style={{ backgroundColor: badgeBg, color: badgeText }}
+                    >
                       {tag.name}
                     </span>
                   </div>
                   <button
-                    onClick={e => openEdit(tag, e)}
+                    onClick={(e) => openEdit(tag, e)}
                     className="rounded p-1 text-slate-500 opacity-0 transition group-hover:opacity-100 hover:text-slate-300"
                   >
                     <FiEdit2 size={12} />
@@ -181,7 +195,9 @@ export function TagPicker() {
             })}
 
             {filtered.length === 0 && !showCreate && (
-              <p className="px-3 py-3 text-center text-xs text-slate-500">No tags yet</p>
+              <p className="px-3 py-3 text-center text-xs text-slate-500">
+                No tags yet
+              </p>
             )}
           </div>
 

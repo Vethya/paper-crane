@@ -76,8 +76,8 @@ export function MobileNav({ activeSection, onSectionChange }: MobileNavProps) {
           className={clsx(
             'shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors',
             activeSection === section
-              ? 'bg-blue-600 text-white'
-              : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
+              ? 'bg-white text-app-background'
+              : 'bg-app-surfaceElevated text-slate-400 hover:bg-app-hover hover:text-slate-200'
           )}
         >
           {label}

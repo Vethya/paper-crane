@@ -35,12 +35,12 @@ export function CollapsibleFormItem({
       <div
         className={twMerge(
           clsx(
-            '-mx-1.5 max-w-none overflow-hidden rounded-lg border border-white/10 bg-slate-900/60 transition hover:border-blue-500/40 sm:-mx-3',
+            '-mx-1.5 max-w-none overflow-hidden rounded-lg border border-app-border bg-app-surface transition hover:border-app-borderStrong sm:-mx-3',
             className
           )
         )}
       >
-        <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-slate-900 sm:px-3">
+        <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-app-hover sm:px-3">
           <button
             type="button"
             onClick={onToggle}
@@ -65,7 +65,7 @@ export function CollapsibleFormItem({
             onClick={onToggle}
             aria-label={isExpanded ? 'Collapse item' : 'Expand item'}
             aria-expanded={isExpanded}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-blue-400 transition hover:bg-blue-500/10 hover:text-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400/60"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded text-slate-400 transition hover:bg-app-hover hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
           </button>
