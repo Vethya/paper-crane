@@ -76,7 +76,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-2 rounded-app-button border border-app-controlBorder bg-app-control px-2 py-1 text-sm text-white transition hover:bg-app-controlHover focus:outline-none">
+                  <button className="flex items-center gap-2 rounded-app-button border border-transparent bg-transparent px-2 py-1 text-sm text-white transition hover:border-app-controlBorder hover:bg-app-control data-[state=open]:border-app-controlBorder data-[state=open]:bg-app-control focus:outline-none">
                     {user.image ? (
                       <img
                         src={user.image}
