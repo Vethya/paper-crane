@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { FiChevronDown } from 'react-icons/fi'
+import { FileText, LogOut } from 'lucide-react'
 import { Logo } from '../core/Logo'
 import { authClient } from '@/db/auth-client'
 import { useAtomValue } from 'jotai'
@@ -100,8 +101,9 @@ export function Header({ className, showTags = true }: HeaderProps) {
                   <DropdownMenuItem asChild>
                     <Link
                       href="/resumes"
-                      className="block px-4 py-2.5 text-sm text-slate-300 hover:bg-app-control focus:bg-app-control focus:text-white transition-colors cursor-pointer"
+                      className="flex items-center gap-2 px-4 py-2.5 text-sm text-slate-300 hover:bg-app-control focus:bg-app-control focus:text-white transition-colors cursor-pointer"
                     >
+                      <FileText className="text-slate-400" />
                       My Resumes
                     </Link>
                   </DropdownMenuItem>
@@ -109,7 +111,8 @@ export function Header({ className, showTags = true }: HeaderProps) {
                     onClick={handleLogout}
                     className="px-4 py-2.5 text-sm text-slate-300 hover:bg-app-control focus:bg-app-control focus:text-white transition-colors cursor-pointer"
                   >
-                    Logout
+                    <LogOut className="text-slate-400" />
+                    Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
