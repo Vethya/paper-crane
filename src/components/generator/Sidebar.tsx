@@ -6,7 +6,7 @@ import { useAtomValue } from 'jotai'
 import { PrimaryButton } from '../core/Button'
 import { isLoadingResumeAtom } from '@/atoms/resume'
 
-const sectionLinks = [
+export const sectionLinks = [
   { label: 'Templates', section: 'templates' },
   { label: 'Profile', section: 'basics' },
   { label: 'Education', section: 'education' },
@@ -31,7 +31,7 @@ export function Sidebar({
 
   return (
     <aside className="min-w-0">
-      <nav className="mb-7 flex w-full min-w-0 flex-col items-start justify-center gap-6">
+      <nav className="mb-7 flex w-full min-w-0 flex-col items-start justify-center gap-3">
         {sectionLinks.map(({ label, section }) => (
           <button
             key={section}
@@ -39,8 +39,10 @@ export function Sidebar({
             onClick={() => onSectionChange(section)}
             className={twMerge(
               clsx(
-                'max-w-full break-words text-left font-light leading-snug text-white',
-                activeSection === section && 'text-green'
+                'w-full max-w-full rounded-app-button border px-3 py-2 text-left text-sm font-medium leading-snug transition-colors',
+                activeSection === section
+                  ? 'border-white/35 bg-white/[0.18] text-white'
+                  : 'border-transparent bg-transparent text-slate-300 hover:bg-white/[0.05] hover:text-white'
               )
             )}
           >
@@ -74,10 +76,10 @@ export function MobileNav({ activeSection, onSectionChange }: MobileNavProps) {
           type="button"
           onClick={() => onSectionChange(section)}
           className={clsx(
-            'shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm font-medium transition-colors',
+            'shrink-0 whitespace-nowrap rounded-app-button px-4 py-2 text-sm font-medium transition-colors',
             activeSection === section
-              ? 'bg-blue-600 text-white'
-              : 'bg-slate-800/60 text-slate-400 hover:text-slate-200'
+              ? 'bg-white text-app-background'
+              : 'border border-app-controlBorder bg-app-control text-slate-300 hover:bg-app-controlHover hover:text-white'
           )}
         >
           {label}

@@ -78,16 +78,14 @@ export default function Keywords({
       <div
         className={clsx(
           'my-2 rounded transition-shadow',
-          fieldEdit &&
-            'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)] p-2'
+          fieldEdit && 'review-field-highlight p-2'
         )}
       >
-        <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-1 overflow-hidden">
+        <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-3 overflow-hidden">
           {fields.map((field, i) => (
             <Fragment key={field.id}>
               <div
-                className="inline-flex max-w-full min-w-0 items-center gap-1 rounded-full border px-4 py-2 pr-1"
-                style={{ borderColor: '#4b5563' }}
+                className="inline-flex max-w-full min-w-0 items-center gap-1 rounded-app-button border border-app-controlBorder py-1 pl-2 pr-2"
               >
                 <span className="block min-w-0 max-w-full truncate">
                   {getValues(`${name}.${i}`)}
@@ -106,7 +104,7 @@ export default function Keywords({
 
         {fieldEdit && (
           <div className="mt-2 flex items-start gap-2">
-            <p className="flex-1 text-xs text-amber-300/80 italic leading-snug">
+            <p className="review-reason flex-1 text-xs italic leading-snug">
               {fieldEdit.reason}
             </p>
             <div className="flex shrink-0 gap-1">

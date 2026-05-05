@@ -201,9 +201,9 @@ export default function Highlights({
               style={{ transform: getRowTransform(i) }}
               className={twMerge(
                 clsx(
-                  'relative grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-2 rounded-lg bg-slate-950/40 p-1 transition-[transform,background-color,box-shadow] duration-200 ease-out',
+                  'relative grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-2 rounded-app-button bg-app-background/40 p-1 transition-[transform,background-color,box-shadow] duration-200 ease-out',
                   dragState?.sourceIndex === i
-                    ? 'z-20 bg-slate-900 shadow-lg shadow-black/20 transition-none'
+                    ? 'z-20 bg-app-surface shadow-lg shadow-black/20 transition-none'
                     : dragState && 'z-10'
                 )
               )}
@@ -226,8 +226,7 @@ export default function Highlights({
                 <div
                   className={clsx(
                     'rounded transition-shadow',
-                    edit &&
-                      'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
+                    edit && 'review-field-highlight'
                   )}
                 >
                   <Input
@@ -238,7 +237,7 @@ export default function Highlights({
                 </div>
                 {edit && (
                   <div className="flex items-start gap-2">
-                    <p className="flex-1 text-xs text-amber-300/80 italic leading-snug">
+                    <p className="review-reason flex-1 text-xs italic leading-snug">
                       {edit.reason}
                     </p>
                     <div className="flex shrink-0 gap-1">

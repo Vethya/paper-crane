@@ -278,7 +278,7 @@ export function AgentEditReviewBar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-          className="fixed bottom-0 left-0 right-0 z-40 border-t border-amber-400/20 bg-slate-950/95 backdrop-blur-sm shadow-[0_-4px_32px_rgba(0,0,0,0.5)]"
+          className="review-accent-border fixed bottom-0 left-0 right-0 z-40 border-t bg-app-background/95 backdrop-blur-sm shadow-[0_-4px_32px_rgba(0,0,0,0.5)]"
         >
           <AnimatePresence>
             {locationsOpen && (
@@ -287,7 +287,7 @@ export function AgentEditReviewBar() {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 12, opacity: 0 }}
                 transition={{ duration: 0.16 }}
-                className="fixed bottom-[6rem] left-4 right-4 z-50 mx-auto max-h-[min(60vh,24rem)] max-w-2xl overflow-hidden rounded-lg border border-amber-400/25 bg-slate-950 shadow-2xl shadow-black/50"
+                className="review-accent-border fixed bottom-[6rem] left-4 right-4 z-50 mx-auto max-h-[min(60vh,24rem)] max-w-2xl overflow-hidden rounded-app-panel border bg-app-background shadow-2xl shadow-black/50"
               >
                 <div className="border-b border-white/10 px-4 py-3">
                   <p className="text-sm font-medium text-slate-100">
@@ -309,8 +309,8 @@ export function AgentEditReviewBar() {
                         }}
                         className={`flex w-full min-w-0 items-start gap-3 rounded-md px-3 py-2.5 text-left transition-colors ${
                           isFocused
-                            ? 'bg-amber-400/10 text-amber-100'
-                            : 'text-slate-200 hover:bg-slate-900'
+                            ? 'review-location-active'
+                            : 'text-slate-200 hover:bg-app-control'
                         }`}
                       >
                         <span className="mt-0.5 min-w-[2rem] text-xs tabular-nums text-slate-500">
@@ -320,7 +320,7 @@ export function AgentEditReviewBar() {
                           <span className="block text-sm font-medium leading-snug">
                             {location.title}
                           </span>
-                          <span className="mt-0.5 block truncate text-xs leading-snug text-slate-400">
+                          <span className="review-location-detail mt-0.5 block truncate text-xs leading-snug text-slate-400">
                             {location.detail}
                           </span>
                         </span>
@@ -336,7 +336,7 @@ export function AgentEditReviewBar() {
               <button
                 type="button"
                 onClick={() => setLocationsOpen((open) => !open)}
-                className="flex h-6 w-32 items-center justify-center rounded-full border border-slate-600 bg-slate-950 text-slate-300 transition-colors hover:border-slate-400 hover:bg-slate-900 hover:text-slate-100"
+                className="flex h-6 w-32 items-center justify-center rounded-app-button border border-app-controlBorder bg-app-control text-white transition-colors hover:border-app-borderStrong hover:bg-app-controlHover"
                 title={
                   locationsOpen
                     ? 'Hide review locations'
@@ -359,9 +359,9 @@ export function AgentEditReviewBar() {
             </div>
             {/* Summary row */}
             <div className="flex items-center gap-3">
-              <Sparkles className="h-4 w-4 shrink-0 text-amber-400" />
+              <Sparkles className="review-accent-icon h-4 w-4 shrink-0" />
               <p className="flex-1 text-sm text-slate-200 truncate">
-                <span className="font-medium text-amber-300">
+                <span className="review-accent-text font-medium">
                   {pendingCount} change{pendingCount !== 1 ? 's' : ''} to review
                 </span>
                 {summary && (
@@ -375,7 +375,7 @@ export function AgentEditReviewBar() {
                   type="button"
                   onClick={() => goTo(displayIdx - 1)}
                   disabled={displayIdx === 0}
-                  className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="rounded p-1 text-slate-300 transition-colors hover:bg-app-control hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Previous change"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -387,7 +387,7 @@ export function AgentEditReviewBar() {
                   type="button"
                   onClick={() => goTo(displayIdx + 1)}
                   disabled={displayIdx >= pendingCount - 1}
-                  className="rounded p-1 text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="rounded p-1 text-slate-300 transition-colors hover:bg-app-control hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Next change"
                 >
                   <ChevronRight className="h-4 w-4" />
@@ -398,7 +398,7 @@ export function AgentEditReviewBar() {
                 <button
                   type="button"
                   onClick={rejectAll}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
+                  className="flex items-center gap-1.5 rounded-app-button px-3 py-1.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
                 >
                   <RotateCcw className="h-3 w-3" />
                   Reject All
@@ -406,7 +406,7 @@ export function AgentEditReviewBar() {
                 <button
                   type="button"
                   onClick={approveAll}
-                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
+                  className="flex items-center gap-1.5 rounded-app-button px-3 py-1.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
                 >
                   <Check className="h-3 w-3" />
                   Approve All

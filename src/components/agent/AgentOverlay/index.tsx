@@ -14,7 +14,7 @@ import {
   agentResumeIdAtom,
   agentHistoryOpenAtom,
   type AgentMode,
-  type AgentMessage,
+  type AgentMessage
 } from '../../../atoms/agentAtom'
 import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
 import {
@@ -24,7 +24,7 @@ import {
   type FieldEdit,
   type NewEntryEdit,
   type RemoveEntryEdit,
-  type PendingEdit,
+  type PendingEdit
 } from '../../../atoms/agentEdits'
 import { authClient } from '../../../db/auth-client'
 import { MOCK_EDIT_RESPONSE } from '../../../lib/agentMock'
@@ -42,17 +42,20 @@ function buildResumeContextMessages(resumeData: object): AgentMessage[] {
     {
       id: 'ctx-resume',
       role: 'user',
-      content: `Here is my current resume data in JSON format. Please use this as context for our conversation:\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`,
+      content: `Here is my current resume data in JSON format. Please use this as context for our conversation:\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`
     },
     {
       id: 'ctx-ack',
       role: 'assistant',
-      content: "I've reviewed your resume. How can I help you?",
-    },
+      content: "I've reviewed your resume. How can I help you?"
+    }
   ]
 }
 
-function getValueAtPath(data: unknown, path: string): string | string[] | undefined {
+function getValueAtPath(
+  data: unknown,
+  path: string
+): string | string[] | undefined {
   const parts = path.split('.')
   let current: unknown = data
   for (const part of parts) {
@@ -65,7 +68,8 @@ function getValueAtPath(data: unknown, path: string): string | string[] | undefi
     }
   }
   if (typeof current === 'string') return current
-  if (Array.isArray(current) && current.every((v) => typeof v === 'string')) return current as string[]
+  if (Array.isArray(current) && current.every((v) => typeof v === 'string'))
+    return current as string[]
   return undefined
 }
 
@@ -73,7 +77,7 @@ async function saveSession({
   resumeId,
   sessionId,
   mode,
-  messages,
+  messages
 }: {
   resumeId: string
   sessionId: string | null
@@ -83,7 +87,7 @@ async function saveSession({
   const res = await fetch('/api/agent/sessions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ resumeId, sessionId, mode, messages }),
+    body: JSON.stringify({ resumeId, sessionId, mode, messages })
   })
   if (!res.ok) throw new Error('Failed to save session')
   const data = (await res.json()) as { sessionId: string }
@@ -130,7 +134,14 @@ export function AgentOverlay() {
     const params = new URLSearchParams(searchParams.toString())
     params.delete('chatId')
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
-  }, [setMessages, setSessionId, setHistoryOpen, searchParams, pathname, router])
+  }, [
+    setMessages,
+    setSessionId,
+    setHistoryOpen,
+    searchParams,
+    pathname,
+    router
+  ])
 
   const handleSelectSession = useCallback(
     async (id: string) => {
@@ -139,7 +150,10 @@ export function AgentOverlay() {
       try {
         const res = await fetch(`/api/agent/sessions/${id}`)
         if (!res.ok) throw new Error('Failed to load session')
-        const data = (await res.json()) as { mode: AgentMode; messages: AgentMessage[] }
+        const data = (await res.json()) as {
+          mode: AgentMode
+          messages: AgentMessage[]
+        }
         setMessages(data.messages)
         setSessionId(id)
         setMode(data.mode)
@@ -149,7 +163,7 @@ export function AgentOverlay() {
         setIsLoadingSession(false)
       }
     },
-    [setHistoryOpen, setMessages, setSessionId, setMode],
+    [setHistoryOpen, setMessages, setSessionId, setMode]
   )
 
   // Auto-open overlay on mount if chatId is present in URL
@@ -184,26 +198,29 @@ export function AgentOverlay() {
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
-        content: text,
+        content: text
       }
       const assistantMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: '',
+        content: ''
       }
 
       const nextMessages = [...(baseMessages ?? messages), userMessage]
       setMessages([...nextMessages, assistantMessage])
       setIsStreaming(true)
 
-      const apiMessages = [...buildResumeContextMessages(formData ?? {}), ...nextMessages]
+      const apiMessages = [
+        ...buildResumeContextMessages(formData ?? {}),
+        ...nextMessages
+      ]
       let finalContent = ''
 
       try {
         const res = await fetch('/api/agent/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: apiMessages, mode }),
+          body: JSON.stringify({ messages: apiMessages, mode })
         })
 
         if (!res.ok || !res.body) throw new Error('Stream request failed')
@@ -217,7 +234,10 @@ export function AgentOverlay() {
           finalContent += decoder.decode(value, { stream: true })
           setMessages((prev) => {
             const updated = [...prev]
-            updated[updated.length - 1] = { ...assistantMessage, content: finalContent }
+            updated[updated.length - 1] = {
+              ...assistantMessage,
+              content: finalContent
+            }
             return updated
           })
         }
@@ -226,15 +246,27 @@ export function AgentOverlay() {
         finalContent = 'Something went wrong. Please try again.'
         setMessages((prev) => {
           const updated = [...prev]
-          updated[updated.length - 1] = { ...assistantMessage, content: finalContent, error: true }
+          updated[updated.length - 1] = {
+            ...assistantMessage,
+            content: finalContent,
+            error: true
+          }
           return updated
         })
       } finally {
         setIsStreaming(false)
         if (resumeId && finalContent) {
-          const finalMessages = [...nextMessages, { ...assistantMessage, content: finalContent }]
+          const finalMessages = [
+            ...nextMessages,
+            { ...assistantMessage, content: finalContent }
+          ]
           try {
-            const savedId = await saveSession({ resumeId, sessionId, mode, messages: finalMessages })
+            const savedId = await saveSession({
+              resumeId,
+              sessionId,
+              mode,
+              messages: finalMessages
+            })
             setSessionId(savedId)
           } catch (err) {
             console.error('[AgentOverlay] Session save error:', err)
@@ -242,7 +274,16 @@ export function AgentOverlay() {
         }
       }
     },
-    [messages, mode, formData, resumeId, sessionId, setMessages, setIsStreaming, setSessionId],
+    [
+      messages,
+      mode,
+      formData,
+      resumeId,
+      sessionId,
+      setMessages,
+      setIsStreaming,
+      setSessionId
+    ]
   )
 
   // ---------------------------------------------------------------------------
@@ -254,12 +295,12 @@ export function AgentOverlay() {
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
-        content: text,
+        content: text
       }
       const thinkingMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'assistant',
-        content: 'Tailoring your resume…',
+        content: 'Tailoring your resume…'
       }
 
       const nextMessages = [...(baseMessages ?? messages), userMessage]
@@ -276,10 +317,30 @@ export function AgentOverlay() {
         let data: {
           summary: string
           edits: Array<
-            | { type: 'set'; fieldPath: string; newValue: string | string[]; reason: string }
-            | { type: 'append'; arrayPath: string; entry: Record<string, unknown>; reason: string }
-            | { type: 'appendSkill'; name: string; keywords: string[]; reason: string }
-            | { type: 'remove'; arrayPath: string; index: number; reason: string }
+            | {
+                type: 'set'
+                fieldPath: string
+                newValue: string | string[]
+                reason: string
+              }
+            | {
+                type: 'append'
+                arrayPath: string
+                entry: Record<string, unknown>
+                reason: string
+              }
+            | {
+                type: 'appendSkill'
+                name: string
+                keywords: string[]
+                reason: string
+              }
+            | {
+                type: 'remove'
+                arrayPath: string
+                index: number
+                reason: string
+              }
           >
         }
         if (isMock) {
@@ -290,9 +351,12 @@ export function AgentOverlay() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              messages: nextMessages.map(({ role, content }) => ({ role, content })),
-              resumeData: snapshot,
-            }),
+              messages: nextMessages.map(({ role, content }) => ({
+                role,
+                content
+              })),
+              resumeData: snapshot
+            })
           })
           if (!res.ok) throw new Error('Edit request failed')
           data = (await res.json()) as typeof data
@@ -305,7 +369,10 @@ export function AgentOverlay() {
 
         const getLatestArray = (arrayPath: string): unknown[] => {
           if (arrayPath in latestArrays) return latestArrays[arrayPath]
-          return ((snapshot as Record<string, unknown>)[arrayPath] as unknown[]) ?? []
+          return (
+            ((snapshot as Record<string, unknown>)[arrayPath] as unknown[]) ??
+            []
+          )
         }
 
         for (const edit of data.edits) {
@@ -318,20 +385,26 @@ export function AgentOverlay() {
               originalValue,
               newValue: edit.newValue,
               reason: edit.reason,
-              status: 'pending',
+              status: 'pending'
             }
             pendingEdits.push(fieldEdit)
 
             // Apply immediately — user approves/rejects afterward
             if (formSetValue && typeof edit.newValue === 'string') {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formSetValue(edit.fieldPath as any, edit.newValue, { shouldDirty: true, shouldValidate: true })
+              formSetValue(edit.fieldPath as any, edit.newValue, {
+                shouldDirty: true,
+                shouldValidate: true
+              })
             }
             // Array values (keywords) are handled by Keywords.tsx via useEffect when pendingEdits updates
           } else if (edit.type === 'remove') {
             const arrayPath = edit.arrayPath as RemoveEntryEdit['arrayPath']
             const currentArray = getLatestArray(arrayPath)
-            const entry = (currentArray[edit.index] ?? {}) as Record<string, unknown>
+            const entry = (currentArray[edit.index] ?? {}) as Record<
+              string,
+              unknown
+            >
             const removeEdit: RemoveEntryEdit = {
               id: crypto.randomUUID(),
               type: 'remove',
@@ -339,13 +412,15 @@ export function AgentOverlay() {
               entryIndex: edit.index,
               entry,
               reason: edit.reason,
-              status: 'pending',
+              status: 'pending'
             }
             pendingEdits.push(removeEdit)
             // Do NOT modify the form — entry stays visible until user confirms removal
           } else if (edit.type === 'append' || edit.type === 'appendSkill') {
             const arrayPath: NewEntryEdit['arrayPath'] =
-              edit.type === 'appendSkill' ? 'skills' : (edit.arrayPath as NewEntryEdit['arrayPath'])
+              edit.type === 'appendSkill'
+                ? 'skills'
+                : (edit.arrayPath as NewEntryEdit['arrayPath'])
             const entry: Record<string, unknown> =
               edit.type === 'appendSkill'
                 ? { name: edit.name, keywords: edit.keywords }
@@ -366,14 +441,17 @@ export function AgentOverlay() {
               entryIndex,
               entry,
               reason: edit.reason,
-              status: 'pending',
+              status: 'pending'
             }
             pendingEdits.push(newEntryEdit)
 
             // Apply immediately — append the new entry to the form
             if (formSetValue) {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formSetValue(arrayPath as any, newArray as any, { shouldDirty: true, shouldValidate: true })
+              formSetValue(arrayPath as any, newArray as any, {
+                shouldDirty: true,
+                shouldValidate: true
+              })
             }
           }
         }
@@ -386,7 +464,7 @@ export function AgentOverlay() {
 
         const doneMessage: AgentMessage = {
           ...thinkingMessage,
-          content: `Done! ${data.summary} Review the highlighted changes in the form, then approve or reject each one.`,
+          content: `Done! ${data.summary} Review the highlighted changes in the form, then approve or reject each one.`
         }
         setMessages([...nextMessages, doneMessage])
 
@@ -397,14 +475,16 @@ export function AgentOverlay() {
               resumeId,
               sessionId,
               mode,
-              messages: [...nextMessages, doneMessage],
+              messages: [...nextMessages, doneMessage]
             })
             setSessionId(savedId)
             // Sync chatId to URL immediately — handleClose() will clear sessionId,
             // so the useEffect-based sync would never fire for Tailoring mode.
             const params = new URLSearchParams(searchParams.toString())
             params.set('chatId', savedId)
-            router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+            router.replace(`${pathname}?${params.toString()}`, {
+              scroll: false
+            })
           } catch (err) {
             console.error('[AgentOverlay] Session save error:', err)
           }
@@ -416,8 +496,9 @@ export function AgentOverlay() {
         console.error('[AgentOverlay] Edit error:', err)
         const errorMessage: AgentMessage = {
           ...thinkingMessage,
-          content: 'Something went wrong while tailoring your resume. Please try again.',
-          error: true,
+          content:
+            'Something went wrong while tailoring your resume. Please try again.',
+          error: true
         }
         setMessages([...nextMessages, errorMessage])
       } finally {
@@ -440,8 +521,8 @@ export function AgentOverlay() {
       handleClose,
       searchParams,
       pathname,
-      router,
-    ],
+      router
+    ]
   )
 
   // ---------------------------------------------------------------------------
@@ -470,7 +551,7 @@ export function AgentOverlay() {
         await handleChatSend(text)
       }
     },
-    [isStreaming, mode, handleEditSend, handleChatSend],
+    [isStreaming, mode, handleEditSend, handleChatSend]
   )
 
   return (
@@ -481,20 +562,28 @@ export function AgentOverlay() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15, ease: 'easeOut' }}
-          className="fixed inset-0 z-50 flex flex-col bg-slate-950/85 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex flex-col bg-app-background/85 backdrop-blur-sm"
         >
           <div className="relative mx-auto flex h-full w-full max-w-2xl flex-col">
-            <AgentOverlayHeader onClose={handleClose} onHistoryClick={() => setHistoryOpen(true)} onNewChat={handleNewChat} />
-            <div className="mx-4 border-b border-slate-700/50" />
+            <AgentOverlayHeader
+              onClose={handleClose}
+              onHistoryClick={() => setHistoryOpen(true)}
+              onNewChat={handleNewChat}
+            />
+            <div className="mx-4 border-b border-app-border" />
 
             {!session ? (
               <div className="flex flex-1 flex-col items-center justify-center gap-4 px-8 text-center">
-                <Sparkles className="h-10 w-10 text-blue-400/60" />
-                <p className="text-base font-medium text-slate-200">Sign in to use the Resume Agent</p>
-                <p className="text-sm text-slate-400">The AI agent is available to authenticated users only.</p>
+                <Sparkles className="h-10 w-10 text-slate-400" />
+                <p className="text-base font-medium text-slate-200">
+                  Sign in to use the Resume Agent
+                </p>
+                <p className="text-sm text-slate-400">
+                  The AI agent is available to authenticated users only.
+                </p>
                 <a
                   href="/login"
-                  className="mt-2 rounded-full bg-blue-600 px-6 py-2 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60"
+                  className="mt-2 rounded-app-button border border-white/90 bg-white px-6 py-2 text-sm font-medium text-app-background transition hover:bg-app-primaryHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   Sign in
                 </a>
@@ -504,15 +593,19 @@ export function AgentOverlay() {
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={i}
-                    className={`h-10 animate-pulse rounded-2xl bg-slate-800/60 ${i % 2 === 0 ? 'self-end w-2/3' : 'self-start w-3/4'}`}
+                    className={`h-10 animate-pulse rounded-app-card bg-app-surfaceElevated ${i % 2 === 0 ? 'self-end w-2/3' : 'self-start w-3/4'}`}
                   />
                 ))}
               </div>
             ) : (
-              <AgentMessageList messages={messages} isStreaming={isStreaming} onRetry={handleRetry} />
+              <AgentMessageList
+                messages={messages}
+                isStreaming={isStreaming}
+                onRetry={handleRetry}
+              />
             )}
 
-            <div className="mx-4 border-t border-slate-700/50" />
+            <div className="mx-4 border-t border-app-border" />
             {session && <AgentComposer onSend={handleSend} />}
 
             <AnimatePresence>

@@ -29,7 +29,7 @@ export function TemplatesSection() {
                 />
                 <div
                   className={clsx(
-                    'overflow-hidden rounded border-2 transition peer-focus-visible:ring-2 peer-focus-visible:ring-blue-400 peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-slate-900',
+                    'overflow-hidden rounded border-2 transition peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2 peer-focus-visible:ring-offset-app-surface',
                     field.value === templateId
                       ? 'border-primary'
                       : 'border-transparent'
@@ -43,7 +43,7 @@ export function TemplatesSection() {
                     className="w-full h-auto"
                     loading="lazy"
                   />
-                  <div className="bg-[#1e232d] text-white text-center py-3 text-sm tracking-wider">
+                  <div className="bg-app-surfaceElevated text-white text-center py-3 text-sm tracking-wider">
                     Template {templateId}
                   </div>
                 </div>

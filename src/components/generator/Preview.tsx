@@ -7,7 +7,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -15,8 +15,14 @@ import { resumeAtom, isLoadingResumeAtom } from '../../atoms/resume'
 import { formDataAtom } from '../../atoms/formData'
 
 // Dynamic import for react-pdf components
-const Document = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Document })), { ssr: false })
-const Page = dynamic(() => import('react-pdf').then(mod => ({ default: mod.Page })), { ssr: false })
+const Document = dynamic(
+  () => import('react-pdf').then((mod) => ({ default: mod.Document })),
+  { ssr: false }
+)
+const Page = dynamic(
+  () => import('react-pdf').then((mod) => ({ default: mod.Page })),
+  { ssr: false }
+)
 
 interface PreviewProps {
   className?: string
@@ -27,7 +33,16 @@ const ZOOM_STEPS = [1.0, 1.25, 1.5, 2.0]
 // Inline SVG icons
 function IconDownload() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M8 2v8M5 7l3 3 3-3" />
       <path d="M2 12h12" />
     </svg>
@@ -36,7 +51,16 @@ function IconDownload() {
 
 function IconArrowLeft() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M10 3L5 8l5 5" />
     </svg>
   )
@@ -44,7 +68,16 @@ function IconArrowLeft() {
 
 function IconArrowRight() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M6 3l5 5-5 5" />
     </svg>
   )
@@ -52,7 +85,16 @@ function IconArrowRight() {
 
 function IconZoomOut() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="7" cy="7" r="4.5" />
       <path d="M5 7h4M11 11l2.5 2.5" />
     </svg>
@@ -61,7 +103,16 @@ function IconZoomOut() {
 
 function IconZoomIn() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <circle cx="7" cy="7" r="4.5" />
       <path d="M5 7h4M7 5v4M11 11l2.5 2.5" />
     </svg>
@@ -70,7 +121,16 @@ function IconZoomIn() {
 
 function IconPrinter() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <rect x="3" y="6" width="10" height="6" rx="1" />
       <path d="M5 6V3h6v3" />
       <rect x="5" y="9" width="6" height="3" />
@@ -105,15 +165,20 @@ export function Preview({ className }: PreviewProps) {
         if (cancelled) return
         pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
       } catch (error) {
-        console.warn('Failed to setup PDF.js worker, PDF preview may not work:', error)
+        console.warn(
+          'Failed to setup PDF.js worker, PDF preview may not work:',
+          error
+        )
       }
     }
 
     setupWorker()
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-useEffect(() => {
+  useEffect(() => {
     if (!containerRef.current) return
     const ro = new ResizeObserver(([entry]) => {
       setContainerWidth(entry.contentRect.width)
@@ -142,7 +207,7 @@ useEffect(() => {
       const res = await fetch('/api/generate-source', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData)
       })
       if (!res.ok) throw new Error('LaTeX generation failed')
       const blob = await res.blob()
@@ -156,7 +221,9 @@ useEffect(() => {
 
   const handleDownloadJson = useCallback(() => {
     if (!formData) return
-    const blob = new Blob([JSON.stringify(formData, null, 2)], { type: 'application/json' })
+    const blob = new Blob([JSON.stringify(formData, null, 2)], {
+      type: 'application/json'
+    })
     const url = URL.createObjectURL(blob)
     triggerDownload(url, 'resume.json')
     URL.revokeObjectURL(url)
@@ -168,29 +235,30 @@ useEffect(() => {
   }, [resume.url])
 
   const handlePrevPage = useCallback(() => {
-    setPageNumber(p => Math.max(1, p - 1))
+    setPageNumber((p) => Math.max(1, p - 1))
   }, [])
 
   const handleNextPage = useCallback(() => {
-    setPageNumber(p => Math.min(numPages, p + 1))
+    setPageNumber((p) => Math.min(numPages, p + 1))
   }, [numPages])
 
   const handleZoomOut = useCallback(() => {
-    setZoom(z => {
+    setZoom((z) => {
       const idx = ZOOM_STEPS.indexOf(z)
       return idx > 0 ? ZOOM_STEPS[idx - 1] : z
     })
   }, [])
 
   const handleZoomIn = useCallback(() => {
-    setZoom(z => {
+    setZoom((z) => {
       const idx = ZOOM_STEPS.indexOf(z)
       return idx < ZOOM_STEPS.length - 1 ? ZOOM_STEPS[idx + 1] : z
     })
   }, [])
 
   const zoomIdx = ZOOM_STEPS.indexOf(zoom)
-  const pageWidth = containerWidth > 0 ? containerWidth * 0.92 * zoom : undefined
+  const pageWidth =
+    containerWidth > 0 ? containerWidth * 0.92 * zoom : undefined
 
   const btnClass =
     'flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-white/80 text-xs'
@@ -199,11 +267,12 @@ useEffect(() => {
   return (
     <output
       ref={containerRef}
-      className={twMerge(clsx('flex-1 w-full flex flex-col', className))}
-      style={{ backgroundColor: '#1f2937' }}
+      className={twMerge(
+        clsx('flex-1 w-full flex flex-col bg-app-control', className)
+      )}
     >
       {/* Toolbar */}
-      <div className="grid grid-cols-3 items-center gap-1 px-3 py-2 bg-[#1c1c1c] border-b border-white/10 text-sm shrink-0">
+      <div className="grid grid-cols-3 items-center gap-1 px-3 py-2 bg-app-surfaceElevated border-b border-white/10 text-sm shrink-0">
         {/* Left group: downloads — dropdown on narrow, individual buttons on wide */}
         <div className="flex items-center gap-1 justify-start">
           {isNarrow ? (
@@ -215,7 +284,7 @@ useEffect(() => {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="start"
-                className="min-w-[130px] bg-[#2a2a2a] border border-white/10 rounded shadow-lg py-1"
+                className="min-w-[130px] bg-app-surfaceElevated border border-white/10 rounded shadow-lg py-1"
               >
                 <DropdownMenuItem
                   onClick={handleDownloadPdf}
@@ -242,13 +311,28 @@ useEffect(() => {
             </DropdownMenu>
           ) : (
             <>
-              <button className={btnClass} onClick={handleDownloadPdf} disabled={!resume.url || isLoadingResume} title="Download PDF">
+              <button
+                className={btnClass}
+                onClick={handleDownloadPdf}
+                disabled={!resume.url || isLoadingResume}
+                title="Download PDF"
+              >
                 <IconDownload /> PDF
               </button>
-              <button className={btnClass} onClick={handleDownloadLatex} disabled={!hasJson || isLoadingResume} title="Download LaTeX source (ZIP)">
+              <button
+                className={btnClass}
+                onClick={handleDownloadLatex}
+                disabled={!hasJson || isLoadingResume}
+                title="Download LaTeX source (ZIP)"
+              >
                 <IconDownload /> LaTeX
               </button>
-              <button className={btnClass} onClick={handleDownloadJson} disabled={!hasJson || isLoadingResume} title="Download JSON">
+              <button
+                className={btnClass}
+                onClick={handleDownloadJson}
+                disabled={!hasJson || isLoadingResume}
+                title="Download JSON"
+              >
                 <IconDownload /> JSON
               </button>
             </>
@@ -266,7 +350,9 @@ useEffect(() => {
             <IconArrowLeft />
           </button>
           <span className="text-white/60 text-xs px-1 tabular-nums whitespace-nowrap">
-            {isNarrow ? `${pageNumber}/${numPages}` : `Page ${pageNumber} / ${numPages}`}
+            {isNarrow
+              ? `${pageNumber}/${numPages}`
+              : `Page ${pageNumber} / ${numPages}`}
           </span>
           <button
             className={btnClass}

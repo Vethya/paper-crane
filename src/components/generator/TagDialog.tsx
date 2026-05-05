@@ -1,8 +1,13 @@
-"use client"
+'use client'
 
 import { useEffect, useState } from 'react'
 import { FiTrash2 } from 'react-icons/fi'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
 import { TAG_COLORS, TagColor, tagColorMap } from '@/lib/tagColors'
 
 export interface TagItem {
@@ -21,7 +26,15 @@ interface TagDialogProps {
   onDeleted?: (tagId: string) => void
 }
 
-export function TagDialog({ open, onOpenChange, editTag, initialName, onCreated, onUpdated, onDeleted }: TagDialogProps) {
+export function TagDialog({
+  open,
+  onOpenChange,
+  editTag,
+  initialName,
+  onCreated,
+  onUpdated,
+  onDeleted
+}: TagDialogProps) {
   const [name, setName] = useState('')
   const [color, setColor] = useState<TagColor>('gray')
   const [saving, setSaving] = useState(false)
@@ -42,7 +55,7 @@ export function TagDialog({ open, onOpenChange, editTag, initialName, onCreated,
         const res = await fetch(`/api/tags/${editTag._id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: name.trim(), color }),
+          body: JSON.stringify({ name: name.trim(), color })
         })
         if (!res.ok) throw new Error()
         const updated = await res.json()
@@ -51,7 +64,7 @@ export function TagDialog({ open, onOpenChange, editTag, initialName, onCreated,
         const res = await fetch('/api/tags', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name: name.trim(), color }),
+          body: JSON.stringify({ name: name.trim(), color })
         })
         if (!res.ok) throw new Error()
         const created = await res.json()
@@ -78,7 +91,10 @@ export function TagDialog({ open, onOpenChange, editTag, initialName, onCreated,
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent showCloseButton={false} className="bg-slate-900 border border-white/10 text-slate-100 max-w-xs">
+      <DialogContent
+        showCloseButton={false}
+        className="border border-app-border bg-app-surface text-slate-100 max-w-xs"
+      >
         <DialogHeader>
           <DialogTitle className="text-white text-sm">
             {editTag ? 'Edit tag' : 'Create tag'}
@@ -88,15 +104,17 @@ export function TagDialog({ open, onOpenChange, editTag, initialName, onCreated,
         <div className="flex flex-col gap-4">
           <input
             value={name}
-            onChange={e => setName(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleSave() }}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSave()
+            }}
             placeholder="Tag name"
             autoFocus
-            className="rounded-lg border border-white/10 bg-slate-800 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-blue-500/50"
+            className="rounded-app-button border border-app-controlBorder bg-app-control px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-app-borderStrong"
           />
 
           <div className="flex flex-wrap gap-2">
-            {TAG_COLORS.map(c => (
+            {TAG_COLORS.map((c) => (
               <button
                 key={c}
                 onClick={() => setColor(c)}
@@ -125,14 +143,14 @@ export function TagDialog({ open, onOpenChange, editTag, initialName, onCreated,
           <div className="flex gap-2">
             <button
               onClick={() => onOpenChange(false)}
-              className="rounded-lg border border-white/10 bg-slate-800 px-3 py-1.5 text-xs text-slate-300 transition-colors hover:bg-slate-700"
+              className="rounded-app-button border border-app-controlBorder bg-app-control px-3 py-1.5 text-xs text-white transition-colors hover:bg-app-controlHover"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
               disabled={saving || !name.trim()}
-              className="rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-500 disabled:opacity-50"
+              className="rounded-app-button border border-white/90 bg-white px-3 py-1.5 text-xs font-medium text-app-background transition-colors hover:bg-app-primaryHover disabled:opacity-50"
             >
               {saving ? 'Saving…' : editTag ? 'Save' : 'Create'}
             </button>

@@ -1,18 +1,18 @@
-export const black = '#0F0F0F'
-export const lightGray = '#121217'
-export const gray = '#161619'
+export const black = '#050505'
+export const lightGray = '#0B0B0D'
+export const gray = '#111114'
 export const white = '#ffffff'
-export const green = '#2563EB'
+export const green = '#F4F4F5'
 
 export const primary = green
 export const accent = green
 export const foreground = white
-export const background = '#14171d'
-export const borders = '#202530'
+export const background = black
+export const borders = 'rgba(255,255,255,0.10)'
 export const placeholders = borders
 export const card = lightGray
-export const input = '#202530'
-export const placeholder = '#c0c5ce'
+export const input = gray
+export const placeholder = '#A1A1AA'
 export const header = lightGray
 export const sidebar = lightGray
 export const footer = lightGray

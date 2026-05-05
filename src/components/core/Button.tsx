@@ -13,7 +13,7 @@ export function Button({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          "flex h-11 min-w-[175px] items-center justify-center rounded-full border border-blue-500/70 bg-transparent px-5 text-sm font-medium text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-0 hover:border-blue-400/80 hover:text-blue-300",
+          'flex h-11 min-w-[175px] items-center justify-center rounded-app-button border border-app-controlBorder bg-app-control px-5 text-sm font-medium text-white transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring hover:border-app-borderStrong hover:bg-app-controlHover',
           className
         )
       )}
@@ -24,12 +24,16 @@ export function Button({ children, className, ...props }: BaseButtonProps) {
   )
 }
 
-export function PrimaryButton({ children, className, ...props }: BaseButtonProps) {
+export function PrimaryButton({
+  children,
+  className,
+  ...props
+}: BaseButtonProps) {
   return (
     <button
       className={twMerge(
         clsx(
-          "flex h-11 min-w-[175px] items-center justify-center rounded-full border-none bg-gradient-to-r from-blue-600 to-blue-500 px-5 text-sm font-semibold text-white shadow-[0_18px_45px_-25px_rgba(37,99,235,0.75)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 hover:from-blue-600/90 hover:to-blue-500/90 disabled:bg-none disabled:bg-slate-600 disabled:from-slate-600 disabled:to-slate-600 disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-60",
+          'flex h-11 min-w-[175px] items-center justify-center rounded-app-button border border-white/90 bg-white px-5 text-sm font-semibold text-app-background shadow-[0_18px_45px_-25px_rgba(255,255,255,0.35)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-app-background hover:bg-app-primaryHover disabled:border-app-border disabled:bg-app-surfaceElevated disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-60',
           className
         )
       )}
@@ -45,7 +49,7 @@ export function MiniButton({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          "flex justify-center items-center font-inherit text-sm text-center no-underline px-6 py-[6px] text-white rounded border-none hover:cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-40",
+          'flex justify-center items-center font-inherit text-sm text-center no-underline px-6 py-[6px] text-white rounded-app-button border-none hover:cursor-pointer focus:outline-none disabled:cursor-not-allowed disabled:opacity-40',
           className
         )
       )}
@@ -61,7 +65,7 @@ export function AddButton({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          "px-3 py-2 cursor-pointer outline-none border-none bg-transparent text-blue-500 hover:cursor-pointer focus:outline-none",
+          'px-3 py-2 cursor-pointer outline-none border-none bg-transparent text-slate-100 hover:cursor-pointer focus:outline-none',
           className
         )
       )}
@@ -72,12 +76,16 @@ export function AddButton({ children, className, ...props }: BaseButtonProps) {
   )
 }
 
-export function RemoveButton({ children, className, ...props }: BaseButtonProps) {
+export function RemoveButton({
+  children,
+  className,
+  ...props
+}: BaseButtonProps) {
   return (
     <button
       className={twMerge(
         clsx(
-          "px-3 py-2 cursor-pointer outline-none border-none bg-transparent text-red-500 hover:cursor-pointer focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed",
+          'px-3 py-2 cursor-pointer outline-none border-none bg-transparent text-red-500 hover:cursor-pointer focus:outline-none disabled:opacity-30 disabled:cursor-not-allowed',
           className
         )
       )}
@@ -93,7 +101,7 @@ export function IconButton({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          "flex items-center outline-none border-none bg-transparent text-white rounded hover:bg-slate-700 focus:bg-slate-700 focus:outline-none",
+          'flex items-center outline-none border-none bg-transparent text-white rounded hover:bg-app-controlHover focus:bg-app-controlHover focus:outline-none',
           className
         )
       )}

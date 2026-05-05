@@ -7,54 +7,200 @@
     @apply box-border;
   }
 
-  html, body {
-    @apply w-full h-full overflow-x-hidden bg-slate-950 text-slate-100 antialiased;
-    font-family: -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    font-size: 0.95rem;
-  }
-
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 222 47% 11%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 214 32% 91%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 210 40% 94%;
+    --accent-foreground: 222 47% 11%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 214 32% 84%;
+    --input: 214 32% 84%;
+    --ring: 222 47% 20%;
     --radius: 0.5rem;
+
+    --app-background: 248 250 252;
+    --app-surface: 255 255 255;
+    --app-surface-elevated: 248 250 252;
+    --app-hover: 15 23 42 / 0.04;
+    --app-control: 15 23 42 / 0.06;
+    --app-control-hover: 15 23 42 / 0.1;
+    --app-border: 15 23 42 / 0.12;
+    --app-control-border: 15 23 42 / 0.18;
+    --app-border-strong: 15 23 42 / 0.26;
+    --app-text-muted: 100 116 139;
+    --app-foreground: 15 23 42;
+    --app-primary-hover: 30 41 59;
+
+    --slate-50: 248 250 252;
+    --slate-100: 15 23 42;
+    --slate-200: 30 41 59;
+    --slate-300: 51 65 85;
+    --slate-400: 71 85 105;
+    --slate-500: 100 116 139;
+    --slate-600: 71 85 105;
+    --slate-700: 51 65 85;
+    --slate-800: 30 41 59;
+    --slate-900: 15 23 42;
+    --slate-950: 2 6 23;
+
+    --tag-gray-bg: 241 245 249;
+    --tag-gray-text: 51 65 85;
+    --tag-red-bg: 254 226 226;
+    --tag-red-text: 153 27 27;
+    --tag-orange-bg: 255 237 213;
+    --tag-orange-text: 154 52 18;
+    --tag-yellow-bg: 254 249 195;
+    --tag-yellow-text: 133 77 14;
+    --tag-green-bg: 220 252 231;
+    --tag-green-text: 22 101 52;
+    --tag-blue-bg: 219 234 254;
+    --tag-blue-text: 30 64 175;
+    --tag-purple-bg: 243 232 255;
+    --tag-purple-text: 107 33 168;
+    --tag-pink-bg: 252 231 243;
+    --tag-pink-text: 157 23 77;
+
+    --review-accent: 180 83 9;
+    --review-accent-icon: 202 138 4;
+    --review-reason: 180 83 9 / 0.86;
+    --review-border: 217 119 6 / 0.36;
+    --review-bg: 254 243 199 / 0.58;
+    --review-active-text: 120 53 15;
+    --review-active-detail: 71 85 105;
+    --review-ring: 217 119 6 / 0.62;
+    --review-shadow: 217 119 6 / 0.16;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --background: 0 0% 2%;
+    --foreground: 0 0% 96%;
+    --card: 240 12% 5%;
+    --card-foreground: 0 0% 96%;
+    --popover: 240 12% 5%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 240 5% 96%;
+    --primary-foreground: 0 0% 2%;
+    --secondary: 240 8% 8%;
+    --secondary-foreground: 0 0% 96%;
+    --muted: 240 8% 8%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 8% 10%;
+    --accent-foreground: 0 0% 96%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 240 6% 16%;
+    --input: 240 6% 16%;
+    --ring: 240 5% 84%;
+
+    --app-background: 5 5 5;
+    --app-surface: 11 11 13;
+    --app-surface-elevated: 17 17 20;
+    --app-hover: 255 255 255 / 0.06;
+    --app-control: 255 255 255 / 0.08;
+    --app-control-hover: 255 255 255 / 0.12;
+    --app-border: 255 255 255 / 0.1;
+    --app-control-border: 255 255 255 / 0.18;
+    --app-border-strong: 255 255 255 / 0.16;
+    --app-text-muted: 161 161 170;
+    --app-foreground: 255 255 255;
+    --app-primary-hover: 228 228 231;
+
+    --slate-50: 248 250 252;
+    --slate-100: 241 245 249;
+    --slate-200: 226 232 240;
+    --slate-300: 203 213 225;
+    --slate-400: 148 163 184;
+    --slate-500: 100 116 139;
+    --slate-600: 71 85 105;
+    --slate-700: 51 65 85;
+    --slate-800: 30 41 59;
+    --slate-900: 15 23 42;
+    --slate-950: 2 6 23;
+
+    --tag-gray-bg: 100 116 139 / 0.35;
+    --tag-gray-text: 203 213 225;
+    --tag-red-bg: 127 29 29 / 0.5;
+    --tag-red-text: 252 165 165;
+    --tag-orange-bg: 124 45 18 / 0.5;
+    --tag-orange-text: 253 186 116;
+    --tag-yellow-bg: 113 63 18 / 0.5;
+    --tag-yellow-text: 253 224 71;
+    --tag-green-bg: 20 83 45 / 0.5;
+    --tag-green-text: 134 239 172;
+    --tag-blue-bg: 30 58 138 / 0.5;
+    --tag-blue-text: 147 197 253;
+    --tag-purple-bg: 88 28 135 / 0.5;
+    --tag-purple-text: 216 180 254;
+    --tag-pink-bg: 131 24 67 / 0.5;
+    --tag-pink-text: 249 168 212;
+
+    --review-accent: 252 211 77;
+    --review-accent-icon: 251 191 36;
+    --review-reason: 252 211 77 / 0.8;
+    --review-border: 251 191 36 / 0.24;
+    --review-bg: 251 191 36 / 0.1;
+    --review-active-text: 254 243 199;
+    --review-active-detail: 148 163 184;
+    --review-ring: 251 191 36 / 0.7;
+    --review-shadow: 251 191 36 / 0.12;
+  }
+
+  html,
+  body {
+    @apply w-full h-full overflow-x-hidden bg-app-background text-slate-100 antialiased;
+    font-family:
+      var(--font-sans),
+      -apple-system,
+      system-ui,
+      BlinkMacSystemFont,
+      'Segoe UI',
+      Roboto,
+      'Helvetica Neue',
+      Arial,
+      sans-serif;
+    font-size: 0.95rem;
+  }
+}
+
+@layer components {
+  .review-accent-text {
+    color: rgb(var(--review-accent));
+  }
+
+  .review-accent-icon {
+    color: rgb(var(--review-accent-icon));
+  }
+
+  .review-accent-border {
+    border-color: rgb(var(--review-border));
+  }
+
+  .review-field-highlight {
+    outline: 2px solid rgb(var(--review-ring));
+    box-shadow: 0 0 0 3px rgb(var(--review-shadow));
+  }
+
+  .review-location-active {
+    background-color: rgb(var(--review-bg));
+    color: rgb(var(--review-active-text));
+  }
+
+  .review-location-active .review-location-detail {
+    color: rgb(var(--review-active-detail));
+  }
+
+  .review-reason {
+    color: rgb(var(--review-reason));
   }
 }

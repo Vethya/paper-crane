@@ -2,10 +2,12 @@
 
 import { useAtom, useAtomValue } from 'jotai'
 import { Check, RotateCcw } from 'lucide-react'
+import type { Path } from 'react-hook-form'
 import { agentPendingEditsAtom, type FieldEdit } from '../../atoms/agentEdits'
 import { formSetValueAtom } from '../../atoms/formData'
 import { useAdvanceFocusedEdit } from '../../hooks/useAdvanceFocusedEdit'
 import { Input, type InputProps } from './Input'
+import type { FormValues } from '../../types'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -21,38 +23,52 @@ export function LabeledInput({ label, className, ...inputProps }: Props) {
 
   const fieldEdit = pendingEdits.find(
     (e): e is FieldEdit =>
-      e.type === 'set' && e.fieldPath === inputProps.name && e.status === 'pending'
+      e.type === 'set' &&
+      e.fieldPath === inputProps.name &&
+      e.status === 'pending'
   )
 
   const handleApprove = () => {
     if (!fieldEdit) return
     advanceFocusedEdit(fieldEdit.id)
     setPendingEdits((prev) =>
-      prev.map((e) => (e.id === fieldEdit.id ? { ...e, status: 'approved' } : e))
+      prev.map((e) =>
+        e.id === fieldEdit.id ? { ...e, status: 'approved' } : e
+      )
     )
   }
 
   const handleReject = () => {
     if (!fieldEdit || !formSetValue) return
     advanceFocusedEdit(fieldEdit.id)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formSetValue(fieldEdit.fieldPath as any, (fieldEdit.originalValue ?? '') as string, {
-      shouldDirty: true,
-      shouldValidate: true
-    })
+    formSetValue(
+      fieldEdit.fieldPath as Path<FormValues>,
+      (fieldEdit.originalValue ?? '') as string,
+      {
+        shouldDirty: true,
+        shouldValidate: true
+      }
+    )
     setPendingEdits((prev) =>
-      prev.map((e) => (e.id === fieldEdit.id ? { ...e, status: 'rejected' } : e))
+      prev.map((e) =>
+        e.id === fieldEdit.id ? { ...e, status: 'rejected' } : e
+      )
     )
   }
 
   return (
-    <div className={twMerge(clsx('flex flex-col mb-8 text-white last:mb-0', className))} data-field-path={inputProps.name}>
+    <div
+      className={twMerge(
+        clsx('flex flex-col mb-8 text-white last:mb-0', className)
+      )}
+      data-field-path={inputProps.name}
+    >
       <label className="text-white mb-2">{label}</label>
 
       <div
         className={clsx(
           'rounded transition-shadow',
-          fieldEdit && 'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
+          fieldEdit && 'review-field-highlight'
         )}
       >
         <Input {...inputProps} />
@@ -60,7 +76,9 @@ export function LabeledInput({ label, className, ...inputProps }: Props) {
 
       {fieldEdit && (
         <div className="mt-1.5 flex items-start gap-2">
-          <p className="flex-1 text-xs text-amber-300/80 italic leading-snug">{fieldEdit.reason}</p>
+          <p className="review-reason flex-1 text-xs italic leading-snug">
+            {fieldEdit.reason}
+          </p>
           <div className="flex shrink-0 gap-1">
             <button
               type="button"

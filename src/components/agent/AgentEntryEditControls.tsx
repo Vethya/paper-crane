@@ -2,7 +2,11 @@
 
 import { useAtom, useAtomValue } from 'jotai'
 import { Check, RotateCcw, Trash2 } from 'lucide-react'
-import { agentPendingEditsAtom, type NewEntryEdit, type RemoveEntryEdit } from '../../atoms/agentEdits'
+import {
+  agentPendingEditsAtom,
+  type NewEntryEdit,
+  type RemoveEntryEdit
+} from '../../atoms/agentEdits'
 import { formSetValueAtom, formDataAtom } from '../../atoms/formData'
 import { useAdvanceFocusedEdit } from '../../hooks/useAdvanceFocusedEdit'
 
@@ -20,12 +24,19 @@ export function AgentEntryEditControls({ edit }: Props) {
   const removeFromForm = () => {
     if (!formSetValue || !formData) return
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const current = ((formData as any)[edit.arrayPath] ?? []) as Record<string, unknown>[]
-    const trimmed = edit.type === 'append'
-      ? current.filter((e) => e._agentEditId !== edit.id)
-      : current.filter((_, i) => i !== edit.entryIndex)
+    const current = ((formData as any)[edit.arrayPath] ?? []) as Record<
+      string,
+      unknown
+    >[]
+    const trimmed =
+      edit.type === 'append'
+        ? current.filter((e) => e._agentEditId !== edit.id)
+        : current.filter((_, i) => i !== edit.entryIndex)
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    formSetValue(edit.arrayPath as any, trimmed as any, { shouldDirty: true, shouldValidate: true })
+    formSetValue(edit.arrayPath as any, trimmed as any, {
+      shouldDirty: true,
+      shouldValidate: true
+    })
   }
 
   // ── append: Keep = approve (entry stays), Remove = reject (entry removed) ──
@@ -91,13 +102,15 @@ export function AgentEntryEditControls({ edit }: Props) {
   if (edit.type === 'remove') {
     return (
       <div className="mt-1.5 flex items-start gap-2">
-        <p className="flex-1 text-xs text-rose-300/80 italic leading-snug">{edit.reason}</p>
+        <p className="flex-1 text-xs text-rose-300/80 italic leading-snug">
+          {edit.reason}
+        </p>
         <div className="flex shrink-0 gap-1">
           <button
             type="button"
             onClick={handleRemoveKeep}
             title="Keep this entry"
-            className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-slate-300 ring-1 ring-slate-500/40 hover:bg-slate-700/50 transition-colors"
+            className="flex items-center gap-1 rounded bg-app-control px-2 py-0.5 text-xs font-medium text-white ring-1 ring-app-controlBorder transition-colors hover:bg-app-controlHover"
           >
             <Check className="h-3 w-3" />
             Keep
@@ -118,7 +131,9 @@ export function AgentEntryEditControls({ edit }: Props) {
 
   return (
     <div className="mt-1.5 flex items-start gap-2">
-      <p className="flex-1 text-xs text-amber-300/80 italic leading-snug">{edit.reason}</p>
+      <p className="review-reason flex-1 text-xs italic leading-snug">
+        {edit.reason}
+      </p>
       <div className="flex shrink-0 gap-1">
         <button
           type="button"
