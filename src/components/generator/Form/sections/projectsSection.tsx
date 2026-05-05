@@ -4,7 +4,6 @@ import { useAtomValue } from 'jotai'
 
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
-import { Divider } from '../../../core/Divider'
 import { FormSection } from './FormSection'
 import {
   CollapsibleFormItem,
@@ -53,14 +52,11 @@ export function ProjectsSection() {
         </Fragment>
       )}
       {fields.length > 0 && (
-        <Fragment>
-          <LabeledInput
-            name="headings.projects"
-            label="Section Heading"
-            placeholder="Projects"
-          />
-          <Divider />
-        </Fragment>
+        <LabeledInput
+          name="headings.projects"
+          label="Section Heading"
+          placeholder="Projects"
+        />
       )}
       {fields.map((field, index) => {
         const entryEdit = pendingEdits.find(

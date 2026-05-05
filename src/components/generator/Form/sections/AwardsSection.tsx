@@ -10,7 +10,6 @@ import {
 import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
-import { Divider } from '../../../core/Divider'
 import {
   agentPendingEditsAtom,
   type NewEntryEdit,
@@ -52,14 +51,11 @@ export function AwardSection() {
         </Fragment>
       )}
       {fields.length > 0 && (
-        <Fragment>
-          <LabeledInput
-            name="headings.awards"
-            label="Section Heading"
-            placeholder="Awards"
-          />
-          <Divider />
-        </Fragment>
+        <LabeledInput
+          name="headings.awards"
+          label="Section Heading"
+          placeholder="Awards"
+        />
       )}
       {fields.map((field, index) => {
         const entryEdit = pendingEdits.find(
