@@ -188,7 +188,7 @@ export function AgentHistoryDialog({
                     </button>
                     <button
                       onClick={handleConfirmDelete}
-                      className="rounded-app-button bg-red-600/90 px-4 py-2 text-sm font-medium text-white transition hover:bg-red-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
+                      className="rounded-app-button bg-red-600/90 px-4 py-2 text-sm font-medium text-[rgb(255_255_255)] transition hover:bg-red-600 hover:text-[rgb(255_255_255)] focus:text-[rgb(255_255_255)] focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/60"
                     >
                       Delete
                     </button>
