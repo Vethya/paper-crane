@@ -85,8 +85,7 @@ export default function Keywords({
           {fields.map((field, i) => (
             <Fragment key={field.id}>
               <div
-                className="inline-flex max-w-full min-w-0 items-center gap-1 rounded-app-button border py-1 pl-2 pr-2"
-                style={{ borderColor: '#4b5563' }}
+                className="inline-flex max-w-full min-w-0 items-center gap-1 rounded-app-button border border-app-controlBorder py-1 pl-2 pr-2"
               >
                 <span className="block min-w-0 max-w-full truncate">
                   {getValues(`${name}.${i}`)}
