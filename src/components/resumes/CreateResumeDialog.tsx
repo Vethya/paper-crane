@@ -99,7 +99,7 @@ export function CreateResumeDialog({ children }: CreateResumeDialogProps) {
             <button
               onClick={handleCreate}
               disabled={loading || !title.trim()}
-              className="rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 disabled:opacity-50"
+              className="rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-app-primaryHover disabled:opacity-50"
             >
               {loading ? 'Creating…' : 'Create'}
             </button>

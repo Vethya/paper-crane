@@ -204,7 +204,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
             <button
               onClick={handleImport}
               disabled={isBusy || !parsedContent || !title.trim()}
-              className="inline-flex items-center justify-center gap-2 rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-app-primaryHover disabled:opacity-50"
             >
               {isBusy && <Loader2 className="h-4 w-4 animate-spin" />}
               {openingGenerator

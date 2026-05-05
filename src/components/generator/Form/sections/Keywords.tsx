@@ -78,8 +78,7 @@ export default function Keywords({
       <div
         className={clsx(
           'my-2 rounded transition-shadow',
-          fieldEdit &&
-            'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)] p-2'
+          fieldEdit && 'review-field-highlight p-2'
         )}
       >
         <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-3 overflow-hidden">
@@ -106,7 +105,7 @@ export default function Keywords({
 
         {fieldEdit && (
           <div className="mt-2 flex items-start gap-2">
-            <p className="flex-1 text-xs text-amber-300/80 italic leading-snug">
+            <p className="review-reason flex-1 text-xs italic leading-snug">
               {fieldEdit.reason}
             </p>
             <div className="flex shrink-0 gap-1">

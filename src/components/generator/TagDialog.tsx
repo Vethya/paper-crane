@@ -150,7 +150,7 @@ export function TagDialog({
             <button
               onClick={handleSave}
               disabled={saving || !name.trim()}
-              className="rounded-app-button border border-white/90 bg-white px-3 py-1.5 text-xs font-medium text-app-background transition-colors hover:bg-zinc-200 disabled:opacity-50"
+              className="rounded-app-button border border-white/90 bg-white px-3 py-1.5 text-xs font-medium text-app-background transition-colors hover:bg-app-primaryHover disabled:opacity-50"
             >
               {saving ? 'Saving…' : editTag ? 'Save' : 'Create'}
             </button>

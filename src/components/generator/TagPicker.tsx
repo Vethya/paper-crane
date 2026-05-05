@@ -175,7 +175,9 @@ export function TagPicker() {
                     <span
                       className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-sm border transition-colors ${attached ? 'border-white bg-white' : 'border-white/20'}`}
                     >
-                      {attached && <FiCheck size={10} className="text-white" />}
+                      {attached && (
+                        <FiCheck size={10} className="text-app-background" />
+                      )}
                     </span>
                     <span
                       className="rounded-full px-2 py-0.5 text-xs"

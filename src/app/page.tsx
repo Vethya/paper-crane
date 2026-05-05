@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Logo } from '../components/core/Logo'
 import { PrimaryButton, Button } from '../components/core/Button'
+import { THEME_STORAGE_KEY } from '@/components/theme/ThemeProvider'
 
 const featureHighlights = [
   {
@@ -35,7 +36,10 @@ export default function Home() {
   }, [])
 
   const startNewSession = () => {
+    const selectedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
     window.localStorage.clear()
+    if (selectedTheme)
+      window.localStorage.setItem(THEME_STORAGE_KEY, selectedTheme)
     router.push('/generator')
   }
 

@@ -29,7 +29,7 @@ export function AgentTriggerButton() {
   return (
     <button
       onClick={handleClick}
-      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-app-button border border-white/25 bg-app-surfaceElevated px-5 py-2.5 text-sm font-medium text-white shadow-[0_12px_36px_rgba(0,0,0,0.72)] ring-1 ring-black/50 transition hover:border-white/35 hover:bg-[#17171b] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="fixed bottom-6 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 rounded-app-button border border-white/25 bg-app-surfaceElevated px-5 py-2.5 text-sm font-medium text-white shadow-[0_12px_36px_rgba(0,0,0,0.72)] ring-1 ring-black/50 transition hover:border-white/35 hover:bg-app-controlHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <Sparkles className="h-4 w-4 text-white" />
       Resume Agent

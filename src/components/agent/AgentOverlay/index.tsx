@@ -583,7 +583,7 @@ export function AgentOverlay() {
                 </p>
                 <a
                   href="/login"
-                  className="mt-2 rounded-app-button border border-white/90 bg-white px-6 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="mt-2 rounded-app-button border border-white/90 bg-white px-6 py-2 text-sm font-medium text-app-background transition hover:bg-app-primaryHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   Sign in
                 </a>

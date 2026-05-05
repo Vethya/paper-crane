@@ -168,7 +168,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
           <button
             onClick={submit}
             disabled={!canSend}
-            className="flex items-center justify-center rounded-app-button border border-white/90 bg-white p-2 text-app-background transition hover:bg-zinc-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+            className="flex items-center justify-center rounded-app-button border border-white/90 bg-white p-2 text-app-background transition hover:bg-app-primaryHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
           >
             <ArrowUp className="h-4 w-4" />
           </button>

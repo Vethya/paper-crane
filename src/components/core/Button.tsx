@@ -33,7 +33,7 @@ export function PrimaryButton({
     <button
       className={twMerge(
         clsx(
-          'flex h-11 min-w-[175px] items-center justify-center rounded-app-button border border-white/90 bg-white px-5 text-sm font-semibold text-app-background shadow-[0_18px_45px_-25px_rgba(255,255,255,0.35)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-app-background hover:bg-zinc-200 disabled:border-app-border disabled:bg-app-surfaceElevated disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-60',
+          'flex h-11 min-w-[175px] items-center justify-center rounded-app-button border border-white/90 bg-white px-5 text-sm font-semibold text-app-background shadow-[0_18px_45px_-25px_rgba(255,255,255,0.35)] transition focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-app-background hover:bg-app-primaryHover disabled:border-app-border disabled:bg-app-surfaceElevated disabled:text-slate-500 disabled:shadow-none disabled:cursor-not-allowed disabled:opacity-60',
           className
         )
       )}

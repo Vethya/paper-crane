@@ -2,14 +2,20 @@
 
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { FiChevronDown } from 'react-icons/fi'
-import { FileText, LogOut } from 'lucide-react'
+import { FileText, LogOut, Moon, Sun } from 'lucide-react'
 import { Logo } from '../core/Logo'
 import { authClient } from '@/db/auth-client'
 import { useAtomValue } from 'jotai'
 import { formDataAtom } from '@/atoms/formData'
 import { TagPicker } from './TagPicker'
 import { useAutoSave } from '@/hooks/useAutoSave'
+import {
+  applyTheme,
+  getStoredTheme,
+  type ThemeMode
+} from '@/components/theme/ThemeProvider'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import {
@@ -28,14 +34,32 @@ export function Header({ className, showTags = true }: HeaderProps) {
   const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [theme, setTheme] = useState<ThemeMode>('dark')
   const resumeId = searchParams.get('id')
   const formData = useAtomValue(formDataAtom)
   const saveState = useAutoSave(resumeId, formData)
+
+  useEffect(() => {
+    setTheme(getStoredTheme())
+
+    function handleThemeChange(event: Event) {
+      setTheme((event as CustomEvent<ThemeMode>).detail)
+    }
+
+    window.addEventListener('themechange', handleThemeChange)
+    return () => window.removeEventListener('themechange', handleThemeChange)
+  }, [])
 
   async function handleLogout() {
     await authClient.signOut({
       fetchOptions: { onSuccess: () => router.push('/login') }
     })
+  }
+
+  function handleToggleTheme() {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(nextTheme)
+    applyTheme(nextTheme)
   }
 
   const user = session?.user
@@ -98,6 +122,17 @@ export function Header({ className, showTags = true }: HeaderProps) {
                   align="end"
                   className="w-44 rounded-app-card border border-app-controlBorder bg-app-surfaceElevated py-1"
                 >
+                  <DropdownMenuItem
+                    onClick={handleToggleTheme}
+                    className="px-4 py-2.5 text-sm text-slate-300 hover:bg-app-control focus:bg-app-control focus:text-white transition-colors cursor-pointer"
+                  >
+                    {theme === 'dark' ? (
+                      <Sun className="text-slate-400" />
+                    ) : (
+                      <Moon className="text-slate-400" />
+                    )}
+                    {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link
                       href="/resumes"

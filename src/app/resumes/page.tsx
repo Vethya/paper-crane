@@ -82,7 +82,7 @@ export default function ResumesPage() {
             </div>
 
             <CreateResumeDialog>
-              <button className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 cursor-pointer sm:hidden">
+              <button className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-app-primaryHover cursor-pointer sm:hidden">
                 <FiPlus size={16} />
                 New Resume
               </button>
@@ -97,7 +97,7 @@ export default function ResumesPage() {
               </button>
             </ImportResumeDialog>
             <CreateResumeDialog>
-              <button className="hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200 cursor-pointer sm:flex">
+              <button className="hidden shrink-0 items-center gap-2 whitespace-nowrap rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-app-primaryHover cursor-pointer sm:flex">
                 <FiPlus size={16} />
                 New Resume
               </button>

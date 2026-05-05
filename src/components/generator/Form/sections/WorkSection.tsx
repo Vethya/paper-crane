@@ -76,7 +76,7 @@ export function WorkSection() {
               entryEdit
                 ? entryEdit.type === 'remove'
                   ? 'ring-2 ring-rose-400/70 shadow-[0_0_0_3px_rgba(251,113,133,0.12)]'
-                  : 'ring-2 ring-amber-400/70 shadow-[0_0_0_3px_rgba(251,191,36,0.12)]'
+                  : 'review-field-highlight'
                 : undefined
             }
             footer={

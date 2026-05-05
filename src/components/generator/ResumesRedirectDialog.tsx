@@ -36,7 +36,7 @@ export function ResumesRedirectDialog({ open }: ResumesRedirectDialogProps) {
         <DialogFooter className="bg-transparent border-t-0 pt-2">
           <button
             onClick={() => router.push('/resumes')}
-            className="rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-zinc-200"
+            className="rounded-app-button border border-white/90 bg-white px-4 py-2 text-sm font-medium text-app-background transition hover:bg-app-primaryHover"
           >
             Go to Resumes
           </button>

@@ -12,7 +12,7 @@ export type SessionPreview = {
 
 const MODE_BADGE_STYLES: Record<AgentMode, string> = {
   Chat: 'bg-white/10 text-slate-300',
-  Feedback: 'bg-amber-500/15 text-amber-400',
+  Feedback: 'bg-[rgb(var(--review-bg))] review-accent-text',
   Tailoring: 'bg-white/10 text-slate-300'
 }
 
