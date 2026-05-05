@@ -31,7 +31,7 @@ export function Sidebar({
 
   return (
     <aside className="min-w-0">
-      <nav className="mb-7 flex w-full min-w-0 flex-col items-start justify-center gap-6">
+      <nav className="mb-7 flex w-full min-w-0 flex-col items-start justify-center gap-3">
         {sectionLinks.map(({ label, section }) => (
           <button
             key={section}
