@@ -77,7 +77,6 @@ module.exports = {
         header: 'rgb(var(--app-surface) / <alpha-value>)',
         sidebar: 'rgb(var(--app-surface) / <alpha-value>)',
         footer: 'rgb(var(--app-surface) / <alpha-value>)',
-        black: 'rgb(var(--app-background) / <alpha-value>)',
         lightGray: 'rgb(var(--app-surface) / <alpha-value>)',
         gray: 'rgb(var(--app-surface-elevated) / <alpha-value>)',
         green: 'rgb(var(--app-foreground) / <alpha-value>)'
