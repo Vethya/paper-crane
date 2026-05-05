@@ -1,12 +1,22 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useRef, useState, Suspense, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import {
+  useRef,
+  useState,
+  Suspense,
+  useEffect,
+  useCallback
+} from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useSetAtom } from 'jotai'
 import { Form } from '../../components/generator/Form'
 import { Header } from '../../components/generator/Header'
-import { MobileNav, Sidebar } from '../../components/generator/Sidebar'
+import {
+  MobileNav,
+  Sidebar,
+  sectionLinks
+} from '../../components/generator/Sidebar'
 import { PrimaryButton } from '../../components/core/Button'
 import { ResumesRedirectDialog } from '../../components/generator/ResumesRedirectDialog'
 import { AgentTriggerButton } from '../../components/agent/AgentTriggerButton'
@@ -21,6 +31,13 @@ const Preview = dynamic(
   { ssr: false }
 )
 
+const DEFAULT_SECTION = 'basics'
+const validSections = new Set(sectionLinks.map(({ section }) => section))
+
+function getValidSection(section: string | null) {
+  return section && validSections.has(section) ? section : DEFAULT_SECTION
+}
+
 export default function GeneratorPage() {
   return (
     <Suspense>
@@ -30,23 +47,51 @@ export default function GeneratorPage() {
 }
 
 function GeneratorContent() {
-  const [activeSection, setActiveSection] = useState('basics')
-  const previewRef = useRef<HTMLDivElement>(null)
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const pathname = usePathname()
+  const urlSection = getValidSection(searchParams.get('section'))
+  const [activeSection, setActiveSection] = useState(urlSection)
+  const previewRef = useRef<HTMLDivElement>(null)
   const resumeId = searchParams.get('id')
   const { data: session, isPending } = authClient.useSession()
   const showRedirectDialog = !isPending && !!session && !resumeId
   const setAgentResumeId = useSetAtom(agentResumeIdAtom)
   const setActiveSectionSetter = useSetAtom(activeSectionSetterAtom)
 
+  const changeActiveSection = useCallback(
+    (section: string) => {
+      const nextSection = getValidSection(section)
+      const nextParams = new URLSearchParams(searchParams.toString())
+      nextParams.set('section', nextSection)
+      const nextUrl = `${pathname}?${nextParams.toString()}`
+
+      setActiveSection(nextSection)
+      router.replace(nextUrl, { scroll: false })
+    },
+    [pathname, router, searchParams]
+  )
+
   useEffect(() => {
     setAgentResumeId(resumeId)
   }, [resumeId, setAgentResumeId])
 
   useEffect(() => {
-    setActiveSectionSetter(() => setActiveSection)
+    setActiveSectionSetter(() => changeActiveSection)
     return () => setActiveSectionSetter(null)
-  }, [setActiveSection, setActiveSectionSetter])
+  }, [changeActiveSection, setActiveSectionSetter])
+
+  useEffect(() => {
+    setActiveSection(urlSection)
+  }, [urlSection])
+
+  useEffect(() => {
+    if (searchParams.get('section') === urlSection) return
+
+    const nextParams = new URLSearchParams(searchParams.toString())
+    nextParams.set('section', urlSection)
+    router.replace(`${pathname}?${nextParams.toString()}`, { scroll: false })
+  }, [pathname, router, searchParams, urlSection])
 
   return (
     <main className="relative flex min-h-screen flex-col bg-app-background text-slate-100 xl:h-screen xl:overflow-hidden">
@@ -57,7 +102,7 @@ function GeneratorContent() {
         <div className="flex flex-col gap-4 px-4 py-6 xl:hidden">
           <MobileNav
             activeSection={activeSection}
-            onSectionChange={setActiveSection}
+            onSectionChange={changeActiveSection}
           />
 
           <div className="rounded-app-panel border border-app-border bg-app-surface">
@@ -95,7 +140,7 @@ function GeneratorContent() {
           <div className="min-w-0 rounded-app-panel border border-app-border bg-app-surface p-6">
             <Sidebar
               activeSection={activeSection}
-              onSectionChange={setActiveSection}
+              onSectionChange={changeActiveSection}
               formId="resume-form-desktop"
             />
           </div>

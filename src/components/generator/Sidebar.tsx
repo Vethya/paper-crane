@@ -6,7 +6,7 @@ import { useAtomValue } from 'jotai'
 import { PrimaryButton } from '../core/Button'
 import { isLoadingResumeAtom } from '@/atoms/resume'
 
-const sectionLinks = [
+export const sectionLinks = [
   { label: 'Templates', section: 'templates' },
   { label: 'Profile', section: 'basics' },
   { label: 'Education', section: 'education' },
@@ -39,8 +39,10 @@ export function Sidebar({
             onClick={() => onSectionChange(section)}
             className={twMerge(
               clsx(
-                'max-w-full break-words text-left font-light leading-snug text-white',
-                activeSection === section && 'text-green'
+                'w-full max-w-full rounded-app-button border px-3 py-2 text-left text-sm font-medium leading-snug transition-colors',
+                activeSection === section
+                  ? 'border-white/35 bg-white/[0.18] text-white'
+                  : 'border-transparent bg-transparent text-slate-300 hover:bg-white/[0.05] hover:text-white'
               )
             )}
           >
