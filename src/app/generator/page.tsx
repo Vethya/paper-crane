@@ -126,8 +126,8 @@ function GeneratorContent() {
             ref={previewRef}
             className="flex min-h-[70svh] flex-col rounded-app-panel border border-app-border bg-app-surface"
           >
-            <div className="border-b border-app-border px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-slate-400">
-              Live preview
+            <div className="border-b border-app-border px-6 py-4 text-md font-medium tracking-wide text-slate-400">
+              Live Preview
             </div>
             <div className="flex flex-1 overflow-hidden">
               <Preview />
@@ -150,8 +150,8 @@ function GeneratorContent() {
           </div>
 
           <div className="flex flex-col rounded-app-panel border border-app-border bg-app-surface">
-            <div className="border-b border-app-border px-6 py-4 text-sm font-medium uppercase tracking-[0.12em] text-slate-400">
-              Live preview
+            <div className="border-b border-app-border px-6 py-4 text-md font-medium tracking-wide text-slate-400">
+              Live Preview
             </div>
             <div className="flex flex-1 overflow-hidden">
               <Preview />
