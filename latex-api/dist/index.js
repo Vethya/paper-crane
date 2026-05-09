@@ -22,6 +22,9 @@ app.use((0, cors_1.default)({
     methods: ['POST']
 }));
 app.use(express_1.default.json({ limit: '10mb' }));
+app.get('/health', (_req, res) => {
+    res.status(200).json({ ok: true });
+});
 app.post('/compile', async (req, res) => {
     const { texDoc, opts } = req.body;
     if (!texDoc || !opts?.cmd) {
@@ -64,11 +67,35 @@ app.post('/compile', async (req, res) => {
             workDir,
             'main.tex'
         ];
-        await execFileAsync(opts.cmd, latexArgs, {
-            cwd: workDir,
-            timeout: 60000
-        });
         const pdfPath = (0, path_1.join)(workDir, 'main.pdf');
+        try {
+            await execFileAsync(opts.cmd, latexArgs, {
+                cwd: workDir,
+                timeout: 60000
+            });
+        }
+        catch (compilationErr) {
+            // xelatex exits non-zero for recoverable errors (e.g. special characters)
+            // but may still produce a valid PDF with -interaction=nonstopmode
+            if (!(0, fs_1.existsSync)(pdfPath)) {
+                let message = compilationErr instanceof Error
+                    ? compilationErr.message
+                    : String(compilationErr);
+                if (compilationErr &&
+                    typeof compilationErr === 'object' &&
+                    'stderr' in compilationErr) {
+                    message += `\n\nSTDERR:\n${compilationErr.stderr}`;
+                }
+                if (compilationErr &&
+                    typeof compilationErr === 'object' &&
+                    'stdout' in compilationErr) {
+                    message += `\n\nSTDOUT:\n${compilationErr.stdout}`;
+                }
+                res.status(500).send(`Compilation error: ${message}`);
+                return;
+            }
+            // PDF was produced despite errors — serve it below
+        }
         if (!(0, fs_1.existsSync)(pdfPath)) {
             res.status(500).send('Compilation produced no output PDF');
             return;

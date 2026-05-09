@@ -34,6 +34,10 @@ interface CompileRequest {
   }
 }
 
+app.get('/health', (_req: Request, res: Response) => {
+  res.status(200).json({ ok: true })
+})
+
 app.post('/compile', async (req: Request, res: Response) => {
   const { texDoc, opts } = req.body as CompileRequest
 

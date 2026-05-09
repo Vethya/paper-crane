@@ -59,6 +59,10 @@ docker build -f latex-api/Dockerfile -t resumake-latex-api .
 docker run -p 3027:3027 resumake-latex-api
 ```
 
+**Production deploy on Ubuntu**
+
+For an Ubuntu server deployment with Docker Compose and automatic HTTPS, see [`latex-api/DEPLOY.md`](latex-api/DEPLOY.md).
+
 **Environment**
 
 Create a `.env.local` in the project root and set the API URL:
