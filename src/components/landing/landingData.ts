@@ -34,7 +34,7 @@ export type WorkflowStep = {
 }
 
 export const navItems = [
-  { href: '#ai', label: 'AI Tailoring' },
+  { href: '#ai', label: 'AI Assistant' },
   { href: '#ats', label: 'ATS' },
   { href: '#workflow', label: 'Workflow' },
   { href: '#templates', label: 'Templates' }

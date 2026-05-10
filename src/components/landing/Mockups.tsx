@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react'
+import { Check, Sparkles } from 'lucide-react'
 import { Logo } from '@/components/core/Logo'
 
 const sidebarItems = [
@@ -166,7 +166,8 @@ export function TemplateCard({ name }: { name: string }) {
       </div>
       <div className="mt-4 flex items-center justify-between">
         <h3 className="font-semibold text-[#0f172a]">{name}</h3>
-        <span className="rounded-md bg-[#ecfdf5] px-2 py-1 text-xs font-medium text-[#047857]">
+        <span className="inline-flex items-center gap-1 rounded-md bg-[#ecfdf5] px-2 py-1 text-xs font-medium text-[#047857]">
+          <Check size={13} strokeWidth={2.5} />
           ATS-ready
         </span>
       </div>
@@ -197,7 +198,9 @@ function ResumeSheet({ compact = false }: { compact?: boolean }) {
   return (
     <div
       className={`overflow-hidden border border-[#e2e8f0] bg-[#ffffff] text-[#111827] shadow-xl shadow-black/10 ${
-        compact ? 'h-56 w-full p-4' : 'h-[390px] w-[275px] p-5'
+        compact
+          ? 'aspect-[210/297] h-auto w-full max-w-[240px] p-4 sm:max-w-[270px] md:max-w-[230px] xl:max-w-[270px]'
+          : 'h-[390px] w-[275px] p-5'
       }`}
     >
       <div className="text-center">
@@ -353,39 +356,54 @@ function TechnicalTemplateMockup() {
   return (
     <div className="h-full p-5 font-sans">
       <div className="ml-auto text-right">
-        <div className="ml-auto h-4 w-24 rounded-sm bg-[#111827]" />
-        <div className="ml-auto mt-2 h-1.5 w-28 rounded-full bg-[#cbd5e1]" />
+        <div className="ml-auto h-4 w-[42%] rounded-sm bg-[#111827]" />
+        <div className="ml-auto mt-2 h-1.5 w-[49%] rounded-full bg-[#cbd5e1]" />
       </div>
 
       <div className="mt-6 space-y-3">
         {[
-          ['w-28', 'w-20'],
-          ['w-24', 'w-20'],
-          ['w-20', 'w-16']
-        ].map(([titleWidth, dateWidth], index) => (
-          <div key={`${titleWidth}-${index}`}>
-            <div className="flex items-center gap-2">
-              <div className="h-2.5 w-20 rounded-sm bg-[#111827]" />
-              <div className="h-0.5 flex-1 bg-[#111827]" />
-            </div>
-            <div className="mt-3 grid grid-cols-[1fr_0.42fr] gap-4">
-              <div>
-                <div className={`h-2 rounded-sm bg-[#111827] ${titleWidth}`} />
-                <div className="mt-1 h-1.5 w-24 rounded-sm bg-[#64748b]" />
-                <div className="mt-2 space-y-1">
-                  <div className="h-1.5 w-full rounded-full bg-[#cbd5e1]" />
-                  <div className="h-1.5 w-10/12 rounded-full bg-[#cbd5e1]" />
-                  {index < 2 && (
-                    <div className="h-1.5 w-11/12 rounded-full bg-[#cbd5e1]" />
-                  )}
-                </div>
+          ['68%', '76%', '100%', '78%', '88%'],
+          ['68%', '76%', '100%', '78%', '88%'],
+          ['68%', '52%', '100%', '78%', '0%']
+        ].map(
+          ([headingWidth, titleWidth, lineOne, lineTwo, lineThree], index) => (
+            <div key={`${headingWidth}-${index}`}>
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-2.5 rounded-sm bg-[#111827]"
+                  style={{ width: headingWidth }}
+                />
+                <div className="h-0.5 flex-1 bg-[#111827]" />
               </div>
-              <div
-                className={`ml-auto h-4 rounded-sm bg-[#111827] ${dateWidth}`}
-              />
+              <div className="mt-3 grid grid-cols-[minmax(0,1fr)_24%] gap-3">
+                <div className="min-w-0">
+                  <div
+                    className="h-2 rounded-sm bg-[#111827]"
+                    style={{ width: titleWidth }}
+                  />
+                  <div className="mt-1 h-1.5 w-[72%] rounded-sm bg-[#64748b]" />
+                  <div className="mt-2 space-y-1">
+                    <div
+                      className="h-1.5 rounded-full bg-[#cbd5e1]"
+                      style={{ width: lineOne }}
+                    />
+                    <div
+                      className="h-1.5 rounded-full bg-[#cbd5e1]"
+                      style={{ width: lineTwo }}
+                    />
+                    {lineThree !== '0%' && (
+                      <div
+                        className="h-1.5 rounded-full bg-[#cbd5e1]"
+                        style={{ width: lineThree }}
+                      />
+                    )}
+                  </div>
+                </div>
+                <div className="ml-auto h-4 w-full rounded-sm bg-[#111827]" />
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        )}
       </div>
     </div>
   )
