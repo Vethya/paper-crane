@@ -101,7 +101,7 @@ export function LandingPage() {
         />
       </main>
 
-      <LandingFooter />
+      <LandingFooter onStartNewSession={startNewSession} />
     </div>
   )
 }
@@ -379,12 +379,54 @@ function FinalCtaSection({
   )
 }
 
-function LandingFooter() {
+function LandingFooter({
+  onStartNewSession
+}: {
+  onStartNewSession: () => void
+}) {
   return (
-    <footer className="border-t border-[#e2e8f0] bg-[#ffffff] px-5 py-8 sm:px-8">
-      <div className="mx-auto flex max-w-7xl flex-col justify-between gap-4 text-sm text-[#64748b] sm:flex-row">
-        <span>© {new Date().getFullYear()} Resume Manager</span>
-        <span>ATS-ready resumes with AI-assisted tailoring</span>
+    <footer className="border-t border-[#e2e8f0] bg-[#ffffff]">
+      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[1.3fr_0.7fr_0.7fr]">
+        <div className="max-w-md">
+          <Link
+            href="/"
+            aria-label="Resume Manager home"
+            className="inline-flex text-xl font-semibold tracking-normal"
+          >
+            <span className="text-[#0f172a]">Resume&nbsp;</span>
+            <span className="text-[#2563eb]">Manager</span>
+          </Link>
+          <p className="mt-4 text-sm leading-6 text-[#64748b]">
+            Build ATS-ready resumes, tailor them with AI feedback, and export
+            polished PDFs from one focused workspace.
+          </p>
+          <button
+            onClick={onStartNewSession}
+            className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-4 text-sm font-semibold text-[#ffffff] shadow-lg shadow-blue-700/20 transition hover:bg-[#1d4ed8] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]"
+          >
+            Start a resume
+            <ArrowRight size={16} />
+          </button>
+        </div>
+
+        <FooterLinkGroup title="Explore">
+          {navItems.map((item) => (
+            <FooterAnchor key={item.href} href={item.href}>
+              {item.label}
+            </FooterAnchor>
+          ))}
+        </FooterLinkGroup>
+
+        <FooterLinkGroup title="Product">
+          <FooterAnchor href="/login">Sign in</FooterAnchor>
+          <FooterAnchor href="/resumes">Resume library</FooterAnchor>
+          <FooterAnchor href="/generator">Resume builder</FooterAnchor>
+        </FooterLinkGroup>
+
+        <div className="flex flex-col justify-between gap-3 border-t border-[#e2e8f0] pt-5 text-sm text-[#64748b] sm:flex-row lg:col-span-3">
+          <span>© {new Date().getFullYear()} Resume Manager</span>
+          <span>ATS-ready resumes with AI-assisted tailoring</span>
+        </div>
       </div>
     </footer>
   )
@@ -408,6 +450,37 @@ function LandingSection({
     >
       <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">{children}</div>
     </section>
+  )
+}
+
+function FooterLinkGroup({
+  children,
+  title
+}: {
+  children: ReactNode
+  title: string
+}) {
+  return (
+    <div>
+      <h2 className="text-sm font-semibold text-[#0f172a]">{title}</h2>
+      <div className="mt-4 flex flex-col items-start gap-3 text-sm text-[#64748b]">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+function FooterAnchor({
+  children,
+  href
+}: {
+  children: ReactNode
+  href: string
+}) {
+  return (
+    <Link href={href} className="transition hover:text-[#0f172a]">
+      {children}
+    </Link>
   )
 }
 
