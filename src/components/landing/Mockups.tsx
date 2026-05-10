@@ -13,7 +13,7 @@ const sidebarItems = [
 
 export function ProductMockup() {
   return (
-    <div className="relative rounded-lg border border-[#cbd5e1] bg-[#ffffff] p-3 shadow-2xl shadow-slate-300/45">
+    <div className="relative select-none rounded-lg border border-[#cbd5e1] bg-[#ffffff] p-3 shadow-2xl shadow-slate-300/45">
       <div className="mb-3 flex h-10 items-center justify-between border-b border-[#e2e8f0] px-2">
         <Logo scale={0.62} />
         <div className="flex items-center gap-2 text-[10px] text-[#64748b]">
@@ -96,7 +96,7 @@ export function ProductMockup() {
 
 export function EditorPreview() {
   return (
-    <div className="grid gap-5 lg:grid-cols-[1fr_0.86fr]">
+    <div className="grid select-none gap-5 lg:grid-cols-[1fr_0.86fr]">
       <div className="rounded-lg border border-[#cbd5e1] bg-[#ffffff] p-3 shadow-xl shadow-slate-300/35">
         <div className="grid gap-3 md:h-[420px] md:grid-cols-[0.55fr_1fr]">
           <div className="rounded-lg border border-[#e2e8f0] bg-[#f8fafc] p-3">
@@ -156,7 +156,7 @@ export function EditorPreview() {
 
 export function TemplateCard({ name }: { name: string }) {
   return (
-    <article className="rounded-lg border border-[#e2e8f0] bg-[#ffffff] p-4 shadow-sm shadow-slate-200/70">
+    <article className="select-none rounded-lg border border-[#e2e8f0] bg-[#ffffff] p-4 shadow-sm shadow-slate-200/70">
       <div className="rounded-md bg-[#f1f5f9] p-4">
         <div className="mx-auto aspect-[210/297] w-full max-w-[245px] overflow-hidden border border-[#e2e8f0] bg-[#ffffff] shadow-sm">
           {name === 'Classic' && <ClassicTemplateMockup />}
