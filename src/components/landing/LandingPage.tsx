@@ -5,8 +5,8 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowRight, FileCheck2, Upload } from 'lucide-react'
+import { z } from 'zod'
 import { Logo } from '@/components/core/Logo'
-import { THEME_STORAGE_KEY } from '@/components/theme/ThemeProvider'
 import {
   aiFeatures,
   atsPoints,
@@ -22,6 +22,39 @@ import { EditorPreview, ProductMockup, TemplateCard } from './Mockups'
 const lightLandingVars = {
   '--app-foreground': '15 23 42'
 } as CSSProperties
+
+const resumeImportSchema = z
+  .object({
+    basics: z.object({}).passthrough().optional(),
+    work: z.array(z.object({}).passthrough()).optional(),
+    education: z.array(z.object({}).passthrough()).optional(),
+    awards: z.array(z.object({}).passthrough()).optional(),
+    skills: z.array(z.object({}).passthrough()).optional(),
+    projects: z.array(z.object({}).passthrough()).optional(),
+    headings: z.record(z.string(), z.string()).optional(),
+    sections: z
+      .array(
+        z.enum(['profile', 'education', 'work', 'skills', 'projects', 'awards'])
+      )
+      .optional(),
+    selectedTemplate: z.number().optional()
+  })
+  .passthrough()
+  .refine(
+    (resume) =>
+      [
+        'basics',
+        'work',
+        'education',
+        'awards',
+        'skills',
+        'projects',
+        'headings',
+        'sections',
+        'selectedTemplate'
+      ].some((key) => key in resume),
+    'Resume JSON must include at least one supported resume field.'
+  )
 
 function handleLandingNavClick(
   event: MouseEvent<HTMLAnchorElement>,
@@ -50,31 +83,46 @@ function handleLandingNavClick(
 export function LandingPage() {
   const router = useRouter()
   const [hasSession, setHasSession] = useState(false)
+  const [importError, setImportError] = useState<string | null>(null)
 
   useEffect(() => {
     setHasSession(!!localStorage.getItem('jsonResume'))
   }, [])
 
   const startNewSession = () => {
-    const selectedTheme = window.localStorage.getItem(THEME_STORAGE_KEY)
-    window.localStorage.clear()
-    if (selectedTheme) {
-      window.localStorage.setItem(THEME_STORAGE_KEY, selectedTheme)
-    }
+    window.localStorage.removeItem('jsonResume')
     router.push('/generator')
   }
 
-  const handleFileUpload = async (e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      return
+    }
+
     const reader = new FileReader()
     reader.addEventListener('load', (event) => {
-      const jsonResume = JSON.parse(event.target?.result as string)
-      localStorage.setItem('jsonResume', JSON.stringify(jsonResume))
-      router.push('/generator')
+      try {
+        const jsonResume = resumeImportSchema.parse(
+          JSON.parse(event.target?.result as string)
+        )
+        localStorage.setItem('jsonResume', JSON.stringify(jsonResume))
+        setImportError(null)
+        router.push('/generator')
+      } catch {
+        setImportError(
+          'Upload a valid JSON Resume file with resume fields such as basics, work, education, skills, projects, or awards.'
+        )
+      } finally {
+        e.target.value = ''
+      }
+    })
+    reader.addEventListener('error', () => {
+      setImportError('Unable to read that file. Please try another JSON file.')
+      e.target.value = ''
     })
 
-    if (e.target.files?.[0]) {
-      reader.readAsText(e.target.files[0])
-    }
+    reader.readAsText(file)
   }
 
   return (
@@ -87,6 +135,7 @@ export function LandingPage() {
       <main>
         <HeroSection
           hasSession={hasSession}
+          importError={importError}
           onFileUpload={handleFileUpload}
           onStartNewSession={startNewSession}
         />
@@ -96,6 +145,7 @@ export function LandingPage() {
         <ProductSection />
         <TemplatesSection />
         <FinalCtaSection
+          importError={importError}
           onFileUpload={handleFileUpload}
           onStartNewSession={startNewSession}
         />
@@ -138,9 +188,9 @@ function LandingHeader({
           >
             Sign in
           </Link>
-          <PrimaryButton onClick={onStartNewSession} compact>
+          <LandingPrimaryButton onClick={onStartNewSession} compact>
             Start a resume
-          </PrimaryButton>
+          </LandingPrimaryButton>
         </div>
       </nav>
     </header>
@@ -149,10 +199,12 @@ function LandingHeader({
 
 function HeroSection({
   hasSession,
+  importError,
   onFileUpload,
   onStartNewSession
 }: {
   hasSession: boolean
+  importError: string | null
   onFileUpload: (e: ChangeEvent<HTMLInputElement>) => void
   onStartNewSession: () => void
 }) {
@@ -171,9 +223,9 @@ function HeroSection({
           </p>
 
           <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <PrimaryButton onClick={onStartNewSession}>
+            <LandingPrimaryButton onClick={onStartNewSession}>
               Start your resume
-            </PrimaryButton>
+            </LandingPrimaryButton>
             <ImportButton inputId="import-json" />
             {hasSession && (
               <SecondaryLink href="/generator">Continue session</SecondaryLink>
@@ -181,6 +233,9 @@ function HeroSection({
           </div>
 
           <FileInput id="import-json" onChange={onFileUpload} />
+          {importError && (
+            <ImportErrorMessage>{importError}</ImportErrorMessage>
+          )}
 
           <div className="mt-9 grid max-w-2xl grid-cols-1 gap-3 text-sm text-[#334155] sm:grid-cols-3">
             {trustItems.map((item) => (
@@ -350,9 +405,11 @@ function TemplatesSection() {
 }
 
 function FinalCtaSection({
+  importError,
   onFileUpload,
   onStartNewSession
 }: {
+  importError: string | null
   onFileUpload: (e: ChangeEvent<HTMLInputElement>) => void
   onStartNewSession: () => void
 }) {
@@ -368,12 +425,13 @@ function FinalCtaSection({
           you already have.
         </p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <PrimaryButton onClick={onStartNewSession}>
+          <LandingPrimaryButton onClick={onStartNewSession}>
             Start a resume
-          </PrimaryButton>
+          </LandingPrimaryButton>
           <ImportButton inputId="import-json-bottom" />
           <FileInput id="import-json-bottom" onChange={onFileUpload} />
         </div>
+        {importError && <ImportErrorMessage>{importError}</ImportErrorMessage>}
       </div>
     </section>
   )
@@ -514,7 +572,7 @@ function SectionIntro({
   )
 }
 
-function PrimaryButton({
+function LandingPrimaryButton({
   children,
   compact = false,
   onClick
@@ -580,6 +638,17 @@ function FileInput({
       onChange={onChange}
       className="hidden"
     />
+  )
+}
+
+function ImportErrorMessage({ children }: { children: ReactNode }) {
+  return (
+    <p
+      role="alert"
+      className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-red-600"
+    >
+      {children}
+    </p>
   )
 }
 
