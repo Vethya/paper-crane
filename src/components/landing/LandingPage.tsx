@@ -1,6 +1,6 @@
 'use client'
 
-import type { CSSProperties, ChangeEvent, ReactNode } from 'react'
+import type { CSSProperties, ChangeEvent, MouseEvent, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -22,6 +22,30 @@ import { EditorPreview, ProductMockup, TemplateCard } from './Mockups'
 const lightLandingVars = {
   '--app-foreground': '15 23 42'
 } as CSSProperties
+
+function handleLandingNavClick(
+  event: MouseEvent<HTMLAnchorElement>,
+  href: string
+) {
+  if (!href.startsWith('#')) {
+    return
+  }
+
+  const target = document.querySelector(href)
+  if (!(target instanceof HTMLElement)) {
+    return
+  }
+
+  event.preventDefault()
+
+  window.history.pushState(null, '', href)
+  target.scrollIntoView({
+    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth',
+    block: 'start'
+  })
+}
 
 export function LandingPage() {
   const router = useRouter()
@@ -99,6 +123,7 @@ function LandingHeader({
             <a
               key={item.href}
               href={item.href}
+              onClick={(event) => handleLandingNavClick(event, item.href)}
               className="whitespace-nowrap transition hover:text-[#0f172a]"
             >
               {item.label}
@@ -204,7 +229,10 @@ function AiSection() {
 
 function AtsSection() {
   return (
-    <section id="ats" className="border-b border-[#e2e8f0] bg-[#f8fafc]">
+    <section
+      id="ats"
+      className="scroll-mt-16 border-b border-[#e2e8f0] bg-[#f8fafc]"
+    >
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[0.8fr_1fr] lg:items-center">
         <SectionIntro
           eyebrow="ATS-ready resumes"
@@ -374,7 +402,7 @@ function LandingSection({
   return (
     <section
       id={id}
-      className={`border-b border-[#e2e8f0] ${
+      className={`scroll-mt-16 border-b border-[#e2e8f0] ${
         background === 'white' ? 'bg-[#ffffff]' : 'bg-[#f8fafc]'
       }`}
     >
