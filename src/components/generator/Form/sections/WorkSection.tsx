@@ -12,6 +12,7 @@ import {
 import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import Highlights from './Highlights'
 import {
+  agentFocusedArrayEntryAtom,
   agentPendingEditsAtom,
   type NewEntryEdit,
   type RemoveEntryEdit
@@ -21,13 +22,17 @@ import { AgentEntryEditControls } from '../../../agent/AgentEntryEditControls'
 import { Work } from '../../../../types'
 
 export function WorkSection() {
+  const focusedArrayEntry = useAtomValue(agentFocusedArrayEntryAtom)
   const {
     fields,
     expandedIndex,
     appendAndExpand,
     removeAndAdjustExpanded,
     toggleExpanded
-  } = useCollapsibleFieldArray('work')
+  } = useCollapsibleFieldArray(
+    'work',
+    focusedArrayEntry?.arrayPath === 'work' ? focusedArrayEntry : null
+  )
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
 
   const handleAdd = () => {

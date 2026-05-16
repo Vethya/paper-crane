@@ -11,6 +11,7 @@ import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
 import {
+  agentFocusedArrayEntryAtom,
   agentPendingEditsAtom,
   type NewEntryEdit,
   type RemoveEntryEdit
@@ -20,13 +21,17 @@ import { AgentEntryEditControls } from '../../../agent/AgentEntryEditControls'
 import { Education } from '../../../../types'
 
 export function EducationSection() {
+  const focusedArrayEntry = useAtomValue(agentFocusedArrayEntryAtom)
   const {
     fields,
     expandedIndex,
     appendAndExpand,
     removeAndAdjustExpanded,
     toggleExpanded
-  } = useCollapsibleFieldArray('education')
+  } = useCollapsibleFieldArray(
+    'education',
+    focusedArrayEntry?.arrayPath === 'education' ? focusedArrayEntry : null
+  )
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
 
   const handleAdd = () => {

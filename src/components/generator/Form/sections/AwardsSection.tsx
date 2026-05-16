@@ -11,6 +11,7 @@ import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
 import {
+  agentFocusedArrayEntryAtom,
   agentPendingEditsAtom,
   type NewEntryEdit,
   type RemoveEntryEdit
@@ -20,13 +21,17 @@ import { AgentEntryEditControls } from '../../../agent/AgentEntryEditControls'
 import { Award } from '../../../../types'
 
 export function AwardSection() {
+  const focusedArrayEntry = useAtomValue(agentFocusedArrayEntryAtom)
   const {
     fields,
     expandedIndex,
     appendAndExpand,
     removeAndAdjustExpanded,
     toggleExpanded
-  } = useCollapsibleFieldArray('awards')
+  } = useCollapsibleFieldArray(
+    'awards',
+    focusedArrayEntry?.arrayPath === 'awards' ? focusedArrayEntry : null
+  )
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
 
   const handleAdd = () => {

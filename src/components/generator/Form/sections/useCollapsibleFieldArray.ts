@@ -1,13 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { FieldArray, FieldArrayPath, useFieldArray } from 'react-hook-form'
 
 import { FormValues } from '../../../../types'
 
 export function useCollapsibleFieldArray<
   TName extends FieldArrayPath<FormValues>
->(name: TName) {
+>(
+  name: TName,
+  focusedReviewEntry?: { entryIndex: number; editId: string } | null
+) {
   const { fields, append, remove } = useFieldArray<FormValues, TName>({ name })
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(0)
+  const focusedEntryIndex = focusedReviewEntry?.entryIndex
+  const focusedEditId = focusedReviewEntry?.editId
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(
+    focusedEntryIndex ?? 0
+  )
+
+  useEffect(() => {
+    if (focusedEntryIndex === undefined) return
+    setExpandedIndex(focusedEntryIndex)
+  }, [focusedEntryIndex, focusedEditId])
 
   const appendAndExpand = (value: FieldArray<FormValues, TName>) => {
     append(value)

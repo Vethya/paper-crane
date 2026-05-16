@@ -1,12 +1,24 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useAtomValue } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import {
+  agentFocusedArrayEntryAtom,
   agentFocusedEditIdAtom,
-  agentPendingEditsAtom
+  agentPendingEditsAtom,
+  type AgentFocusedArrayEntry,
+  type AgentReviewArrayPath,
+  type PendingEdit
 } from '../../atoms/agentEdits'
 import { activeSectionSetterAtom } from '../../atoms/activeSection'
+
+const ARRAY_SECTIONS = new Set<string>([
+  'work',
+  'education',
+  'skills',
+  'projects',
+  'awards'
+])
 
 function fieldPathToSection(fieldPath: string): string {
   const prefix = fieldPath.split('.')[0]
@@ -27,6 +39,35 @@ function fieldPathToSection(fieldPath: string): string {
       return 'awards'
     default:
       return 'basics'
+  }
+}
+
+function fieldPathToArrayEntry(
+  fieldPath: string,
+  editId: string
+): AgentFocusedArrayEntry | null {
+  const [arrayPath, index] = fieldPath.split('.')
+  if (!ARRAY_SECTIONS.has(arrayPath)) return null
+
+  const entryIndex = Number(index)
+  if (!Number.isInteger(entryIndex)) return null
+
+  return {
+    arrayPath: arrayPath as AgentReviewArrayPath,
+    entryIndex,
+    editId
+  }
+}
+
+function editToArrayEntry(edit: PendingEdit): AgentFocusedArrayEntry | null {
+  if (edit.type === 'set') {
+    return fieldPathToArrayEntry(edit.fieldPath, edit.id)
+  }
+
+  return {
+    arrayPath: edit.arrayPath,
+    entryIndex: edit.entryIndex,
+    editId: edit.id
   }
 }
 
@@ -141,20 +182,30 @@ export function AgentFieldFocuser() {
   const focusedId = useAtomValue(agentFocusedEditIdAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const setActiveSection = useAtomValue(activeSectionSetterAtom)
+  const setFocusedArrayEntry = useSetAtom(agentFocusedArrayEntryAtom)
   const prevSectionRef = useRef<string | null>(null)
   const scrollCancelRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    if (!focusedId || !setActiveSection) return
+    if (!focusedId) {
+      setFocusedArrayEntry(null)
+      return
+    }
+
+    if (!setActiveSection) return
 
     const edit = pendingEdits.find((e) => e.id === focusedId)
-    if (!edit) return
+    if (!edit) {
+      setFocusedArrayEntry(null)
+      return
+    }
 
     const section =
       edit.type === 'set' ? fieldPathToSection(edit.fieldPath) : edit.arrayPath
     const sectionChanged = prevSectionRef.current !== section
     prevSectionRef.current = section
     setActiveSection(section)
+    setFocusedArrayEntry(editToArrayEntry(edit))
 
     const forms = document.querySelectorAll('[data-resume-form]')
     const formEl =

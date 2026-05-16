@@ -32,6 +32,19 @@ export type RemoveEntryEdit = {
 
 export type PendingEdit = FieldEdit | NewEntryEdit | RemoveEntryEdit
 
+export type AgentReviewArrayPath =
+  | 'work'
+  | 'education'
+  | 'skills'
+  | 'projects'
+  | 'awards'
+
+export type AgentFocusedArrayEntry = {
+  arrayPath: AgentReviewArrayPath
+  entryIndex: number
+  editId: string
+}
+
 export const agentPendingEditsAtom = atom<PendingEdit[]>([])
 agentPendingEditsAtom.debugLabel = 'agentPendingEditsAtom'
 
@@ -41,3 +54,9 @@ agentEditSummaryAtom.debugLabel = 'agentEditSummaryAtom'
 // Tracks which pending edit the user is currently reviewing
 export const agentFocusedEditIdAtom = atom<string | null>(null)
 agentFocusedEditIdAtom.debugLabel = 'agentFocusedEditIdAtom'
+
+// Tracks the collapsible array entry containing the focused review item
+export const agentFocusedArrayEntryAtom = atom<AgentFocusedArrayEntry | null>(
+  null
+)
+agentFocusedArrayEntryAtom.debugLabel = 'agentFocusedArrayEntryAtom'
