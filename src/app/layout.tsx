@@ -6,6 +6,17 @@ import { ThemeProvider } from '@/components/theme/ThemeProvider'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' })
 
+const themeInitScript = `
+try {
+  const theme = window.localStorage.getItem('resume-manager-theme')
+  const isDark = theme === 'dark'
+  document.documentElement.classList.toggle('dark', isDark)
+  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light'
+} catch {
+  document.documentElement.style.colorScheme = 'light'
+}
+`
+
 export const metadata: Metadata = {
   title: 'Resume Manager',
   description: 'Create beautiful resumes with ease'
@@ -22,6 +33,9 @@ export default function RootLayout({
       className={cn('font-sans', geist.variable)}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body>
         <ThemeProvider>{children}</ThemeProvider>
       </body>
