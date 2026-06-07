@@ -108,6 +108,8 @@ export function AwardSection() {
                 name={`awards.${index}.summary`}
                 label="Summary"
                 placeholder="Recognized for creating the most awesome project at a hackathon."
+                multiline
+                textareaRows={4}
               />
             </div>
           </CollapsibleFormItem>
