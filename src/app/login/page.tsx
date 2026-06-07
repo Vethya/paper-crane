@@ -14,7 +14,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isPending && session) {
-      router.replace('/generator')
+      router.replace('/resumes')
     }
   }, [session, isPending, router])
 
@@ -23,7 +23,7 @@ export default function LoginPage() {
   async function handleGoogle() {
     await authClient.signIn.social({
       provider: 'google',
-      callbackURL: '/generator'
+      callbackURL: '/resumes'
     })
   }
 
