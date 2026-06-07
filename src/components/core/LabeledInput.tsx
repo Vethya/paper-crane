@@ -2,21 +2,35 @@
 
 import { useAtom, useAtomValue } from 'jotai'
 import { Check, RotateCcw } from 'lucide-react'
-import type { Path } from 'react-hook-form'
+import type { FieldPath, Path } from 'react-hook-form'
 import { agentPendingEditsAtom, type FieldEdit } from '../../atoms/agentEdits'
 import { formSetValueAtom } from '../../atoms/formData'
 import { useAdvanceFocusedEdit } from '../../hooks/useAdvanceFocusedEdit'
-import { Input, type InputProps } from './Input'
+import { Input, Textarea } from './Input'
 import type { FormValues } from '../../types'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-interface Props extends Omit<InputProps, 'formContext'> {
+interface Props {
+  name: FieldPath<FormValues>
   label: string
+  placeholder?: string
+  type?: string
+  disabled?: boolean
+  autoComplete?: string
   className?: string
+  multiline?: boolean
+  textareaRows?: number
 }
 
-export function LabeledInput({ label, className, ...inputProps }: Props) {
+export function LabeledInput({
+  label,
+  className,
+  multiline = false,
+  textareaRows,
+  type,
+  ...inputProps
+}: Props) {
   const [pendingEdits, setPendingEdits] = useAtom(agentPendingEditsAtom)
   const formSetValue = useAtomValue(formSetValueAtom)
   const advanceFocusedEdit = useAdvanceFocusedEdit()
@@ -71,7 +85,11 @@ export function LabeledInput({ label, className, ...inputProps }: Props) {
           fieldEdit && 'review-field-highlight'
         )}
       >
-        <Input {...inputProps} />
+        {multiline ? (
+          <Textarea {...inputProps} rows={textareaRows} />
+        ) : (
+          <Input {...inputProps} type={type} />
+        )}
       </div>
 
       {fieldEdit && (

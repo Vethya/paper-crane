@@ -99,6 +99,8 @@ export function ProjectsSection() {
                 name={`projects.${index}.description`}
                 label="Project Description"
                 placeholder="A video chat app with great picture quality."
+                multiline
+                textareaRows={4}
               />
               <LabeledInput
                 name={`projects.${index}.url`}

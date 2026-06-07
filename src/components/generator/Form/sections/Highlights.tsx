@@ -5,7 +5,7 @@ import { useFieldArray } from 'react-hook-form'
 import { useAtom, useAtomValue } from 'jotai'
 import { MdClose, MdDragIndicator } from 'react-icons/md'
 import { Check, RotateCcw } from 'lucide-react'
-import { Input } from '../../../core/Input'
+import { Textarea } from '../../../core/Input'
 import { FormInput } from '../../../core/FormInput'
 import { IconButton } from '../../../core/Button'
 import {
@@ -229,10 +229,11 @@ export default function Highlights({
                     edit && 'review-field-highlight'
                   )}
                 >
-                  <Input
+                  <Textarea
                     name={`${name}.${i}`}
                     placeholder={placeholder}
-                    className="min-w-0"
+                    rows={3}
+                    className="min-h-20 min-w-0"
                   />
                 </div>
                 {edit && (
