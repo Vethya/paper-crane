@@ -8,6 +8,7 @@ import { Header } from '@/components/generator/Header'
 import { ResumeCard } from '@/components/resumes/ResumeCard'
 import { CreateResumeDialog } from '@/components/resumes/CreateResumeDialog'
 import { ImportResumeDialog } from '@/components/resumes/ImportResumeDialog'
+import { LibraryNav } from '@/components/library/LibraryNav'
 import type { TagColor } from '@/lib/tagColors'
 
 interface ResumeListItem {
@@ -66,6 +67,8 @@ export default function ResumesPage() {
       />
 
       <main className="relative z-10 mx-auto max-w-5xl px-6 py-12">
+        <LibraryNav />
+
         <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 items-start justify-between gap-3 sm:block">
             <div className="min-w-0">

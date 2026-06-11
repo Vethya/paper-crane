@@ -1,16 +1,16 @@
-import { Fragment } from 'react'
+import { DragEvent, Fragment, HTMLAttributes, useEffect, useState } from 'react'
 import { useWatch } from 'react-hook-form'
 import { useAtomValue } from 'jotai'
 
-import { LabeledInput } from '../../../core/LabeledInput'
+import { ComponentItemFields } from '@/components/resume-components/ComponentItemFields'
 import { AddButton } from '../../../core/Button'
+import { LabeledInput } from '../../../core/LabeledInput'
 import { FormSection } from './FormSection'
 import {
   CollapsibleFormItem,
   CollapsibleFormItemSummary
 } from './CollapsibleFormItem'
 import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
-import Highlights from './Highlights'
 import {
   agentPendingEditsAtom,
   type NewEntryEdit,
@@ -19,16 +19,29 @@ import {
 import { AgentEntryEditControls } from '../../../agent/AgentEntryEditControls'
 
 import { Work } from '../../../../types'
+import { componentInsertFocusAtom } from '@/atoms/resumeComponents'
 
 export function WorkSection() {
   const {
     fields,
     expandedIndex,
     appendAndExpand,
+    insertAndExpand,
+    moveAndPreserveExpanded,
     removeAndAdjustExpanded,
+    setExpandedIndex,
     toggleExpanded
   } = useCollapsibleFieldArray('work')
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
+  const focusRequest = useAtomValue(componentInsertFocusAtom)
+  const [dropIndex, setDropIndex] = useState<number | null>(null)
+  const items = useWatch({ name: 'work' }) as Work[] | undefined
+
+  useEffect(() => {
+    if (focusRequest?.type === 'work') {
+      setExpandedIndex(focusRequest.index)
+    }
+  }, [focusRequest, setExpandedIndex])
 
   const handleAdd = () => {
     const defaultWork: Work = {
@@ -86,50 +99,132 @@ export function WorkSection() {
             }
             isExpanded={expandedIndex === index}
             onToggle={() => toggleExpanded(index)}
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = 'copyMove'
+              event.dataTransfer.setData(
+                'application/x-resume-form-item',
+                JSON.stringify({
+                  source: 'resume-form',
+                  type: 'work',
+                  index,
+                  content: items?.[index]
+                })
+              )
+            }}
+            onMoveUp={
+              index > 0
+                ? () => moveAndPreserveExpanded(index, index - 1)
+                : undefined
+            }
+            onMoveDown={
+              index < fields.length - 1
+                ? () => moveAndPreserveExpanded(index, index + 1)
+                : undefined
+            }
             onRemove={() => removeAndAdjustExpanded(index)}
-            removeDisabled={fields.length === 1}
             removeLabel="Remove work experience"
             summary={<WorkSummary index={index} />}
           >
+            <DropZone
+              active={dropIndex === index}
+              onDrop={(event) => {
+                handleDrop(event, index)
+                setDropIndex(null)
+              }}
+              onDragLeave={() => setDropIndex(null)}
+              onDragOver={(event) => {
+                if (acceptsDrop(event)) {
+                  event.preventDefault()
+                  setDropIndex(index)
+                }
+              }}
+            />
             <div data-array-path="work" data-array-index={index}>
-              <LabeledInput
-                name={`work.${index}.company`}
-                label="Company name"
-                placeholder="Netflix"
-              />
-              <LabeledInput
-                name={`work.${index}.location`}
-                label="Location"
-                placeholder="Los Gatos, CA"
-              />
-              <LabeledInput
-                name={`work.${index}.position`}
-                label="Position"
-                placeholder="Software Engineer"
-              />
-              <LabeledInput
-                name={`work.${index}.startDate`}
-                label="Start Date"
-                placeholder="Sep 2015"
-              />
-              <LabeledInput
-                name={`work.${index}.endDate`}
-                label="End Date"
-                placeholder="Jun 2019"
-              />
-              <Highlights
-                label="Job Responsibilities"
-                placeholder="Did cool stuff at company"
-                name={`work.${index}.highlights`}
-              />
+              <ComponentItemFields type="work" index={index} />
             </div>
+            <DropZone
+              active={dropIndex === index + 1}
+              onDrop={(event) => {
+                handleDrop(event, index + 1)
+                setDropIndex(null)
+              }}
+              onDragLeave={() => setDropIndex(null)}
+              onDragOver={(event) => {
+                if (acceptsDrop(event)) {
+                  event.preventDefault()
+                  setDropIndex(index + 1)
+                }
+              }}
+            />
           </CollapsibleFormItem>
         )
       })}
+      {fields.length === 0 && (
+        <DropZone
+          active={dropIndex === 0}
+          onDrop={(event) => {
+            handleDrop(event, 0)
+            setDropIndex(null)
+          }}
+          onDragLeave={() => setDropIndex(null)}
+          onDragOver={(event) => {
+            if (acceptsDrop(event)) {
+              event.preventDefault()
+              setDropIndex(0)
+            }
+          }}
+        />
+      )}
       <AddButton type="button" onClick={handleAdd}>
         + Add Work Experience
       </AddButton>
     </FormSection>
+  )
+
+  function acceptsDrop(event: DragEvent<HTMLElement>) {
+    return (
+      event.dataTransfer.types.includes('application/x-resume-component') ||
+      event.dataTransfer.types.includes('application/x-resume-form-item')
+    )
+  }
+
+  function handleDrop(event: DragEvent<HTMLElement>, targetIndex: number) {
+    event.preventDefault()
+    const component = event.dataTransfer.getData(
+      'application/x-resume-component'
+    )
+    if (component) {
+      const data = JSON.parse(component)
+      if (data.type === 'work') insertAndExpand(targetIndex, data.content)
+      return
+    }
+
+    const formItem = event.dataTransfer.getData(
+      'application/x-resume-form-item'
+    )
+    if (!formItem) return
+    const data = JSON.parse(formItem)
+    if (data.type !== 'work' || data.index === targetIndex) return
+    moveAndPreserveExpanded(
+      data.index,
+      data.index < targetIndex ? targetIndex - 1 : targetIndex
+    )
+  }
+}
+
+function DropZone({
+  active,
+  ...props
+}: {
+  active: boolean
+} & HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      {...props}
+      className={`my-2 h-2 rounded-full transition ${
+        active ? 'bg-emerald-400/80' : 'bg-transparent'
+      }`}
+    />
   )
 }
 

@@ -1,14 +1,15 @@
-import { Fragment } from 'react'
+import { DragEvent, Fragment, HTMLAttributes, useEffect, useState } from 'react'
 import { useWatch } from 'react-hook-form'
 import { useAtomValue } from 'jotai'
 
+import { ComponentItemFields } from '@/components/resume-components/ComponentItemFields'
 import { FormSection } from './FormSection'
+import { LabeledInput } from '../../../core/LabeledInput'
 import {
   CollapsibleFormItem,
   CollapsibleFormItemSummary
 } from './CollapsibleFormItem'
 import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
-import { LabeledInput } from '../../../core/LabeledInput'
 import { AddButton } from '../../../core/Button'
 import {
   agentPendingEditsAtom,
@@ -18,16 +19,29 @@ import {
 import { AgentEntryEditControls } from '../../../agent/AgentEntryEditControls'
 
 import { Award } from '../../../../types'
+import { componentInsertFocusAtom } from '@/atoms/resumeComponents'
 
 export function AwardSection() {
   const {
     fields,
     expandedIndex,
     appendAndExpand,
+    insertAndExpand,
+    moveAndPreserveExpanded,
     removeAndAdjustExpanded,
+    setExpandedIndex,
     toggleExpanded
   } = useCollapsibleFieldArray('awards')
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
+  const focusRequest = useAtomValue(componentInsertFocusAtom)
+  const [dropIndex, setDropIndex] = useState<number | null>(null)
+  const items = useWatch({ name: 'awards' }) as Award[] | undefined
+
+  useEffect(() => {
+    if (focusRequest?.type === 'awards') {
+      setExpandedIndex(focusRequest.index)
+    }
+  }, [focusRequest, setExpandedIndex])
 
   const handleAdd = () => {
     const defaultAward: Award = {
@@ -83,42 +97,132 @@ export function AwardSection() {
             }
             isExpanded={expandedIndex === index}
             onToggle={() => toggleExpanded(index)}
+            onDragStart={(event) => {
+              event.dataTransfer.effectAllowed = 'copyMove'
+              event.dataTransfer.setData(
+                'application/x-resume-form-item',
+                JSON.stringify({
+                  source: 'resume-form',
+                  type: 'awards',
+                  index,
+                  content: items?.[index]
+                })
+              )
+            }}
+            onMoveUp={
+              index > 0
+                ? () => moveAndPreserveExpanded(index, index - 1)
+                : undefined
+            }
+            onMoveDown={
+              index < fields.length - 1
+                ? () => moveAndPreserveExpanded(index, index + 1)
+                : undefined
+            }
             onRemove={() => removeAndAdjustExpanded(index)}
-            removeDisabled={fields.length === 1}
             removeLabel="Remove award"
             summary={<AwardSummary index={index} />}
           >
+            <DropZone
+              active={dropIndex === index}
+              onDrop={(event) => {
+                handleDrop(event, index)
+                setDropIndex(null)
+              }}
+              onDragLeave={() => setDropIndex(null)}
+              onDragOver={(event) => {
+                if (acceptsDrop(event)) {
+                  event.preventDefault()
+                  setDropIndex(index)
+                }
+              }}
+            />
             <div data-array-path="awards" data-array-index={index}>
-              <LabeledInput
-                name={`awards.${index}.title`}
-                label="Award Name"
-                placeholder="Supreme hacker"
-              />
-              <LabeledInput
-                name={`awards.${index}.date`}
-                label="Award Date"
-                placeholder="May 2015"
-              />
-              <LabeledInput
-                name={`awards.${index}.awarder`}
-                label="Awarder"
-                placeholder="HackNY"
-              />
-              <LabeledInput
-                name={`awards.${index}.summary`}
-                label="Summary"
-                placeholder="Recognized for creating the most awesome project at a hackathon."
-                multiline
-                textareaRows={4}
-              />
+              <ComponentItemFields type="awards" index={index} />
             </div>
+            <DropZone
+              active={dropIndex === index + 1}
+              onDrop={(event) => {
+                handleDrop(event, index + 1)
+                setDropIndex(null)
+              }}
+              onDragLeave={() => setDropIndex(null)}
+              onDragOver={(event) => {
+                if (acceptsDrop(event)) {
+                  event.preventDefault()
+                  setDropIndex(index + 1)
+                }
+              }}
+            />
           </CollapsibleFormItem>
         )
       })}
+      {fields.length === 0 && (
+        <DropZone
+          active={dropIndex === 0}
+          onDrop={(event) => {
+            handleDrop(event, 0)
+            setDropIndex(null)
+          }}
+          onDragLeave={() => setDropIndex(null)}
+          onDragOver={(event) => {
+            if (acceptsDrop(event)) {
+              event.preventDefault()
+              setDropIndex(0)
+            }
+          }}
+        />
+      )}
       <AddButton type="button" onClick={handleAdd}>
         + Add Award
       </AddButton>
     </FormSection>
+  )
+
+  function acceptsDrop(event: DragEvent<HTMLElement>) {
+    return (
+      event.dataTransfer.types.includes('application/x-resume-component') ||
+      event.dataTransfer.types.includes('application/x-resume-form-item')
+    )
+  }
+
+  function handleDrop(event: DragEvent<HTMLElement>, targetIndex: number) {
+    event.preventDefault()
+    const component = event.dataTransfer.getData(
+      'application/x-resume-component'
+    )
+    if (component) {
+      const data = JSON.parse(component)
+      if (data.type === 'awards') insertAndExpand(targetIndex, data.content)
+      return
+    }
+
+    const formItem = event.dataTransfer.getData(
+      'application/x-resume-form-item'
+    )
+    if (!formItem) return
+    const data = JSON.parse(formItem)
+    if (data.type !== 'awards' || data.index === targetIndex) return
+    moveAndPreserveExpanded(
+      data.index,
+      data.index < targetIndex ? targetIndex - 1 : targetIndex
+    )
+  }
+}
+
+function DropZone({
+  active,
+  ...props
+}: {
+  active: boolean
+} & HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      {...props}
+      className={`my-2 h-2 rounded-full transition ${
+        active ? 'bg-emerald-400/80' : 'bg-transparent'
+      }`}
+    />
   )
 }
 

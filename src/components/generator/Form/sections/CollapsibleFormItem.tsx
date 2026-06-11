@@ -1,5 +1,12 @@
-import { ReactNode } from 'react'
-import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import { DragEvent, ReactNode } from 'react'
+import {
+  ChevronDown,
+  ChevronUp,
+  GripVertical,
+  MoveDown,
+  MoveUp,
+  Trash2
+} from 'lucide-react'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -10,6 +17,9 @@ interface CollapsibleFormItemProps {
   isExpanded: boolean
   onToggle: () => void
   onRemove?: () => void
+  onDragStart?: (event: DragEvent<HTMLButtonElement>) => void
+  onMoveDown?: () => void
+  onMoveUp?: () => void
   removeDisabled?: boolean
   removeLabel?: string
   summary: ReactNode
@@ -21,6 +31,9 @@ export function CollapsibleFormItem({
   footer,
   isExpanded,
   onToggle,
+  onDragStart,
+  onMoveDown,
+  onMoveUp,
   onRemove,
   removeDisabled = false,
   removeLabel = 'Remove item',
@@ -37,7 +50,20 @@ export function CollapsibleFormItem({
         )
       )}
     >
-      <div className="grid w-full min-w-0 grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-app-control sm:px-3">
+      <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto_auto_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-app-control sm:px-3">
+        {onDragStart ? (
+          <button
+            type="button"
+            draggable
+            onDragStart={onDragStart}
+            aria-label="Drag to reorder"
+            className="flex h-8 w-8 shrink-0 cursor-grab items-center justify-center rounded border border-transparent text-slate-400 transition hover:border-app-controlBorder hover:bg-app-controlHover hover:text-white active:cursor-grabbing"
+          >
+            <GripVertical className="h-4 w-4" aria-hidden="true" />
+          </button>
+        ) : (
+          <span className="hidden" />
+        )}
         <button
           type="button"
           onClick={onToggle}
@@ -46,6 +72,26 @@ export function CollapsibleFormItem({
         >
           {summary}
         </button>
+        {onMoveUp && (
+          <button
+            type="button"
+            onClick={onMoveUp}
+            aria-label="Move item up"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-transparent text-slate-300 transition hover:border-app-controlBorder hover:bg-app-control hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <MoveUp className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
+        {onMoveDown && (
+          <button
+            type="button"
+            onClick={onMoveDown}
+            aria-label="Move item down"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-transparent text-slate-300 transition hover:border-app-controlBorder hover:bg-app-control hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <MoveDown className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
         {onRemove && (
           <button
             type="button"
