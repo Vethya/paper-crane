@@ -70,7 +70,7 @@ export function ComponentCard({
         )
       }}
       className={clsx(
-        'group flex min-h-32 cursor-pointer flex-col gap-3 rounded-app-card border bg-app-surface p-4 transition hover:border-app-borderStrong hover:bg-app-surfaceElevated',
+        'group flex min-h-32 cursor-pointer flex-col gap-3 rounded-lg border bg-app-surface p-4 transition hover:border-app-borderStrong hover:bg-app-surfaceElevated',
         highlighted
           ? 'border-emerald-400/80 shadow-[0_0_0_3px_rgba(52,211,153,0.14)]'
           : 'border-app-border'

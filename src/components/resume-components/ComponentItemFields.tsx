@@ -8,10 +8,16 @@ import type { ResumeComponentType } from '@/lib/resumeComponents'
 interface ComponentItemFieldsProps {
   type: ResumeComponentType
   index: number
+  invalidFieldName?: string | null
 }
 
-export function ComponentItemFields({ type, index }: ComponentItemFieldsProps) {
+export function ComponentItemFields({
+  type,
+  index,
+  invalidFieldName
+}: ComponentItemFieldsProps) {
   const fieldClassName = 'mb-0'
+  const isInvalid = (fieldName: string) => invalidFieldName === fieldName
 
   if (type === 'education') {
     return (
@@ -21,6 +27,7 @@ export function ComponentItemFields({ type, index }: ComponentItemFieldsProps) {
           label="School name"
           placeholder="Rutgers University"
           className={fieldClassName}
+          invalid={isInvalid('institution')}
         />
         <LabeledInput
           name={`education.${index}.location`}
@@ -70,6 +77,7 @@ export function ComponentItemFields({ type, index }: ComponentItemFieldsProps) {
           label="Company name"
           placeholder="Netflix"
           className={fieldClassName}
+          invalid={isInvalid('company')}
         />
         <LabeledInput
           name={`work.${index}.location`}
@@ -113,6 +121,7 @@ export function ComponentItemFields({ type, index }: ComponentItemFieldsProps) {
           label="Skill name"
           placeholder="Programming Languages"
           className={fieldClassName}
+          invalid={isInvalid('name')}
         />
         <Keywords
           label="Skill Details"
@@ -132,6 +141,7 @@ export function ComponentItemFields({ type, index }: ComponentItemFieldsProps) {
           label="Project Name"
           placeholder="Piper Chat"
           className={fieldClassName}
+          invalid={isInvalid('name')}
         />
         <LabeledInput
           name={`projects.${index}.description`}
@@ -164,6 +174,7 @@ export function ComponentItemFields({ type, index }: ComponentItemFieldsProps) {
         label="Award Name"
         placeholder="Supreme hacker"
         className={fieldClassName}
+        invalid={isInvalid('title')}
       />
       <LabeledInput
         name={`awards.${index}.date`}

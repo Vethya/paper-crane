@@ -52,7 +52,6 @@ function ComponentsContent() {
   const [editing, setEditing] = useState<ResumeComponent | null>(null)
   const [details, setDetails] = useState<ResumeComponent | null>(null)
   const [deleting, setDeleting] = useState<ResumeComponent | null>(null)
-  const [highlightedId, setHighlightedId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -119,7 +118,6 @@ function ComponentsContent() {
     const data = res.status === 204 ? null : await res.json().catch(() => null)
 
     if (res.status === 409) {
-      setHighlightedId(data?.duplicateId)
       toast.error('That component is already saved.')
       throw new Error('Duplicate component')
     }
@@ -130,7 +128,6 @@ function ComponentsContent() {
     }
 
     await loadComponents()
-    setHighlightedId(data?._id)
     toast.success(editing ? 'Component updated.' : 'Component created.')
     setEditing(null)
   }
@@ -215,7 +212,7 @@ function ComponentsContent() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="h-32 animate-pulse rounded-app-card border border-app-border bg-app-surface"
+                className="h-32 animate-pulse rounded-lg border border-app-border bg-app-surface"
               />
             ))}
           </div>
@@ -269,7 +266,6 @@ function ComponentsContent() {
               <ComponentCard
                 key={component._id}
                 component={component}
-                highlighted={highlightedId === component._id}
                 mode="library"
                 onOpen={setDetails}
                 onEdit={(item) => {

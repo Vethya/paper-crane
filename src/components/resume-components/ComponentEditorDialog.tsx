@@ -38,6 +38,7 @@ export function ComponentEditorDialog({
 }: ComponentEditorDialogProps) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [invalidField, setInvalidField] = useState<string | null>(null)
   const defaultValues = useMemo(
     () => createFormValues(type, component),
     [component, type]
@@ -49,6 +50,7 @@ export function ComponentEditorDialog({
     if (open) {
       form.reset(createFormValues(type, component))
       setError(null)
+      setInvalidField(null)
     }
   }, [component, form, open, type])
 
@@ -57,13 +59,15 @@ export function ComponentEditorDialog({
       getEmptyComponentContent(type)) as ResumeComponentContent
     if (!getRequiredValue(type, content as Record<string, unknown>)) {
       setError(
-        `${componentMeta[type].label} requires ${componentMeta[type].requiredField}`
+        `${componentMeta[type].label} requires ${componentMeta[type].requiredFieldLabel}`
       )
+      setInvalidField(componentMeta[type].requiredField)
       return
     }
 
     setSaving(true)
     setError(null)
+    setInvalidField(null)
     try {
       await onSave(content)
       onOpenChange(false)
@@ -105,9 +109,13 @@ export function ComponentEditorDialog({
             className="space-y-0"
             onSubmit={form.handleSubmit(handleSubmit)}
           >
-            <ComponentItemFields type={type} index={0} />
+            <ComponentItemFields
+              type={type}
+              index={0}
+              invalidFieldName={invalidField}
+            />
             {error && (
-              <p className="rounded-app-card border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+              <p className="!mt-4 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-sm text-red-300">
                 {error}
               </p>
             )}

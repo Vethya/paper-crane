@@ -40,6 +40,7 @@ export const componentMeta: Record<
     newLabel: string
     fallbackTitle: string
     requiredField: string
+    requiredFieldLabel: string
     sectionTitle: string
   }
 > = {
@@ -49,6 +50,7 @@ export const componentMeta: Record<
     newLabel: 'New School',
     fallbackTitle: 'Untitled school',
     requiredField: 'institution',
+    requiredFieldLabel: 'School name',
     sectionTitle: 'Education'
   },
   work: {
@@ -57,6 +59,7 @@ export const componentMeta: Record<
     newLabel: 'New Work Experience',
     fallbackTitle: 'Untitled work experience',
     requiredField: 'company',
+    requiredFieldLabel: 'Company name',
     sectionTitle: 'Work Experience'
   },
   skills: {
@@ -65,6 +68,7 @@ export const componentMeta: Record<
     newLabel: 'New Skill',
     fallbackTitle: 'Untitled skill',
     requiredField: 'name',
+    requiredFieldLabel: 'Skill name',
     sectionTitle: 'Skills'
   },
   projects: {
@@ -73,6 +77,7 @@ export const componentMeta: Record<
     newLabel: 'New Project',
     fallbackTitle: 'Untitled project',
     requiredField: 'name',
+    requiredFieldLabel: 'Project Name',
     sectionTitle: 'Projects'
   },
   awards: {
@@ -81,6 +86,7 @@ export const componentMeta: Record<
     newLabel: 'New Award',
     fallbackTitle: 'Untitled award',
     requiredField: 'title',
+    requiredFieldLabel: 'Award Name',
     sectionTitle: 'Awards'
   }
 }
@@ -189,7 +195,7 @@ export function validateComponentContent(
   }
 
   if (!getRequiredValue(type, content as Record<string, unknown>)) {
-    return `${componentMeta[type].label} requires ${componentMeta[type].requiredField}`
+    return `${componentMeta[type].label} requires ${componentMeta[type].requiredFieldLabel}`
   }
 
   return null

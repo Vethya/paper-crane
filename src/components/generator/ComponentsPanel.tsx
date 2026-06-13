@@ -141,7 +141,7 @@ export function ComponentsPanel({
     }
     if (!getRequiredValue(data.type, data.content as Record<string, unknown>)) {
       toast.error(
-        `${componentMeta[data.type].label} needs ${componentMeta[data.type].requiredField} before saving.`
+        `${componentMeta[data.type].label} needs ${componentMeta[data.type].requiredFieldLabel} before saving.`
       )
       return
     }
@@ -269,14 +269,14 @@ export function ComponentsPanel({
             {Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={index}
-                className="h-32 animate-pulse rounded-app-card border border-app-border bg-app-surface"
+                className="h-32 animate-pulse rounded-lg border border-app-border bg-app-surface"
               />
             ))}
           </div>
         )}
 
         {!loading && activeComponents.length === 0 && (
-          <div className="rounded-app-card border border-dashed border-app-controlBorder px-5 py-10 text-center">
+          <div className="rounded-lg border border-dashed border-app-controlBorder px-5 py-10 text-center">
             <p className="mb-4 text-sm text-slate-400">
               No {componentMeta[activeType].pluralLabel.toLowerCase()} saved
               yet.
