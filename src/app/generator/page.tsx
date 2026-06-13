@@ -89,6 +89,10 @@ function GeneratorContent() {
     })
   }, [activeSection])
 
+  const closeComponents = useCallback(() => {
+    setComponentsOpen(false)
+  }, [])
+
   useEffect(() => {
     setAgentResumeId(resumeId)
   }, [resumeId, setAgentResumeId])
@@ -134,7 +138,11 @@ function GeneratorContent() {
           )}
 
           <div className="rounded-app-panel border border-app-border bg-app-surface">
-            <Form activeSection={activeSection} formId="resume-form-mobile" />
+            <Form
+              activeSection={activeSection}
+              formId="resume-form-mobile"
+              onMake={closeComponents}
+            />
           </div>
 
           <div className="flex justify-center">
@@ -177,7 +185,11 @@ function GeneratorContent() {
           </div>
 
           <div className="rounded-app-panel border border-app-border bg-app-surface xl:overflow-hidden">
-            <Form activeSection={activeSection} formId="resume-form-desktop" />
+            <Form
+              activeSection={activeSection}
+              formId="resume-form-desktop"
+              onMake={closeComponents}
+            />
           </div>
 
           <div className="flex min-h-0 flex-col rounded-app-panel border border-app-border bg-app-surface">

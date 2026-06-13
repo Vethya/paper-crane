@@ -115,12 +115,14 @@ interface FormProps {
   className?: string
   activeSection?: string
   formId?: string
+  onMake?: () => void
 }
 
 export function Form({
   className,
   activeSection = 'basics',
-  formId = 'resume-form'
+  formId = 'resume-form',
+  onMake
 }: FormProps) {
   const searchParams = useSearchParams()
   const currSection = activeSection
@@ -217,12 +219,14 @@ export function Form({
   }, [setFormSetValue, formContext.setValue])
 
   const handleFormSubmit = useCallback(async () => {
+    onMake?.()
+
     const formValues = structuredClone(formContext.getValues())
     applyPendingEdits(formValues, pendingEdits)
     stripAgentMarkers(formValues)
 
     await generateAndSetResume(formValues)
-  }, [formContext, generateAndSetResume, pendingEdits])
+  }, [formContext, generateAndSetResume, onMake, pendingEdits])
 
   return (
     <FormProvider {...formContext}>
