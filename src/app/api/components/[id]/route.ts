@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import mongoose from 'mongoose'
 import { auth } from '@/lib/auth'
 import { connectDB } from '@/db'
 import { ResumeComponent } from '@/db/models/resumeComponent'
@@ -18,6 +19,10 @@ export async function PATCH(
   }
 
   const { id } = await params
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
+  }
+
   const { type, content } = await request.json()
 
   await connectDB()
@@ -77,6 +82,10 @@ export async function DELETE(
   }
 
   const { id } = await params
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
+  }
+
   await connectDB()
 
   const component = await ResumeComponent.findOneAndDelete({
