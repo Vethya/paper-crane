@@ -1,4 +1,4 @@
-import { DragEvent, ReactNode } from 'react'
+import { DragEvent, ReactNode, useRef } from 'react'
 import {
   ChevronDown,
   ChevronUp,
@@ -40,6 +40,7 @@ export function CollapsibleFormItem({
   summary
 }: CollapsibleFormItemProps) {
   const Icon = isExpanded ? ChevronUp : ChevronDown
+  const headerRef = useRef<HTMLDivElement>(null)
 
   return (
     <div
@@ -50,12 +51,25 @@ export function CollapsibleFormItem({
         )
       )}
     >
-      <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto_auto_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-app-control sm:px-3">
+      <div
+        ref={headerRef}
+        className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto_auto_auto_auto] items-center gap-2 px-1.5 py-3 transition hover:bg-app-control sm:px-3"
+      >
         {onDragStart ? (
           <button
             type="button"
             draggable
-            onDragStart={onDragStart}
+            onDragStart={(event) => {
+              if (headerRef.current) {
+                const rect = headerRef.current.getBoundingClientRect()
+                event.dataTransfer.setDragImage(
+                  headerRef.current,
+                  event.clientX - rect.left,
+                  event.clientY - rect.top
+                )
+              }
+              onDragStart?.(event)
+            }}
             aria-label="Drag to reorder"
             className="flex h-8 w-8 shrink-0 cursor-grab items-center justify-center rounded border border-transparent text-slate-400 transition hover:border-app-controlBorder hover:bg-app-controlHover hover:text-white active:cursor-grabbing"
           >
