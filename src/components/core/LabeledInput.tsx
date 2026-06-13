@@ -21,6 +21,7 @@ interface Props {
   className?: string
   multiline?: boolean
   textareaRows?: number
+  invalid?: boolean
 }
 
 export function LabeledInput({
@@ -28,6 +29,7 @@ export function LabeledInput({
   className,
   multiline = false,
   textareaRows,
+  invalid = false,
   type,
   ...inputProps
 }: Props) {
@@ -82,6 +84,8 @@ export function LabeledInput({
       <div
         className={clsx(
           'rounded transition-shadow',
+          invalid &&
+            'ring-1 ring-red-400/80 shadow-[0_0_0_3px_rgba(248,113,113,0.14)]',
           fieldEdit && 'review-field-highlight'
         )}
       >

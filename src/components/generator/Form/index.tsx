@@ -115,24 +115,51 @@ interface FormProps {
   className?: string
   activeSection?: string
   formId?: string
+  onMake?: () => void
+  controlsExternalUpdates?: boolean
 }
 
 export function Form({
   className,
   activeSection = 'basics',
-  formId = 'resume-form'
+  formId = 'resume-form',
+  onMake,
+  controlsExternalUpdates = true
 }: FormProps) {
   const searchParams = useSearchParams()
   const currSection = activeSection
   const resumeId = searchParams.get('id')
 
-  const [resume, setResume] = useAtom(resumeAtom)
+  const [, setResume] = useAtom(resumeAtom)
   const [, setFormData] = useAtom(formDataAtom)
   const [, setResumeTags] = useAtom(resumeTagsAtom)
   const [isLoadingResume, setIsLoadingResume] = useAtom(isLoadingResumeAtom)
   const setFormSetValue = useSetAtom(formSetValueAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
+
+  const generateAndSetResume = useCallback(
+    async (
+      formValues: FormValues,
+      shouldCommit: () => boolean = () => true
+    ) => {
+      setResume((current) => ({ ...current, isError: false, isLoading: true }))
+      try {
+        const newResumeUrl = await generateResume(formValues)
+        if (!shouldCommit()) return
+        setResume({ url: newResumeUrl, isError: false, isLoading: false })
+      } catch (error) {
+        if (!shouldCommit()) return
+        console.error(error)
+        setResume((current) => ({
+          ...current,
+          isError: true,
+          isLoading: false
+        }))
+      }
+    },
+    [setResume]
+  )
 
   useEffect(() => {
     let cancelled = false
@@ -149,6 +176,7 @@ export function Form({
           formContext.reset(content)
           setFormData(content)
           setResumeTags(data.tags ?? [])
+          void generateAndSetResume(content, () => !cancelled)
         } finally {
           if (!cancelled) setIsLoadingResume(false)
         }
@@ -177,28 +205,31 @@ export function Form({
       cancelled = true
       subscription.unsubscribe()
     }
-  }, [resumeId, formContext, setFormData, setResumeTags, setIsLoadingResume])
+  }, [
+    resumeId,
+    formContext,
+    setFormData,
+    setResumeTags,
+    setIsLoadingResume,
+    generateAndSetResume
+  ])
 
   // Register setValue so the agent edit system can apply / restore values from outside the form
   useEffect(() => {
+    if (!controlsExternalUpdates) return
     setFormSetValue(() => formContext.setValue)
     return () => setFormSetValue(null)
-  }, [setFormSetValue, formContext.setValue])
+  }, [controlsExternalUpdates, setFormSetValue, formContext.setValue])
 
   const handleFormSubmit = useCallback(async () => {
+    onMake?.()
+
     const formValues = structuredClone(formContext.getValues())
     applyPendingEdits(formValues, pendingEdits)
     stripAgentMarkers(formValues)
 
-    setResume({ ...resume, isLoading: true })
-    try {
-      const newResumeUrl = await generateResume(formValues)
-      setResume({ ...resume, url: newResumeUrl, isLoading: false })
-    } catch (error) {
-      console.error(error)
-      setResume({ ...resume, isError: true, isLoading: false })
-    }
-  }, [formContext, resume, setResume, pendingEdits])
+    await generateAndSetResume(formValues)
+  }, [formContext, generateAndSetResume, onMake, pendingEdits])
 
   return (
     <FormProvider {...formContext}>

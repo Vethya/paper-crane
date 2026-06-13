@@ -3,6 +3,7 @@
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useAtomValue } from 'jotai'
+import { Blocks } from 'lucide-react'
 import { PrimaryButton } from '../core/Button'
 import { isLoadingResumeAtom } from '@/atoms/resume'
 
@@ -18,13 +19,19 @@ export const sectionLinks = [
 
 interface SidebarProps {
   activeSection: string
+  componentsOpen?: boolean
+  onComponentsToggle?: () => void
   onSectionChange: (section: string) => void
+  showComponents?: boolean
   formId?: string
 }
 
 export function Sidebar({
   activeSection,
+  componentsOpen = false,
+  onComponentsToggle,
   onSectionChange,
+  showComponents = false,
   formId = 'resume-form'
 }: SidebarProps) {
   const isLoadingResume = useAtomValue(isLoadingResumeAtom)
@@ -50,6 +57,24 @@ export function Sidebar({
           </button>
         ))}
       </nav>
+
+      {showComponents && (
+        <button
+          type="button"
+          onClick={onComponentsToggle}
+          className={twMerge(
+            clsx(
+              'mb-3 flex w-full min-w-0 items-center justify-center gap-2 rounded-app-button border px-3 py-2 text-sm font-medium transition-colors',
+              componentsOpen
+                ? 'border-white/35 bg-white/[0.18] text-white'
+                : 'border-app-controlBorder bg-app-control text-slate-200 hover:bg-app-controlHover hover:text-white'
+            )
+          )}
+        >
+          <Blocks className="h-4 w-4" />
+          Components
+        </button>
+      )}
 
       <PrimaryButton
         form={formId}

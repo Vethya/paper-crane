@@ -1,4 +1,6 @@
-export { Resume } from "./resume";
-export type { IResume } from "./resume";
-export { AgentSession } from "./agentSession";
-export type { IAgentSession, IAgentSessionMessage } from "./agentSession";
+export { Resume } from './resume'
+export type { IResume } from './resume'
+export { ResumeComponent } from './resumeComponent'
+export type { IResumeComponent } from './resumeComponent'
+export { AgentSession } from './agentSession'
+export type { IAgentSession, IAgentSessionMessage } from './agentSession'
