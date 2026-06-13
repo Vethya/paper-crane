@@ -37,9 +37,6 @@ export function ComponentsPanel({
   const [componentsByType, setComponentsByType] = useState<
     Partial<Record<ResumeComponentType, ResumeComponent[]>>
   >({})
-  const [loadedTypes, setLoadedTypes] = useState<Set<ResumeComponentType>>(
-    () => new Set()
-  )
   const [loading, setLoading] = useState(false)
   const [query, setQuery] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
@@ -51,17 +48,23 @@ export function ComponentsPanel({
   const setFocusRequest = useSetAtom(componentInsertFocusAtom)
   const changeFormSection = useAtomValue(activeSectionSetterAtom)
 
-  const loadComponents = useCallback(async (type: ResumeComponentType) => {
+  const loadComponents = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await fetch(`/api/components?type=${type}`)
+      const res = await fetch('/api/components')
       if (!res.ok) throw new Error('Failed to load components')
       const nextComponents = (await res.json()) as ResumeComponent[]
-      setComponentsByType((current) => ({
-        ...current,
-        [type]: nextComponents
-      }))
-      setLoadedTypes((current) => new Set(current).add(type))
+      setComponentsByType(
+        componentTypes.reduce(
+          (acc, type) => {
+            acc[type] = nextComponents.filter(
+              (component) => component.type === type
+            )
+            return acc
+          },
+          {} as Record<ResumeComponentType, ResumeComponent[]>
+        )
+      )
     } catch {
       toast.error('Unable to load components.')
     } finally {
@@ -70,8 +73,14 @@ export function ComponentsPanel({
   }, [])
 
   useEffect(() => {
-    if (!loadedTypes.has(activeType)) loadComponents(activeType)
-  }, [activeType, loadedTypes, loadComponents])
+    loadComponents()
+  }, [loadComponents])
+
+  useEffect(() => {
+    if (!highlightedId) return
+    const timeout = window.setTimeout(() => setHighlightedId(null), 3000)
+    return () => window.clearTimeout(timeout)
+  }, [highlightedId])
 
   const counts = useMemo(() => {
     return Object.fromEntries(
@@ -115,7 +124,7 @@ export function ComponentsPanel({
       throw new Error(data?.error ?? 'Unable to save component')
     }
 
-    await loadComponents(activeType)
+    await loadComponents()
     setHighlightedId(data?._id)
     toast.success('Component created.')
   }
@@ -147,7 +156,7 @@ export function ComponentsPanel({
     if (res.status === 409) {
       setHighlightedId(body?.duplicateId)
       onActiveTypeChange(data.type)
-      await loadComponents(data.type)
+      await loadComponents()
       toast.error('That component is already saved.')
       return
     }
@@ -156,7 +165,7 @@ export function ComponentsPanel({
       return
     }
 
-    await loadComponents(data.type)
+    await loadComponents()
     setHighlightedId(body?._id)
     onActiveTypeChange(data.type)
     toast.success('Form item saved as component.')
@@ -181,7 +190,7 @@ export function ComponentsPanel({
         </button>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+      <div className="shrink-0 space-y-4 border-b border-app-border p-5">
         <div className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {componentTypes.map((type) => (
             <button
@@ -252,7 +261,9 @@ export function ComponentsPanel({
           Open full Components Library
           <ExternalLink className="h-3.5 w-3.5" />
         </Link>
+      </div>
 
+      <div className="min-h-0 flex-1 overflow-y-auto p-5">
         {loading && (
           <div className="space-y-3">
             {Array.from({ length: 3 }).map((_, index) => (
