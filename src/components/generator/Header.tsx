@@ -1,11 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { FiChevronDown } from 'react-icons/fi'
 import { FileText, LogOut, Moon, Sun } from 'lucide-react'
 import { Logo } from '../core/Logo'
+import { LibraryNav } from '../library/LibraryNav'
 import { authClient } from '@/db/auth-client'
 import { useAtomValue } from 'jotai'
 import { formDataAtom } from '@/atoms/formData'
@@ -40,6 +41,7 @@ interface HeaderProps {
 export function Header({ className, showTags = true }: HeaderProps) {
   const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const [theme, setTheme] = useState<ThemeMode>('dark')
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false)
@@ -77,6 +79,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
   }
 
   const user = session?.user
+  const showLibraryNav = pathname === '/resumes' || pathname === '/components'
   const initials = user?.name
     ? user.name
         .split(' ')
@@ -90,7 +93,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
     <header
       className={twMerge(
         clsx(
-          'w-full h-16 flex justify-between items-center border-b px-6',
+          'relative w-full h-16 flex justify-between items-center border-b px-6',
           className
         )
       )}
@@ -98,6 +101,10 @@ export function Header({ className, showTags = true }: HeaderProps) {
       <Link href={session ? '/resumes' : '/'}>
         <Logo />
       </Link>
+
+      {showLibraryNav && (
+        <LibraryNav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:flex" />
+      )}
 
       <div className="flex items-center gap-3">
         {resumeId && showTags && <TagPicker />}

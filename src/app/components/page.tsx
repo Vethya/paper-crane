@@ -6,7 +6,6 @@ import { FiPlus, FiSearch } from 'react-icons/fi'
 import { toast } from '@/components/ui/sonner'
 import { authClient } from '@/db/auth-client'
 import { Header } from '@/components/generator/Header'
-import { LibraryNav } from '@/components/library/LibraryNav'
 import { ComponentCard } from '@/components/resume-components/ComponentCard'
 import { ComponentDetailsDialog } from '@/components/resume-components/ComponentDetailsDialog'
 import { ComponentEditorDialog } from '@/components/resume-components/ComponentEditorDialog'
@@ -161,8 +160,6 @@ function ComponentsContent() {
       />
 
       <main className="relative z-10 mx-auto max-w-5xl px-6 py-12">
-        <LibraryNav />
-
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-white">Components</h1>

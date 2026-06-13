@@ -3,17 +3,18 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import clsx from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 const links = [
   { href: '/resumes', label: 'Resumes' },
   { href: '/components', label: 'Components' }
 ]
 
-export function LibraryNav() {
+export function LibraryNav({ className }: { className?: string }) {
   const pathname = usePathname()
 
   return (
-    <nav className="mb-8 flex justify-center">
+    <nav className={twMerge('flex justify-center', className)}>
       <div className="inline-flex rounded-app-button border border-app-controlBorder bg-app-control p-1">
         {links.map((link) => {
           const active = pathname === link.href
