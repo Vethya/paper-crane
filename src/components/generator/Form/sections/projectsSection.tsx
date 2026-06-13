@@ -1,4 +1,4 @@
-import { DragEvent, Fragment, HTMLAttributes, useEffect, useState } from 'react'
+import { DragEvent, Fragment, useEffect, useState } from 'react'
 import { useWatch } from 'react-hook-form'
 import { useAtomValue } from 'jotai'
 
@@ -10,6 +10,7 @@ import {
   CollapsibleFormItem,
   CollapsibleFormItemSummary
 } from './CollapsibleFormItem'
+import { FormItemDropZone } from './FormItemDropZone'
 import { useCollapsibleFieldArray } from './useCollapsibleFieldArray'
 import {
   agentPendingEditsAtom,
@@ -82,8 +83,9 @@ export function ProjectsSection() {
 
         return (
           <Fragment key={field.id}>
-            <DropZone
+            <FormItemDropZone
               active={dropIndex === index}
+              size={fields.length === 1 ? 'spacious' : 'normal'}
               onDrop={(event) => {
                 handleDrop(event, index)
                 setDropIndex(null)
@@ -145,8 +147,9 @@ export function ProjectsSection() {
         )
       })}
       {fields.length > 0 && (
-        <DropZone
+        <FormItemDropZone
           active={dropIndex === fields.length}
+          size={fields.length === 1 ? 'spacious' : 'normal'}
           onDrop={(event) => {
             handleDrop(event, fields.length)
             setDropIndex(null)
@@ -161,8 +164,9 @@ export function ProjectsSection() {
         />
       )}
       {fields.length === 0 && (
-        <DropZone
+        <FormItemDropZone
           active={dropIndex === 0}
+          size="empty"
           onDrop={(event) => {
             handleDrop(event, 0)
             setDropIndex(null)
@@ -211,22 +215,6 @@ export function ProjectsSection() {
       data.index < targetIndex ? targetIndex - 1 : targetIndex
     )
   }
-}
-
-function DropZone({
-  active,
-  ...props
-}: {
-  active: boolean
-} & HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      {...props}
-      className={`my-1 h-4 rounded-full transition ${
-        active ? 'bg-emerald-400/80' : 'bg-transparent'
-      }`}
-    />
-  )
 }
 
 function ProjectSummary({ index }: { index: number }) {
