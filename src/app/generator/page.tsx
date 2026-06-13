@@ -59,6 +59,7 @@ function GeneratorContent() {
   const [componentsOpen, setComponentsOpen] = useState(false)
   const [componentsType, setComponentsType] =
     useState<ResumeComponentType>('work')
+  const [isDesktopLayout, setIsDesktopLayout] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
   const resumeId = searchParams.get('id')
   const { data: session, isPending } = authClient.useSession()
@@ -103,6 +104,15 @@ function GeneratorContent() {
   }, [changeActiveSection, setActiveSectionSetter])
 
   useEffect(() => {
+    const mediaQuery = window.matchMedia('(min-width: 1280px)')
+    const updateLayout = () => setIsDesktopLayout(mediaQuery.matches)
+
+    updateLayout()
+    mediaQuery.addEventListener('change', updateLayout)
+    return () => mediaQuery.removeEventListener('change', updateLayout)
+  }, [])
+
+  useEffect(() => {
     setActiveSection(urlSection)
   }, [urlSection])
 
@@ -142,6 +152,7 @@ function GeneratorContent() {
               activeSection={activeSection}
               formId="resume-form-mobile"
               onMake={closeComponents}
+              controlsExternalUpdates={!isDesktopLayout}
             />
           </div>
 
@@ -189,6 +200,7 @@ function GeneratorContent() {
               activeSection={activeSection}
               formId="resume-form-desktop"
               onMake={closeComponents}
+              controlsExternalUpdates={isDesktopLayout}
             />
           </div>
 

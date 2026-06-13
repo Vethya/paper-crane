@@ -116,13 +116,15 @@ interface FormProps {
   activeSection?: string
   formId?: string
   onMake?: () => void
+  controlsExternalUpdates?: boolean
 }
 
 export function Form({
   className,
   activeSection = 'basics',
   formId = 'resume-form',
-  onMake
+  onMake,
+  controlsExternalUpdates = true
 }: FormProps) {
   const searchParams = useSearchParams()
   const currSection = activeSection
@@ -214,9 +216,10 @@ export function Form({
 
   // Register setValue so the agent edit system can apply / restore values from outside the form
   useEffect(() => {
+    if (!controlsExternalUpdates) return
     setFormSetValue(() => formContext.setValue)
     return () => setFormSetValue(null)
-  }, [setFormSetValue, formContext.setValue])
+  }, [controlsExternalUpdates, setFormSetValue, formContext.setValue])
 
   const handleFormSubmit = useCallback(async () => {
     onMake?.()
