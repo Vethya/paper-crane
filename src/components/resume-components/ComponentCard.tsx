@@ -1,6 +1,6 @@
 'use client'
 
-import { MouseEvent, useRef } from 'react'
+import { KeyboardEvent, MouseEvent, useRef } from 'react'
 import { Edit2, GripVertical, Plus, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 import {
@@ -43,10 +43,18 @@ export function ComponentCard({
   return (
     <article
       draggable={draggable}
+      role="button"
+      tabIndex={0}
+      aria-label={`Open ${title}`}
       onPointerDown={(event) => {
         pointer.current = { x: event.clientX, y: event.clientY }
       }}
       onClick={(event) => {
+        if (event.detail === 0) {
+          onOpen(component)
+          return
+        }
+
         const start = pointer.current
         if (start) {
           const moved =
@@ -54,6 +62,11 @@ export function ComponentCard({
             Math.abs(event.clientY - start.y)
           if (moved > 8) return
         }
+        onOpen(component)
+      }}
+      onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+        if (event.key !== 'Enter' && event.key !== ' ') return
+        event.preventDefault()
         onOpen(component)
       }}
       onDragStart={(event) => {

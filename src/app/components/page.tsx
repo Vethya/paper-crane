@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useMemo, useState } from 'react'
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { FiPlus, FiSearch } from 'react-icons/fi'
 import { toast } from '@/components/ui/sonner'
@@ -66,12 +66,7 @@ function ComponentsContent() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }, [activeType, pathname, router, searchParams])
 
-  useEffect(() => {
-    if (!session) return
-    loadComponents()
-  }, [session])
-
-  async function loadComponents() {
+  const loadComponents = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -83,7 +78,12 @@ function ComponentsContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!session) return
+    loadComponents()
+  }, [session, loadComponents])
 
   const counts = useMemo(() => {
     return Object.fromEntries(

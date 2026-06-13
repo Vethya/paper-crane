@@ -105,9 +105,9 @@ function ComponentReadOnlyFields({
           </div>
           {Array.isArray(row.value) ? (
             <div className="mt-2 flex flex-wrap gap-2">
-              {row.value.map((value) => (
+              {row.value.map((value, index) => (
                 <span
-                  key={value}
+                  key={`${value}-${index}`}
                   className="rounded-md border border-app-controlBorder bg-app-surface px-2.5 py-1 text-xs text-slate-200"
                 >
                   {value}
