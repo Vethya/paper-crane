@@ -16,6 +16,7 @@ import {
   componentMeta,
   componentTypes,
   getRequiredValue,
+  isComponentType,
   type ResumeComponent,
   type ResumeComponentContent,
   type ResumeComponentType
@@ -135,10 +136,25 @@ export function ComponentsPanel({
     const raw = event.dataTransfer.getData('application/x-resume-form-item')
     if (!raw) return
 
-    const data = JSON.parse(raw) as {
+    let data: {
       type: ResumeComponentType
       content: ResumeComponentContent
     }
+    try {
+      const parsed = JSON.parse(raw) as {
+        type?: unknown
+        content?: unknown
+      }
+      if (!isComponentType(parsed.type)) return
+      data = {
+        type: parsed.type,
+        content: parsed.content as ResumeComponentContent
+      }
+    } catch {
+      toast.error('Unable to read dropped item.')
+      return
+    }
+
     if (!getRequiredValue(data.type, data.content as Record<string, unknown>)) {
       toast.error(
         `${componentMeta[data.type].label} needs ${componentMeta[data.type].requiredFieldLabel} before saving.`
@@ -240,7 +256,7 @@ export function ComponentsPanel({
                 )
               ) {
                 event.preventDefault()
-                setDropActive(true)
+                setDropActive((active) => (active ? active : true))
               }
             }}
             className={`rounded-app-card border border-dashed px-4 py-4 text-center text-sm transition ${

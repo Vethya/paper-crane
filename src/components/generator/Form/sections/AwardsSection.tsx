@@ -1,6 +1,6 @@
 import { DragEvent, Fragment, useEffect, useState } from 'react'
 import { useWatch } from 'react-hook-form'
-import { useAtomValue } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 
 import { ComponentItemFields } from '@/components/resume-components/ComponentItemFields'
 import { FormSection } from './FormSection'
@@ -35,14 +35,16 @@ export function AwardSection() {
   } = useCollapsibleFieldArray('awards')
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const focusRequest = useAtomValue(componentInsertFocusAtom)
+  const setFocusRequest = useSetAtom(componentInsertFocusAtom)
   const [dropIndex, setDropIndex] = useState<number | null>(null)
   const items = useWatch({ name: 'awards' }) as Award[] | undefined
 
   useEffect(() => {
     if (focusRequest?.type === 'awards') {
       setExpandedIndex(focusRequest.index)
+      setFocusRequest(null)
     }
-  }, [focusRequest, setExpandedIndex])
+  }, [focusRequest, setExpandedIndex, setFocusRequest])
 
   const handleAdd = () => {
     const defaultAward: Award = {
@@ -94,7 +96,9 @@ export function AwardSection() {
               onDragOver={(event) => {
                 if (acceptsDrop(event)) {
                   event.preventDefault()
-                  setDropIndex(index)
+                  setDropIndex((current) =>
+                    current === index ? current : index
+                  )
                 }
               }}
             />
@@ -158,7 +162,9 @@ export function AwardSection() {
           onDragOver={(event) => {
             if (acceptsDrop(event)) {
               event.preventDefault()
-              setDropIndex(fields.length)
+              setDropIndex((current) =>
+                current === fields.length ? current : fields.length
+              )
             }
           }}
         />
@@ -175,7 +181,7 @@ export function AwardSection() {
           onDragOver={(event) => {
             if (acceptsDrop(event)) {
               event.preventDefault()
-              setDropIndex(0)
+              setDropIndex((current) => (current === 0 ? current : 0))
             }
           }}
         />
@@ -199,8 +205,15 @@ export function AwardSection() {
       'application/x-resume-component'
     )
     if (component) {
-      const data = JSON.parse(component)
-      if (data.type === 'awards') insertAndExpand(targetIndex, data.content)
+      let data: { type?: unknown; content?: unknown }
+      try {
+        data = JSON.parse(component)
+      } catch {
+        return
+      }
+      if (data.type === 'awards') {
+        insertAndExpand(targetIndex, data.content as Award)
+      }
       return
     }
 
@@ -208,8 +221,19 @@ export function AwardSection() {
       'application/x-resume-form-item'
     )
     if (!formItem) return
-    const data = JSON.parse(formItem)
-    if (data.type !== 'awards' || data.index === targetIndex) return
+    let data: { type?: unknown; index?: unknown }
+    try {
+      data = JSON.parse(formItem)
+    } catch {
+      return
+    }
+    if (
+      data.type !== 'awards' ||
+      typeof data.index !== 'number' ||
+      data.index === targetIndex
+    ) {
+      return
+    }
     moveAndPreserveExpanded(
       data.index,
       data.index < targetIndex ? targetIndex - 1 : targetIndex
