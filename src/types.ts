@@ -98,6 +98,9 @@ export type LaTeXOpts = {
   cmd: 'pdflatex' | 'xelatex'
   inputs?: string[]
   fonts?: string[]
+  // Siglum bundles for packages the template loads indirectly. Without them
+  // Siglum discovers each one with a full recompile.
+  bundles?: string[]
 }
 
 export type TemplateData = {
