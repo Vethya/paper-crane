@@ -239,6 +239,7 @@ export function Form({
         )}
         data-resume-form
         id={formId}
+        method="post"
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
         {isLoadingResume ? (
