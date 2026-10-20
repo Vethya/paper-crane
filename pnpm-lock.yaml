@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  '@siglum/engine@0.1.4':
+    hash: 403ea9a8bbf3ef8828aba89b321b61caf9e0f3a448056939133ad3bad2282662
+    path: patches/@siglum__engine@0.1.4.patch
+
 importers:
 
   .:
@@ -23,6 +28,9 @@ importers:
       '@radix-ui/react-slot':
         specifier: ^1.2.4
         version: 1.2.4(@types/react@19.1.12)(react@19.1.1)
+      '@siglum/engine':
+        specifier: 0.1.4
+        version: 0.1.4(patch_hash=403ea9a8bbf3ef8828aba89b321b61caf9e0f3a448056939133ad3bad2282662)
       ai:
         specifier: ^6.0.141
         version: 6.0.141(zod@4.3.6)
@@ -1041,6 +1049,12 @@ packages:
   '@rushstack/eslint-patch@1.12.0':
     resolution: {integrity: sha512-5EwMtOqvJMMa3HbmxLlF74e+3/HhwBTMcvt3nqVJgGCozO6hzIPOBlwm8mGVNR9SN2IJpxSnlxczyDjcn7qIyw==}
 
+  '@siglum/engine@0.1.4':
+    resolution: {integrity: sha512-m7RvhdTie64VWY727Yhz20PUMXTnRLiNkE2Z24hkXkNdX+k5m86krhB/LQXcqyH7C1plWl5vM1mxkiHPuCwXSQ==}
+
+  '@siglum/filesystem@0.2.1':
+    resolution: {integrity: sha512-c06BUHuURbYgUl71lJKeYXViofNDzxiGYeugGSna42NA5h40WAuBZK3j1ArGWzwhXHk8AJ6xsuk55uhE4biW3w==}
+
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
@@ -1516,6 +1530,9 @@ packages:
 
   bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
+
+  blake3-wasm@2.1.5:
+    resolution: {integrity: sha512-F1+K8EbfOZE49dtoPtmxUQrpXaBIl3ICvasLh+nJta0xkz+9kF/7uet9fLnwKqhDrmj6g+6K3Tw9yQPUg2ka5g==}
 
   brace-expansion@1.1.12:
     resolution: {integrity: sha512-9T9UjW3r0UW5c1Q7GTwllptXwhvYmEzFhzMfZ9H7FQWt+uZePjZPjBP/W1ZEyZ1twGWom5/56TF4lPcqjnDHcg==}
@@ -3979,6 +3996,9 @@ packages:
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
 
+  xzwasm@0.1.2:
+    resolution: {integrity: sha512-AhkIQcyCRTKQAlI+ENhQBB52AUZF7puNmNleawbpyGAzEyflbMbwIKlU5yN99cgiv5XVlXt0mIeYgQrdQghdsA==}
+
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
@@ -4886,6 +4906,14 @@ snapshots:
 
   '@rushstack/eslint-patch@1.12.0': {}
 
+  '@siglum/engine@0.1.4(patch_hash=403ea9a8bbf3ef8828aba89b321b61caf9e0f3a448056939133ad3bad2282662)':
+    dependencies:
+      '@siglum/filesystem': 0.2.1
+      blake3-wasm: 2.1.5
+      xzwasm: 0.1.2
+
+  '@siglum/filesystem@0.2.1': {}
+
   '@standard-schema/spec@1.1.0': {}
 
   '@swc/helpers@0.5.15':
@@ -5359,6 +5387,8 @@ snapshots:
       inherits: 2.0.4
       readable-stream: 3.6.2
     optional: true
+
+  blake3-wasm@2.1.5: {}
 
   brace-expansion@1.1.12:
     dependencies:
@@ -8275,6 +8305,8 @@ snapshots:
       strip-ansi: 7.1.0
 
   wrappy@1.0.2: {}
+
+  xzwasm@0.1.2: {}
 
   yallist@3.1.1:
     optional: true

@@ -1,23 +1,87 @@
 import { LaTeXOpts } from '../types'
-import { clientEnv } from '@/env.client'
+
+const SIGLUM_BASE_URL = 'https://cdn.siglum.org/tl2025'
+
+type SiglumCompiler = import('@siglum/engine').SiglumCompiler
+
+let compilerPromise: Promise<SiglumCompiler> | null = null
+
+function getCompiler(): Promise<SiglumCompiler> {
+  if (!compilerPromise) {
+    compilerPromise = import('@siglum/engine')
+      .then(({ SiglumCompiler }) => {
+        const compiler = new SiglumCompiler({
+          bundlesUrl: `${SIGLUM_BASE_URL}/bundles`,
+          wasmUrl: `${SIGLUM_BASE_URL}/busytex.wasm`,
+          jsUrl: `${SIGLUM_BASE_URL}/busytex.js`,
+          workerUrl: '/siglum-worker.js',
+          enableCtan: false,
+          enableLazyFS: true,
+          enableDocCache: true
+        })
+
+        return compiler.init().then(() => compiler)
+      })
+      .catch((error) => {
+        compilerPromise = null
+        throw error
+      })
+  }
+
+  return compilerPromise
+}
 
 export default async function latex(
   texDoc: string,
   opts: LaTeXOpts
 ): Promise<string> {
-  const apiUrl = clientEnv.NEXT_PUBLIC_LATEX_API_URL
+  const compiler = await getCompiler()
+  const additionalFiles = await resolveAssets(opts)
 
-  const res = await fetch(`${apiUrl}/compile`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ texDoc, opts })
+  const result = await compiler.compile(texDoc, {
+    engine: opts.cmd,
+    additionalFiles
   })
 
-  if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`LaTeX compilation failed: ${err}`)
+  if (!result.success || !result.pdf) {
+    const details = result.error || result.log || 'Unknown compilation error'
+    throw new Error(`LaTeX compilation failed: ${details}`)
   }
 
-  const blob = await res.blob()
-  return URL.createObjectURL(blob)
+  const pdf = new Uint8Array(new ArrayBuffer(result.pdf.byteLength))
+  pdf.set(result.pdf)
+
+  return URL.createObjectURL(
+    new Blob([pdf.buffer], { type: 'application/pdf' })
+  )
+}
+
+async function resolveAssets(
+  opts: LaTeXOpts
+): Promise<Record<string, Uint8Array>> {
+  const additionalFiles: Record<string, Uint8Array> = {}
+
+  for (const assetPath of opts.inputs || []) {
+    additionalFiles[basename(assetPath)] = await fetchAsset(assetPath)
+  }
+
+  for (const assetPath of opts.fonts || []) {
+    additionalFiles[`fonts/${basename(assetPath)}`] =
+      await fetchAsset(assetPath)
+  }
+
+  return additionalFiles
+}
+
+async function fetchAsset(assetPath: string): Promise<Uint8Array> {
+  const response = await fetch(assetPath)
+  if (!response.ok) {
+    throw new Error(`Failed to load LaTeX asset: ${assetPath}`)
+  }
+
+  return new Uint8Array(await response.arrayBuffer())
+}
+
+function basename(assetPath: string): string {
+  return assetPath.split('/').pop() || assetPath
 }
