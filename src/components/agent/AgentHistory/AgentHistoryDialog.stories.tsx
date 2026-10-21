@@ -12,7 +12,9 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const Empty: Story = {}
-export const Loading: Story = { parameters: { apiLoading: true } }
+export const Loading: Story = {
+  parameters: { apiLoading: true, a11y: { test: 'error' } }
+}
 export const Error: Story = { parameters: { apiError: true } }
 export const Populated: Story = {
   parameters: {
