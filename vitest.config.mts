@@ -7,6 +7,15 @@ export default defineConfig({
     projects: [
       {
         plugins: [storybookTest({ configDir: '.storybook' })],
+        optimizeDeps: {
+          include: [
+            'next/link',
+            'next/navigation',
+            'react-hook-form',
+            'react-icons/fi',
+            'zod'
+          ]
+        },
         test: {
           name: 'storybook',
           browser: {
