@@ -58,6 +58,9 @@ async function compileLatex(texDoc: string, opts: LaTeXOpts): Promise<string> {
   const additionalFiles = await resolveAssets(opts)
 
   compiler.eagerBundles = opts.bundles ?? []
+  await Promise.all(
+    (opts.packages ?? []).map((name) => compiler.ctanFetcher.fetchPackage(name))
+  )
   unavailablePackage = null
   const result = await compiler.compile(texDoc, {
     engine: opts.cmd,
