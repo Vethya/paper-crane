@@ -24,3 +24,12 @@ export const resume = {
   sections: ['profile', 'work', 'skills'],
   selectedTemplate: 1
 } satisfies FormValues
+
+export const fullResume: FormValues = {
+  ...resume,
+  education: [{ institution: 'MIT', area: 'Computer Science' }],
+  awards: [{ title: 'Engineering Impact Award', date: '2024' }],
+  projects: [
+    { name: 'Design system', description: 'Accessible React components' }
+  ]
+}
