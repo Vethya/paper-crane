@@ -295,6 +295,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         opts: {
           cmd: 'pdflatex',
           bundles: ['xcolor', 'utils', 'typography', 'tex-generic'],
+          packages: ['marvosym'],
           inputs: [
             '/templates/template7/collection.sty',
             '/templates/template7/moderncv.cls',
