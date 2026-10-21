@@ -18,7 +18,7 @@ export async function GET(
 
   const agentSession = await AgentSession.findOne({
     _id: id,
-    userId: session.user.id,
+    userId: session.user.id
   }).lean()
 
   if (!agentSession) {

@@ -1,15 +1,16 @@
-import { NextRequest, NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
-import { connectDB } from "@/db"
-import { Tag } from "@/db/models/tag"
-import { Resume } from "@/db/models/resume"
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
+import { connectDB } from '@/db'
+import { Tag } from '@/db/models/tag'
+import { Resume } from '@/db/models/resume'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({ headers: request.headers })
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!session)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const { name, color } = await request.json()
@@ -17,7 +18,7 @@ export async function PATCH(
   const mongoose = await connectDB()
 
   const tag = await Tag.findOne({ _id: id, userId: session.user.id })
-  if (!tag) return NextResponse.json({ error: "Not found" }, { status: 404 })
+  if (!tag) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const oldName = tag.name
 
@@ -33,7 +34,7 @@ export async function PATCH(
     if (name !== undefined && name.trim() !== oldName) {
       await Resume.updateMany(
         { userId: session.user.id, tags: oldName },
-        { $set: { "tags.$": name.trim() } },
+        { $set: { 'tags.$': name.trim() } },
         { session: dbSession }
       )
     }
@@ -54,7 +55,8 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const session = await auth.api.getSession({ headers: request.headers })
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  if (!session)
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { id } = await params
   const mongoose = await connectDB()
@@ -64,10 +66,13 @@ export async function DELETE(
   try {
     dbSession.startTransaction()
 
-    tag = await Tag.findOneAndDelete({ _id: id, userId: session.user.id }, { session: dbSession })
+    tag = await Tag.findOneAndDelete(
+      { _id: id, userId: session.user.id },
+      { session: dbSession }
+    )
     if (!tag) {
       await dbSession.abortTransaction()
-      return NextResponse.json({ error: "Not found" }, { status: 404 })
+      return NextResponse.json({ error: 'Not found' }, { status: 404 })
     }
 
     // Remove the tag name from all resumes
