@@ -13,7 +13,11 @@ export default defineConfig({
             'next/navigation',
             'react-hook-form',
             'react-icons/fi',
-            'zod'
+            'zod',
+            'react-icons/md',
+            'react-markdown',
+            'remark-gfm',
+            'common-tags'
           ]
         },
         test: {
