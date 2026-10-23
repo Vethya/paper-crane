@@ -18,7 +18,10 @@ export async function GET(request: NextRequest) {
 
   await connectDB()
 
-  const resume = await Resume.findOne({ _id: resumeId, userId: session.user.id }).lean()
+  const resume = await Resume.findOne({
+    _id: resumeId,
+    userId: session.user.id
+  }).lean()
   if (!resume) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
@@ -57,12 +60,19 @@ export async function POST(request: NextRequest) {
 
   await connectDB()
 
-  const resume = await Resume.findOne({ _id: resumeId, userId: session.user.id }).lean()
+  const resume = await Resume.findOne({
+    _id: resumeId,
+    userId: session.user.id
+  }).lean()
   if (!resume) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const visibleMessages = messages.map(({ id, role, content }) => ({ id, role, content }))
+  const visibleMessages = messages.map(({ id, role, content }) => ({
+    id,
+    role,
+    content
+  }))
 
   if (sessionId) {
     await AgentSession.updateOne(
@@ -76,7 +86,7 @@ export async function POST(request: NextRequest) {
     resumeId,
     userId: session.user.id,
     mode,
-    messages: visibleMessages,
+    messages: visibleMessages
   })
 
   return NextResponse.json({ sessionId: String(created._id) }, { status: 201 })

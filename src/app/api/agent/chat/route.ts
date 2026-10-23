@@ -21,13 +21,15 @@ export async function POST(request: NextRequest) {
 
   const modelMessages: ModelMessage[] = messages.map(({ role, content }) => ({
     role,
-    content,
+    content
   }))
 
   const result = streamText({
     model: google('gemini-3.1-flash-lite-preview'),
-    system: SYSTEM_PROMPTS[mode as Exclude<AgentMode, 'Tailoring'>] ?? SYSTEM_PROMPTS.Chat,
-    messages: modelMessages,
+    system:
+      SYSTEM_PROMPTS[mode as Exclude<AgentMode, 'Tailoring'>] ??
+      SYSTEM_PROMPTS.Chat,
+    messages: modelMessages
   })
 
   // Use fullStream to detect errors — textStream silently swallows them.
@@ -54,7 +56,7 @@ export async function POST(request: NextRequest) {
     console.error('[agent/chat] Error:', err)
     return NextResponse.json(
       { error: 'Failed to generate response' },
-      { status: 502 },
+      { status: 502 }
     )
   }
 
@@ -79,10 +81,10 @@ export async function POST(request: NextRequest) {
       } finally {
         controller.close()
       }
-    },
+    }
   })
 
   return new Response(stream, {
-    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' }
   })
 }
