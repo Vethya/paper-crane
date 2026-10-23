@@ -46,7 +46,9 @@ async function generateSourceCode(formData: FormValues): Promise<Buffer> {
 
     if (opts.inputs) {
       opts.inputs.forEach((inputPath: string) => {
-        zip.file(`public${inputPath}`, { name: inputPath.replace('/templates/', '') })
+        zip.file(`public${inputPath}`, {
+          name: inputPath.replace('/templates/', '')
+        })
       })
     }
 

@@ -220,8 +220,8 @@ const generator: Omit<Generator, 'resumeHeader'> = {
 
         return stripIndent`
             \\textbf{${title || ''}}, {\\sl ${awarder || ''}} \\hfill ${
-          date || ''
-        } \\\\
+              date || ''
+            } \\\\
             ${summary || ''} \\\\\\\\
         `
       })}

@@ -1,22 +1,22 @@
-import mongoose, { Schema, Document } from "mongoose";
-import type { FormValues } from "@/types";
+import mongoose, { Schema, Document } from 'mongoose'
+import type { FormValues } from '@/types'
 
 export interface IResume extends Document {
-  userId: string;
-  title: string;
-  tags: string[];
-  content: FormValues;
-  templateId: string;
-  createdAt: Date;
-  updatedAt: Date;
+  userId: string
+  title: string
+  tags: string[]
+  content: FormValues
+  templateId: string
+  createdAt: Date
+  updatedAt: Date
 }
 
 const LocationSchema = new Schema(
   {
-    address: String,
+    address: String
   },
   { _id: false }
-);
+)
 
 const BasicsSchema = new Schema(
   {
@@ -24,10 +24,10 @@ const BasicsSchema = new Schema(
     email: String,
     phone: String,
     website: String,
-    location: LocationSchema,
+    location: LocationSchema
   },
   { _id: false }
-);
+)
 
 const WorkSchema = new Schema(
   {
@@ -36,10 +36,10 @@ const WorkSchema = new Schema(
     startDate: String,
     endDate: String,
     location: String,
-    highlights: [String],
+    highlights: [String]
   },
   { _id: false }
-);
+)
 
 const EducationSchema = new Schema(
   {
@@ -49,38 +49,38 @@ const EducationSchema = new Schema(
     startDate: String,
     endDate: String,
     score: String,
-    location: String,
+    location: String
   },
   { _id: false }
-);
+)
 
 const AwardSchema = new Schema(
   {
     title: String,
     date: String,
     awarder: String,
-    summary: String,
+    summary: String
   },
   { _id: false }
-);
+)
 
 const SkillSchema = new Schema(
   {
     name: String,
-    keywords: [String],
+    keywords: [String]
   },
   { _id: false }
-);
+)
 
 const ProjectSchema = new Schema(
   {
     name: String,
     description: String,
     url: String,
-    keywords: [String],
+    keywords: [String]
   },
   { _id: false }
-);
+)
 
 const ContentSchema = new Schema(
   {
@@ -96,13 +96,13 @@ const ContentSchema = new Schema(
       education: String,
       awards: String,
       skills: String,
-      projects: String,
+      projects: String
     },
     sections: { type: [String] },
-    selectedTemplate: { type: Number },
+    selectedTemplate: { type: Number }
   },
   { _id: false }
-);
+)
 
 const ResumeSchema = new Schema<IResume>(
   {
@@ -110,10 +110,10 @@ const ResumeSchema = new Schema<IResume>(
     title: { type: String, required: true },
     tags: { type: [String], default: [] },
     content: { type: ContentSchema, required: true },
-    templateId: { type: String, required: true },
+    templateId: { type: String, required: true }
   },
   { timestamps: true }
-);
+)
 
 export const Resume =
-  mongoose.models.Resume ?? mongoose.model<IResume>("Resume", ResumeSchema);
+  mongoose.models.Resume ?? mongoose.model<IResume>('Resume', ResumeSchema)
