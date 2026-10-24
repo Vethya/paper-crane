@@ -165,13 +165,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
             'hyperref',
             'tex-generic'
           ],
-          packages: [
-            'enumitem',
-            'ragged2e',
-            'xifthen',
-            'setspace',
-            'parskip'
-          ],
+          packages: ['enumitem', 'ragged2e', 'xifthen', 'setspace', 'parskip'],
           inputs: [
             '/templates/template2/awesome-cv.cls',
             '/templates/template2/fontawesome.sty',
@@ -207,7 +201,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template3(data),
         opts: {
           cmd: 'pdflatex',
-          packages: ['enumitem', 'framed', 'tocloft', 'xcolor'],
+          packages: ['enumitem', 'framed', 'tocloft', 'xcolor']
         }
       }
 
@@ -325,7 +319,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template9(data),
         opts: {
           cmd: 'pdflatex',
-          packages: ['sectsty', 'xcolor', 'helvetic'],
+          packages: ['sectsty', 'xcolor', 'helvetic']
         }
       }
 
