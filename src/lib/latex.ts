@@ -5,6 +5,7 @@ const SIGLUM_BASE_URL = 'https://cdn.siglum.org/tl2025'
 type SiglumCompiler = import('@siglum/engine').SiglumCompiler
 
 let compilerPromise: Promise<SiglumCompiler> | null = null
+let compilationQueue: Promise<unknown> = Promise.resolve()
 
 function getCompiler(): Promise<SiglumCompiler> {
   if (!compilerPromise) {
@@ -17,7 +18,7 @@ function getCompiler(): Promise<SiglumCompiler> {
           workerUrl: '/siglum-worker.js',
           enableCtan: false,
           enableLazyFS: true,
-          enableDocCache: true
+          enableDocCache: false // Siglum's PDF cache key excludes template assets.
         })
 
         return compiler.init().then(() => compiler)
@@ -31,10 +32,16 @@ function getCompiler(): Promise<SiglumCompiler> {
   return compilerPromise
 }
 
-export default async function latex(
+export default function latex(
   texDoc: string,
   opts: LaTeXOpts
 ): Promise<string> {
+  const compilation = compilationQueue.then(() => compileLatex(texDoc, opts))
+  compilationQueue = compilation.catch(() => {})
+  return compilation
+}
+
+async function compileLatex(texDoc: string, opts: LaTeXOpts): Promise<string> {
   const compiler = await getCompiler()
   const additionalFiles = await resolveAssets(opts)
 
