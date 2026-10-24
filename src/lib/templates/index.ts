@@ -165,6 +165,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
             'hyperref',
             'tex-generic'
           ],
+          packages: ['enumitem', 'ragged2e', 'xifthen', 'setspace', 'parskip'],
           inputs: [
             '/templates/template2/awesome-cv.cls',
             '/templates/template2/fontawesome.sty',
@@ -199,7 +200,8 @@ export default function getTemplateData(data: FormValues): TemplateData {
       return {
         texDoc: template3(data),
         opts: {
-          cmd: 'pdflatex'
+          cmd: 'pdflatex',
+          packages: ['enumitem', 'framed', 'tocloft', 'xcolor']
         }
       }
 
@@ -216,6 +218,14 @@ export default function getTemplateData(data: FormValues): TemplateData {
             'tex-generic',
             'babel',
             'typography'
+          ],
+          packages: [
+            'titlesec',
+            'textpos',
+            'isodate',
+            'xltxtra',
+            'xunicode',
+            'tipa'
           ],
           inputs: ['/templates/template4/deedy-resume-openfont.cls'],
           fonts: [
@@ -238,6 +248,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         opts: {
           cmd: 'xelatex',
           bundles: ['fonts-lm-type1'],
+          packages: ['hyphenat'],
           inputs: [
             '/templates/template5/helvetica.sty',
             '/templates/template5/res.cls'
@@ -251,6 +262,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         opts: {
           cmd: 'xelatex',
           bundles: ['typography', 'utils'],
+          packages: ['koma-script', 'enumitem'],
           inputs: [
             '/templates/template6/custom-command.tex',
             '/templates/template6/minimal-resume-config.tex',
@@ -277,6 +289,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         opts: {
           cmd: 'pdflatex',
           bundles: ['xcolor', 'utils', 'typography', 'tex-generic'],
+          packages: ['marvosym'],
           inputs: [
             '/templates/template7/collection.sty',
             '/templates/template7/moderncv.cls',
@@ -296,6 +309,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         opts: {
           cmd: 'xelatex',
           bundles: ['typography', 'utils'],
+          packages: ['parskip', 'tabu', 'changepage', 'enumitem'],
           inputs: ['/templates/template8/mcdowellcv.cls']
         }
       }
@@ -304,7 +318,8 @@ export default function getTemplateData(data: FormValues): TemplateData {
       return {
         texDoc: template9(data),
         opts: {
-          cmd: 'pdflatex'
+          cmd: 'pdflatex',
+          packages: ['sectsty', 'xcolor', 'helvetic']
         }
       }
 

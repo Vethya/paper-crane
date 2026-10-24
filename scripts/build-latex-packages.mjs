@@ -53,9 +53,10 @@ const REQUIRED_FILES = [
   't3enc.def'
 ]
 
-// Font packages TeX requests by font name (e.g. `phvb7t`), which Siglum can't
-// map to a package. next.config.js rewrites those names to these files.
-const FONT_PACKAGES = ['helvetic']
+// Font packages that no file lookup reaches. TeX requests Helvetica by font
+// name (e.g. `phvb7t`), which next.config.js rewrites to `helvetic`. Template 7
+// selects marvosym's font directly, so it only loads through preloading.
+const FONT_PACKAGES = ['helvetic', 'marvosym']
 
 // Packages where only some files are needed, to skip large font sets.
 // TIPA's encoding is declared by xunicode but its glyphs are never used, so

@@ -6,7 +6,7 @@ settings:
 
 patchedDependencies:
   '@siglum/engine@0.1.4':
-    hash: 403ea9a8bbf3ef8828aba89b321b61caf9e0f3a448056939133ad3bad2282662
+    hash: d20284a0185c6a56fa21652770be0e0ef5efe1e115c4b9031927d2c36279e163
     path: patches/@siglum__engine@0.1.4.patch
 
 importers:
@@ -30,7 +30,7 @@ importers:
         version: 1.2.4(@types/react@19.1.12)(react@19.1.1)
       '@siglum/engine':
         specifier: 0.1.4
-        version: 0.1.4(patch_hash=403ea9a8bbf3ef8828aba89b321b61caf9e0f3a448056939133ad3bad2282662)
+        version: 0.1.4(patch_hash=d20284a0185c6a56fa21652770be0e0ef5efe1e115c4b9031927d2c36279e163)
       ai:
         specifier: ^6.0.141
         version: 6.0.141(zod@4.3.6)
@@ -4906,7 +4906,7 @@ snapshots:
 
   '@rushstack/eslint-patch@1.12.0': {}
 
-  '@siglum/engine@0.1.4(patch_hash=403ea9a8bbf3ef8828aba89b321b61caf9e0f3a448056939133ad3bad2282662)':
+  '@siglum/engine@0.1.4(patch_hash=d20284a0185c6a56fa21652770be0e0ef5efe1e115c4b9031927d2c36279e163)':
     dependencies:
       '@siglum/filesystem': 0.2.1
       blake3-wasm: 2.1.5
