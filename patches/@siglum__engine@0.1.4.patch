@@ -1,0 +1,27 @@
+diff --git a/src/hash.js b/src/hash.js
+index 11a2d13b5a8edcb06345e26936c0ec6b1703e45f..3c234bef3137c8afc3035fc54525e05d4b3000eb 100644
+--- a/src/hash.js
++++ b/src/hash.js
+@@ -30,18 +30,10 @@ function djb2Hash(content) {
+  * @returns {Promise<object>}
+  */
+ async function loadBlake3() {
+-    if (blake3Module) return blake3Module;
+-    if (blake3LoadPromise) return blake3LoadPromise;
+-
+-    blake3LoadPromise = import('blake3-wasm/browser.js').then(module => {
+-        blake3Module = module;
+-        return module;
+-    }).catch(err => {
+-        console.warn('BLAKE3 load failed, using DJB2 fallback:', err.message);
+-        return null;
+-    });
+-
+-    return blake3LoadPromise;
++    // The published browser entry currently references generated files that are
++    // missing from blake3-wasm@2.1.5. Keep Siglum's built-in DJB2 fallback until
++    // that optional dependency ships a complete browser bundle.
++    return null;
+ }
+ 
+ /**
