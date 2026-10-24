@@ -6,6 +6,12 @@ type SiglumCompiler = import('@siglum/engine').SiglumCompiler
 
 let compilerPromise: Promise<SiglumCompiler> | null = null
 let compilationQueue: Promise<unknown> = Promise.resolve()
+let unavailablePackage: string | null = null
+
+function trackUnavailablePackage(message: string) {
+  const match = message.match(/fetch failed for (\S+):/)
+  if (match) unavailablePackage = match[1]
+}
 
 function getCompiler(): Promise<SiglumCompiler> {
   if (!compilerPromise) {
@@ -16,7 +22,13 @@ function getCompiler(): Promise<SiglumCompiler> {
           wasmUrl: `${SIGLUM_BASE_URL}/busytex.wasm`,
           jsUrl: `${SIGLUM_BASE_URL}/busytex.js`,
           workerUrl: '/siglum-worker.js',
-          enableCtan: false,
+          // Static package files built by scripts/build-latex-packages.mjs.
+          // Also lets Siglum load bundles for packages that templates only
+          // pull in indirectly.
+          ctanProxyUrl: '/latex-packages',
+          // Each missing package costs one retry the first time it's fetched
+          maxRetries: 40,
+          onLog: trackUnavailablePackage,
           enableLazyFS: true,
           enableDocCache: false // Siglum's PDF cache key excludes template assets.
         })
@@ -45,13 +57,20 @@ async function compileLatex(texDoc: string, opts: LaTeXOpts): Promise<string> {
   const compiler = await getCompiler()
   const additionalFiles = await resolveAssets(opts)
 
+  compiler.eagerBundles = opts.bundles ?? []
+  unavailablePackage = null
   const result = await compiler.compile(texDoc, {
     engine: opts.cmd,
     additionalFiles
   })
 
   if (!result.success || !result.pdf) {
-    const details = result.error || result.log || 'Unknown compilation error'
+    // Siglum doesn't return the TeX log, so report packages it couldn't load
+    const details =
+      result.error ||
+      result.log ||
+      (unavailablePackage && `package ${unavailablePackage} is unavailable`) ||
+      'Unknown compilation error'
     throw new Error(`LaTeX compilation failed: ${details}`)
   }
 

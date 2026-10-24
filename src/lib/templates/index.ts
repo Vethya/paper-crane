@@ -155,9 +155,21 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template2(data),
         opts: {
           cmd: 'xelatex',
+          bundles: [
+            'tex-latex-misc',
+            'graphics',
+            'xcolor',
+            'utils',
+            'typography',
+            'amsmath',
+            'hyperref',
+            'tex-generic'
+          ],
           inputs: [
             '/templates/template2/awesome-cv.cls',
-            '/templates/template2/fontawesome.sty'
+            '/templates/template2/fontawesome.sty',
+            // Default unicode-math font, not in Siglum's bundles
+            '/templates/template2/latinmodern-math.otf'
           ],
           fonts: [
             '/templates/template2/fonts/FontAwesome.otf',
@@ -196,6 +208,15 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template4(data),
         opts: {
           cmd: 'xelatex',
+          bundles: [
+            'tex-latex-misc',
+            'graphics',
+            'xcolor',
+            'hyperref',
+            'tex-generic',
+            'babel',
+            'typography'
+          ],
           inputs: ['/templates/template4/deedy-resume-openfont.cls'],
           fonts: [
             '/templates/template4/fonts/Raleway-Bold.otf',
@@ -216,6 +237,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template5(data),
         opts: {
           cmd: 'xelatex',
+          bundles: ['fonts-lm-type1'],
           inputs: [
             '/templates/template5/helvetica.sty',
             '/templates/template5/res.cls'
@@ -228,6 +250,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template6(data),
         opts: {
           cmd: 'xelatex',
+          bundles: ['typography', 'utils'],
           inputs: [
             '/templates/template6/custom-command.tex',
             '/templates/template6/minimal-resume-config.tex',
@@ -253,6 +276,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template7(data),
         opts: {
           cmd: 'pdflatex',
+          bundles: ['xcolor', 'utils', 'typography', 'tex-generic'],
           inputs: [
             '/templates/template7/collection.sty',
             '/templates/template7/moderncv.cls',
@@ -271,6 +295,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template8(data),
         opts: {
           cmd: 'xelatex',
+          bundles: ['typography', 'utils'],
           inputs: ['/templates/template8/mcdowellcv.cls']
         }
       }

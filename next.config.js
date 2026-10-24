@@ -33,6 +33,15 @@ const NextConfig = {
         headers: workerHeaders
       },
       {
+        source: '/latex-packages/:path*',
+        headers: [
+          {
+            key: 'Cross-Origin-Resource-Policy',
+            value: 'same-origin'
+          }
+        ]
+      },
+      {
         source: '/generator/:path*',
         headers: [
           {
@@ -44,6 +53,15 @@ const NextConfig = {
             value: 'require-corp'
           }
         ]
+      }
+    ]
+  },
+  async rewrites() {
+    return [
+      // Siglum requests missing fonts by name (e.g. phvb7t for Helvetica)
+      {
+        source: '/latex-packages/api/fetch/:font(phv[a-z0-9]+)',
+        destination: '/latex-packages/api/fetch/helvetic'
       }
     ]
   },
