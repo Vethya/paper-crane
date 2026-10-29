@@ -146,7 +146,10 @@ export function Form({
       setResume((current) => ({ ...current, isError: false, isLoading: true }))
       try {
         const newResumeUrl = await generateResume(formValues)
-        if (!shouldCommit()) return
+        if (!shouldCommit()) {
+          URL.revokeObjectURL(newResumeUrl)
+          return
+        }
         setResume({ url: newResumeUrl, isError: false, isLoading: false })
       } catch (error) {
         if (!shouldCommit()) return
@@ -239,6 +242,7 @@ export function Form({
         )}
         data-resume-form
         id={formId}
+        method="post"
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
         {isLoadingResume ? (

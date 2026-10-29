@@ -1,0 +1,46 @@
+diff --git a/src/ctan.js b/src/ctan.js
+index 17c7fd275ba7d2da48a7439aaf29bf2918f3bf9e..28215f0ecf72d1ba73a172f2785414de07a6beda 100644
+--- a/src/ctan.js
++++ b/src/ctan.js
+@@ -247,6 +247,14 @@ export class CTANFetcher {
+                 }
+             }
+ 
++            // The browser can drop cached files while their metadata survives,
++            // and file writes fail silently. Treat a partial entry as a cache
++            // miss so the package is refetched instead of mounted empty.
++            if (meta.files && files.size < meta.files.length) {
++                this.onLog(`[Cache] ${packageName}: ${meta.files.length - files.size} files missing - will refetch`);
++                return null;
++            }
++
+             return {
+                 files,
+                 dependencies: meta.dependencies || [],
+diff --git a/src/hash.js b/src/hash.js
+index 11a2d13b5a8edcb06345e26936c0ec6b1703e45f..3c234bef3137c8afc3035fc54525e05d4b3000eb 100644
+--- a/src/hash.js
++++ b/src/hash.js
+@@ -30,18 +30,10 @@ function djb2Hash(content) {
+  * @returns {Promise<object>}
+  */
+ async function loadBlake3() {
+-    if (blake3Module) return blake3Module;
+-    if (blake3LoadPromise) return blake3LoadPromise;
+-
+-    blake3LoadPromise = import('blake3-wasm/browser.js').then(module => {
+-        blake3Module = module;
+-        return module;
+-    }).catch(err => {
+-        console.warn('BLAKE3 load failed, using DJB2 fallback:', err.message);
+-        return null;
+-    });
+-
+-    return blake3LoadPromise;
++    // The published browser entry currently references generated files that are
++    // missing from blake3-wasm@2.1.5. Keep Siglum's built-in DJB2 fallback until
++    // that optional dependency ships a complete browser bundle.
++    return null;
+ }
+ 
+ /**
