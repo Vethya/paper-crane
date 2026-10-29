@@ -1,6 +1,6 @@
 # Resume Manager
 
-A resume builder for generating elegant LaTeX resumes without writing any TeX code yourself. Built as a modern full-stack rebuild with a Next.js frontend and a dedicated LaTeX compilation API backend.
+A resume builder for generating elegant LaTeX resumes without writing any TeX code yourself. Built with Next.js and client-side WebAssembly LaTeX compilation.
 
 ## Features
 
@@ -16,20 +16,19 @@ A resume builder for generating elegant LaTeX resumes without writing any TeX co
 - Next.js 15, React 19, TypeScript
 - Tailwind CSS, Jotai, react-pdf, react-hook-form
 
-**Backend (LaTeX API)**
-- Express.js with `pdflatex` / `xelatex`
-- Runs standalone or via Docker
+**LaTeX compilation**
+- Siglum Engine with TeX Live 2025 compiled to WebAssembly
+- Runs in the browser with no LaTeX server required
 
 ## Architecture
 
-The project is split into two services:
+The app runs as one Next.js service:
 
 | Service | Port | Description |
 |---|---|---|
-| Next.js app | 3026 | Frontend UI — form, preview, template selection |
-| `latex-api` | 3027 | Express server — receives `.tex` source, compiles with LaTeX, returns a PDF |
+| Next.js app | 3026 | UI, authentication, data APIs, and browser-side PDF compilation |
 
-The frontend sends the generated `.tex` document to the API, which compiles it in an isolated temp directory and streams the resulting PDF back.
+The browser downloads the Siglum WebAssembly runtime and compiles generated `.tex` documents locally. The first compilation downloads the runtime bundles; subsequent compilations reuse the browser cache.
 
 ## Getting Started
 
@@ -37,7 +36,6 @@ The frontend sends the generated `.tex` document to the API, which compiles it i
 
 ```bash
 pnpm install
-cd latex-api && pnpm install
 ```
 
 **Run the frontend**
@@ -46,30 +44,11 @@ cd latex-api && pnpm install
 pnpm dev
 ```
 
-**Run the LaTeX API** (requires a local LaTeX installation — `texlive-xetex`, `texlive-latex-extra`, etc.)
-
-```bash
-cd latex-api && pnpm dev
-```
-
-**Or run the LaTeX API via Docker** (recommended — includes all LaTeX packages)
-
-```bash
-docker build -f latex-api/Dockerfile -t resumake-latex-api .
-docker run -p 3027:3027 resumake-latex-api
-```
-
-**Production deploy on Ubuntu**
-
-For an Ubuntu server deployment with Docker Compose and automatic HTTPS, see [`latex-api/DEPLOY.md`](latex-api/DEPLOY.md).
-
 **Environment**
 
-Create a `.env.local` in the project root and set the API URL:
+Create a `.env.local` in the project root with the app's existing authentication, database, and AI settings. No LaTeX API URL is required.
 
-```
-NEXT_PUBLIC_LATEX_API_URL=http://localhost:3027
-```
+The generator route sends the headers required by WebAssembly threading (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`).
 
 ## Templates
 

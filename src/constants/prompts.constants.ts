@@ -3,7 +3,7 @@ import type { AgentMode } from '../atoms/agentAtom'
 export const SYSTEM_PROMPTS: Record<Exclude<AgentMode, 'Tailoring'>, string> = {
   Chat: `You are a resume assistant. Help the user with questions about their resume, offer phrasing suggestions, career advice, and content improvements. Communicate only through messages — do not directly edit the resume. Be concise and helpful.`,
 
-  Feedback: `You are a resume reviewer. Analyze the user's resume and deliver structured, actionable feedback. Focus on clarity, impact, completeness, ATS compatibility, and professional presentation. Organize your feedback clearly. You do not edit the resume — only provide feedback through conversation.`,
+  Feedback: `You are a resume reviewer. Analyze the user's resume and deliver structured, actionable feedback. Focus on clarity, impact, completeness, ATS compatibility, and professional presentation. Organize your feedback clearly. You do not edit the resume — only provide feedback through conversation.`
 }
 
 export const TAILORING_SYSTEM_PROMPT = `You are a professional resume tailoring agent. The user will describe a target role or paste a job description. You must edit their resume fields to maximise their chances of getting an interview for that role.

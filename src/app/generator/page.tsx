@@ -22,6 +22,7 @@ import { agentResumeIdAtom } from '../../atoms/agentAtom'
 import { activeSectionSetterAtom } from '../../atoms/activeSection'
 import { Blocks } from 'lucide-react'
 import type { ResumeComponentType } from '@/lib/resumeComponents'
+import { useIsHydrated } from '@/hooks/useIsHydrated'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
@@ -54,6 +55,7 @@ function GeneratorContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
+  const isHydrated = useIsHydrated()
   const urlSection = getValidSection(searchParams.get('section'))
   const [activeSection, setActiveSection] = useState(urlSection)
   const [componentsOpen, setComponentsOpen] = useState(false)
@@ -160,6 +162,7 @@ function GeneratorContent() {
             <PrimaryButton
               type="submit"
               form="resume-form-mobile"
+              disabled={!isHydrated}
               className="w-full"
               onClick={() =>
                 previewRef.current?.scrollIntoView({ behavior: 'smooth' })

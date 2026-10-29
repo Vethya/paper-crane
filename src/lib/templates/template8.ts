@@ -76,8 +76,8 @@ const generator: Generator = {
 
         return stripIndent`
           \\begin{cvsubsection}{${location || ''}}{${institution || ''}}{${
-          dateRange || ''
-        }}
+            dateRange || ''
+          }}
             \\begin{itemize}
               \\item ${degreeLine}
             \\end{itemize}
@@ -126,8 +126,8 @@ const generator: Generator = {
 
         return stripIndent`
           \\begin{cvsubsection}{${position || ''}}{${company || ''}}{${
-          dateRange || ''
-        }}
+            dateRange || ''
+          }}
             ${location || ''}
             ${highlightLines || ''}
           \\end{cvsubsection}
