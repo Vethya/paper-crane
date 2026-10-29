@@ -41,6 +41,6 @@ latex-api/deploy/.env.production
 # typescript
 *.tsbuildinfo
 
-# swiftlatex's postinstall files
+# generated browser compiler assets
 /public/*.js
 /public/*.wasm
