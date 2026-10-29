@@ -14,13 +14,21 @@ import { twMerge } from 'tailwind-merge'
 import { resumeAtom, isLoadingResumeAtom } from '../../atoms/resume'
 import { formDataAtom } from '../../atoms/formData'
 
-// Dynamic import for react-pdf components
+// Configure PDF.js before either component is rendered. If the worker is
+// configured in an effect, Document can start loading the PDF first and leave
+// PDF.js with a destroyed message handler during a file change.
+const loadPdfModule = async () => {
+  const mod = await import('react-pdf')
+  mod.pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
+  return mod
+}
+
 const Document = dynamic(
-  () => import('react-pdf').then((mod) => ({ default: mod.Document })),
+  () => loadPdfModule().then((mod) => ({ default: mod.Document })),
   { ssr: false }
 )
 const Page = dynamic(
-  () => import('react-pdf').then((mod) => ({ default: mod.Page })),
+  () => loadPdfModule().then((mod) => ({ default: mod.Page })),
   { ssr: false }
 )
 
@@ -157,28 +165,6 @@ export function Preview({ className }: PreviewProps) {
   const [containerWidth, setContainerWidth] = useState(0)
 
   useEffect(() => {
-    let cancelled = false
-
-    const setupWorker = async () => {
-      try {
-        const { pdfjs } = await import('react-pdf')
-        if (cancelled) return
-        pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs'
-      } catch (error) {
-        console.warn(
-          'Failed to setup PDF.js worker, PDF preview may not work:',
-          error
-        )
-      }
-    }
-
-    setupWorker()
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  useEffect(() => {
     if (!containerRef.current) return
     const ro = new ResizeObserver(([entry]) => {
       setContainerWidth(entry.contentRect.width)
@@ -259,6 +245,7 @@ export function Preview({ className }: PreviewProps) {
   const zoomIdx = ZOOM_STEPS.indexOf(zoom)
   const pageWidth =
     containerWidth > 0 ? containerWidth * 0.92 * zoom : undefined
+  const pdfFile = resume.url || '/blank.pdf'
 
   const btnClass =
     'flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-white/80 text-xs'
@@ -399,7 +386,8 @@ export function Preview({ className }: PreviewProps) {
         style={{ overflowX: zoom > 1 ? 'auto' : 'hidden' }}
       >
         <Document
-          file={resume.url || '/blank.pdf'}
+          key={pdfFile}
+          file={pdfFile}
           onLoadSuccess={handleDocumentLoadSuccess}
           onLoadError={handleDocumentLoadError}
           loading=""

@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useEffect, useRef } from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
@@ -8,7 +8,10 @@ import { agentPendingEditsAtom } from '@/atoms/agentEdits'
 
 export type { SaveState } from '@/atoms/saveState'
 
-export function useAutoSave(resumeId: string | null, formData: FormValues | null) {
+export function useAutoSave(
+  resumeId: string | null,
+  formData: FormValues | null
+) {
   const saveState = useAtomValue(saveStateAtom)
   const setSaveState = useSetAtom(saveStateAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
@@ -48,7 +51,7 @@ export function useAutoSave(resumeId: string | null, formData: FormValues | null
         const res = await fetch(`/api/resumes/${resumeId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: latestFormData.current }),
+          body: JSON.stringify({ content: latestFormData.current })
         })
         if (!res.ok) throw new Error()
         lastKnownData.current = JSON.stringify(latestFormData.current)

@@ -6,6 +6,7 @@ import { useAtomValue } from 'jotai'
 import { Blocks } from 'lucide-react'
 import { PrimaryButton } from '../core/Button'
 import { isLoadingResumeAtom } from '@/atoms/resume'
+import { useIsHydrated } from '@/hooks/useIsHydrated'
 
 export const sectionLinks = [
   { label: 'Templates', section: 'templates' },
@@ -35,6 +36,7 @@ export function Sidebar({
   formId = 'resume-form'
 }: SidebarProps) {
   const isLoadingResume = useAtomValue(isLoadingResumeAtom)
+  const isHydrated = useIsHydrated()
 
   return (
     <aside className="min-w-0">
@@ -78,7 +80,7 @@ export function Sidebar({
 
       <PrimaryButton
         form={formId}
-        disabled={isLoadingResume}
+        disabled={!isHydrated || isLoadingResume}
         className="w-full min-w-0 px-3"
       >
         MAKE
