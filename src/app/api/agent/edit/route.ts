@@ -20,14 +20,20 @@ const FieldEditSchema = z.object({
     .describe(
       'New value. Use a plain string for text fields. Use a string array ONLY for "skills.N.keywords" or "projects.N.keywords" paths. This key is ALWAYS "newValue" — never rename it to "keywords" or anything else.'
     ),
-  reason: z.string().describe('One sentence explaining why this change helps the user land the target role.')
+  reason: z
+    .string()
+    .describe(
+      'One sentence explaining why this change helps the user land the target role.'
+    )
 })
 
 const NewEntrySchema = z.object({
   type: z.literal('append'),
   arrayPath: z
     .enum(['work', 'education', 'projects', 'awards'])
-    .describe('Top-level array to append a new entry to. Do NOT use for skills — use appendSkill instead.'),
+    .describe(
+      'Top-level array to append a new entry to. Do NOT use for skills — use appendSkill instead.'
+    ),
   entry: z
     .object({
       // work
@@ -53,15 +59,31 @@ const NewEntrySchema = z.object({
       awarder: z.string().optional(),
       summary: z.string().optional()
     })
-    .describe('Full entry object to append. Include only fields relevant to the arrayPath type.'),
-  reason: z.string().describe('One sentence explaining why this new entry is relevant to the target role.')
+    .describe(
+      'Full entry object to append. Include only fields relevant to the arrayPath type.'
+    ),
+  reason: z
+    .string()
+    .describe(
+      'One sentence explaining why this new entry is relevant to the target role.'
+    )
 })
 
 const AppendSkillSchema = z.object({
   type: z.literal('appendSkill'),
-  name: z.string().describe('Display name for the new skill category. E.g. "Machine Learning", "Cloud & DevOps".'),
-  keywords: z.array(z.string()).describe('Keywords to list under this skill category.'),
-  reason: z.string().describe('One sentence explaining why this new skill category strengthens the application.')
+  name: z
+    .string()
+    .describe(
+      'Display name for the new skill category. E.g. "Machine Learning", "Cloud & DevOps".'
+    ),
+  keywords: z
+    .array(z.string())
+    .describe('Keywords to list under this skill category.'),
+  reason: z
+    .string()
+    .describe(
+      'One sentence explaining why this new skill category strengthens the application.'
+    )
 })
 
 const RemoveEntrySchema = z.object({
@@ -74,7 +96,11 @@ const RemoveEntrySchema = z.object({
     .int()
     .min(0)
     .describe('0-based index of the entry to remove from the array.'),
-  reason: z.string().describe('One sentence explaining why removing this entry strengthens the application.')
+  reason: z
+    .string()
+    .describe(
+      'One sentence explaining why removing this entry strengthens the application.'
+    )
 })
 
 const AgentEditResponseSchema = z.object({
@@ -84,7 +110,14 @@ const AgentEditResponseSchema = z.object({
       'A single sentence summarising all changes made. Example: "Tailored 7 fields to highlight React expertise for a Senior Frontend Engineer role at Stripe."'
     ),
   edits: z
-    .array(z.discriminatedUnion('type', [FieldEditSchema, NewEntrySchema, AppendSkillSchema, RemoveEntrySchema]))
+    .array(
+      z.discriminatedUnion('type', [
+        FieldEditSchema,
+        NewEntrySchema,
+        AppendSkillSchema,
+        RemoveEntrySchema
+      ])
+    )
     .describe('Ordered list of edit operations. Apply all of them.')
 })
 
@@ -107,14 +140,18 @@ export async function POST(request: NextRequest) {
       model,
       output: Output.object({ schema: AgentEditResponseSchema }),
       system,
-      messages: messages.map(({ role, content }) => ({ role, content })),
+      messages: messages.map(({ role, content }) => ({ role, content }))
     })
 
-    console.log('[agent/edit] Generated edits:', { editCount: output.edits.length })
+    console.log('[agent/edit] Generated edits:', {
+      editCount: output.edits.length
+    })
     return NextResponse.json(output)
   } catch (err) {
     if (NoObjectGeneratedError.isInstance(err)) {
-      console.warn('[agent/edit] Schema validation failed, attempting repair...')
+      console.warn(
+        '[agent/edit] Schema validation failed, attempting repair...'
+      )
       try {
         const { output: repaired } = await generateText({
           model,
@@ -124,11 +161,13 @@ export async function POST(request: NextRequest) {
             err.text,
             'Validation errors:',
             JSON.stringify(err.cause, null, 2),
-            'Fix the JSON so it matches the schema exactly. The most common mistake is using a field name other than "newValue" on "set" edits (e.g. writing "keywords" instead of "newValue"). Return only the corrected JSON.',
-          ].join('\n\n'),
+            'Fix the JSON so it matches the schema exactly. The most common mistake is using a field name other than "newValue" on "set" edits (e.g. writing "keywords" instead of "newValue"). Return only the corrected JSON.'
+          ].join('\n\n')
         })
 
-        console.log('[agent/edit] Repair successful:', { editCount: repaired.edits.length })
+        console.log('[agent/edit] Repair successful:', {
+          editCount: repaired.edits.length
+        })
         return NextResponse.json(repaired)
       } catch (repairErr) {
         console.error('[agent/edit] Repair failed:', repairErr)
@@ -136,6 +175,9 @@ export async function POST(request: NextRequest) {
     }
 
     console.error('[agent/edit] generateText error:', err)
-    return NextResponse.json({ error: 'Failed to generate edits' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Failed to generate edits' },
+      { status: 500 }
+    )
   }
 }

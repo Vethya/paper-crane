@@ -27,7 +27,7 @@ export function FormInput({ onSubmit, style, className }: FormInputProps) {
 
   return (
     <div
-      className={twMerge(clsx("grid grid-cols-[1fr_auto_12px]", className))}
+      className={twMerge(clsx('grid grid-cols-[1fr_auto_12px]', className))}
       style={style}
     >
       <StyledInput
