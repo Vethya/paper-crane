@@ -12,7 +12,12 @@ import { WorkSection } from './sections/WorkSection'
 import { SkillsSection } from './sections/SkillsSection'
 import { AwardSection } from './sections/AwardsSection'
 import { ProjectsSection } from './sections/projectsSection'
-import { resumeAtom, isLoadingResumeAtom } from '../../../atoms/resume'
+import {
+  resumeAtom,
+  isLoadingResumeAtom,
+  markBuiltAtom,
+  resumeTitleAtom
+} from '../../../atoms/resume'
 import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
 import { AgentFieldFocuser } from '../../agent/AgentFieldFocuser'
 import {
@@ -135,6 +140,8 @@ export function Form({
   const [, setResumeTags] = useAtom(resumeTagsAtom)
   const [isLoadingResume, setIsLoadingResume] = useAtom(isLoadingResumeAtom)
   const setFormSetValue = useSetAtom(formSetValueAtom)
+  const markBuilt = useSetAtom(markBuiltAtom)
+  const setResumeTitle = useSetAtom(resumeTitleAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
 
@@ -143,6 +150,7 @@ export function Form({
       formValues: FormValues,
       shouldCommit: () => boolean = () => true
     ) => {
+      markBuilt()
       setResume((current) => ({ ...current, isError: false, isLoading: true }))
       try {
         const newResumeUrl = await generateResume(formValues)
@@ -161,7 +169,7 @@ export function Form({
         }))
       }
     },
-    [setResume]
+    [setResume, markBuilt]
   )
 
   useEffect(() => {
@@ -179,6 +187,7 @@ export function Form({
           formContext.reset(content)
           setFormData(content)
           setResumeTags(data.tags ?? [])
+          setResumeTitle(data.title ?? '')
           void generateAndSetResume(content, () => !cancelled)
         } finally {
           if (!cancelled) setIsLoadingResume(false)
@@ -213,6 +222,7 @@ export function Form({
     formContext,
     setFormData,
     setResumeTags,
+    setResumeTitle,
     setIsLoadingResume,
     generateAndSetResume
   ])

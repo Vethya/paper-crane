@@ -2,14 +2,16 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FiChevronDown } from 'react-icons/fi'
 import { FileText, LogOut, Moon, Sun } from 'lucide-react'
 import { Logo } from '../core/Logo'
 import { LibraryNav } from '../library/LibraryNav'
 import { authClient } from '@/db/auth-client'
-import { useAtomValue } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { formDataAtom } from '@/atoms/formData'
+import { resumeTitleAtom } from '@/atoms/resume'
+import { agentPendingEditsAtom } from '@/atoms/agentEdits'
 import { TagPicker } from './TagPicker'
 import { useAutoSave } from '@/hooks/useAutoSave'
 import {
@@ -49,6 +51,9 @@ export function Header({ className, showTags = true }: HeaderProps) {
   const resumeId = searchParams.get('id')
   const formData = useAtomValue(formDataAtom)
   const saveState = useAutoSave(resumeId, formData)
+  const reviewing = useAtomValue(agentPendingEditsAtom).some(
+    (e) => e.status === 'pending'
+  )
 
   useEffect(() => {
     setTheme(getStoredTheme())
@@ -93,14 +98,24 @@ export function Header({ className, showTags = true }: HeaderProps) {
     <header
       className={twMerge(
         clsx(
-          'relative w-full h-16 flex justify-between items-center border-b px-6',
+          'relative flex h-14 w-full items-center justify-between gap-4 border-b px-6',
           className
         )
       )}
     >
-      <Link href={session ? '/resumes' : '/'}>
-        <Logo />
-      </Link>
+      <div className="flex min-w-0 items-center gap-3">
+        <Link href={session ? '/resumes' : '/'} className="shrink-0">
+          <Logo />
+        </Link>
+        {resumeId && pathname === '/generator' && (
+          <>
+            <span className="text-slate-500" aria-hidden="true">
+              /
+            </span>
+            <ResumeTitle resumeId={resumeId} />
+          </>
+        )}
+      </div>
 
       {showLibraryNav && (
         <LibraryNav className="absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 md:flex" />
@@ -109,12 +124,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
       <div className="flex items-center gap-3">
         {resumeId && showTags && <TagPicker />}
 
-        {resumeId && saveState === 'saving' && (
-          <span className="text-sm text-slate-400">Saving…</span>
-        )}
-        {resumeId && saveState === 'saved' && (
-          <span className="text-sm text-slate-400">Saved</span>
-        )}
+        {resumeId && <SaveStatus state={saveState} reviewing={reviewing} />}
 
         {!isPending && (
           <div>
@@ -219,5 +229,78 @@ export function Header({ className, showTags = true }: HeaderProps) {
         )}
       </div>
     </header>
+  )
+}
+
+function SaveStatus({
+  state,
+  reviewing
+}: {
+  state: ReturnType<typeof useAutoSave>
+  reviewing: boolean
+}) {
+  if (reviewing)
+    return (
+      <span className="review-accent-text text-xs">
+        Saving paused while you review
+      </span>
+    )
+  if (state === 'error')
+    return <span className="text-xs text-red-400">Couldn’t save</span>
+  if (state === 'saving')
+    return <span className="text-xs text-slate-400">Saving…</span>
+  if (state === 'saved')
+    return <span className="text-xs text-slate-400">Saved</span>
+  return null
+}
+
+function ResumeTitle({ resumeId }: { resumeId: string }) {
+  const [title, setTitle] = useAtom(resumeTitleAtom)
+  const [draft, setDraft] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (draft !== null) inputRef.current?.select()
+  }, [draft !== null]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function commit() {
+    const next = draft?.trim()
+    setDraft(null)
+    if (!next || next === title) return
+    const previous = title
+    setTitle(next)
+    const res = await fetch(`/api/resumes/${resumeId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: next })
+    }).catch(() => null)
+    if (!res?.ok) setTitle(previous)
+  }
+
+  if (draft !== null)
+    return (
+      <input
+        ref={inputRef}
+        aria-label="Resume title"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') commit()
+          if (e.key === 'Escape') setDraft(null)
+        }}
+        className="h-8 w-64 rounded-md border border-app-borderStrong bg-transparent px-2 text-sm font-medium text-white focus:outline-none"
+      />
+    )
+
+  return (
+    <button
+      type="button"
+      title="Rename"
+      onClick={() => setDraft(title)}
+      className="h-8 min-w-0 truncate rounded-md px-2 text-sm font-medium text-white transition-colors hover:bg-app-hover"
+    >
+      {title || 'Untitled resume'}
+    </button>
   )
 }

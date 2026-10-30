@@ -3,9 +3,13 @@
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useAtomValue } from 'jotai'
-import { Blocks } from 'lucide-react'
+import { Blocks, LoaderCircle } from 'lucide-react'
 import { PrimaryButton } from '../core/Button'
-import { isLoadingResumeAtom } from '@/atoms/resume'
+import {
+  isLoadingResumeAtom,
+  isPreviewStaleAtom,
+  resumeAtom
+} from '@/atoms/resume'
 import { useIsHydrated } from '@/hooks/useIsHydrated'
 
 export const sectionLinks = [
@@ -39,8 +43,8 @@ export function Sidebar({
   const isHydrated = useIsHydrated()
 
   return (
-    <aside className="min-w-0">
-      <nav className="mb-7 flex w-full min-w-0 flex-col items-start justify-center gap-3">
+    <aside className="flex min-w-0 flex-col">
+      <nav className="mb-4 flex w-full min-w-0 flex-col items-start justify-center gap-0.5">
         {sectionLinks.map(({ label, section }) => (
           <button
             key={section}
@@ -48,10 +52,10 @@ export function Sidebar({
             onClick={() => onSectionChange(section)}
             className={twMerge(
               clsx(
-                'w-full max-w-full rounded-app-button border px-3 py-2 text-left text-sm font-medium leading-snug transition-colors',
+                'w-full max-w-full rounded-app-button px-3 py-2 text-left text-sm font-medium leading-snug transition-colors',
                 activeSection === section
-                  ? 'border-white/35 bg-white/[0.18] text-white'
-                  : 'border-transparent bg-transparent text-slate-300 hover:bg-white/[0.05] hover:text-white'
+                  ? 'bg-app-control text-white'
+                  : 'text-slate-400 hover:bg-app-hover hover:text-white'
               )
             )}
           >
@@ -66,10 +70,10 @@ export function Sidebar({
           onClick={onComponentsToggle}
           className={twMerge(
             clsx(
-              'mb-3 flex w-full min-w-0 items-center justify-center gap-2 rounded-app-button border px-3 py-2 text-sm font-medium transition-colors',
+              'mb-4 flex w-full min-w-0 items-center gap-2 rounded-app-button px-3 py-2 text-left text-sm font-medium transition-colors',
               componentsOpen
-                ? 'border-white/35 bg-white/[0.18] text-white'
-                : 'border-app-controlBorder bg-app-control text-slate-200 hover:bg-app-controlHover hover:text-white'
+                ? 'bg-app-control text-white'
+                : 'text-slate-400 hover:bg-app-hover hover:text-white'
             )
           )}
         >
@@ -85,8 +89,35 @@ export function Sidebar({
       >
         MAKE
       </PrimaryButton>
+      <BuildStatus />
     </aside>
   )
+}
+
+function BuildStatus() {
+  const resume = useAtomValue(resumeAtom)
+  const isStale = useAtomValue(isPreviewStaleAtom)
+
+  if (resume.isLoading)
+    return (
+      <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-slate-400">
+        <LoaderCircle className="h-3 w-3 animate-spin" aria-hidden="true" />
+        Building PDF…
+      </p>
+    )
+  if (resume.isError)
+    return (
+      <p className="mt-2 text-center text-xs text-red-400">
+        Couldn’t build the PDF
+      </p>
+    )
+  if (isStale)
+    return (
+      <p className="review-accent-text mt-2 text-center text-xs">
+        Preview is out of date
+      </p>
+    )
+  return null
 }
 
 interface MobileNavProps {
@@ -103,10 +134,10 @@ export function MobileNav({ activeSection, onSectionChange }: MobileNavProps) {
           type="button"
           onClick={() => onSectionChange(section)}
           className={clsx(
-            'shrink-0 whitespace-nowrap rounded-app-button px-4 py-2 text-sm font-medium transition-colors',
+            'shrink-0 whitespace-nowrap rounded-app-button px-3.5 py-2 text-sm font-medium transition-colors',
             activeSection === section
-              ? 'bg-white text-app-background'
-              : 'border border-app-controlBorder bg-app-control text-slate-300 hover:bg-app-controlHover hover:text-white'
+              ? 'bg-app-control text-white'
+              : 'text-slate-400 hover:bg-app-hover hover:text-white'
           )}
         >
           {label}

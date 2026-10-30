@@ -142,7 +142,7 @@ function GeneratorContent() {
             <button
               type="button"
               onClick={toggleComponents}
-              className="inline-flex items-center justify-center gap-2 rounded-app-button border border-app-controlBorder bg-app-control px-4 py-2 text-sm font-medium text-white transition hover:bg-app-controlHover"
+              className="inline-flex items-center justify-center gap-2 rounded-app-button border border-app-border bg-app-surface px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-app-control hover:text-white"
             >
               <Blocks className="h-4 w-4" />
               Components
@@ -176,18 +176,15 @@ function GeneratorContent() {
             ref={previewRef}
             className="flex min-h-[70svh] flex-col rounded-app-panel border border-app-border bg-app-surface"
           >
-            <div className="border-b border-app-border px-6 py-4 text-md font-medium tracking-wide text-slate-400">
-              Live Preview
-            </div>
-            <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden rounded-app-panel">
               <Preview />
             </div>
           </div>
         </div>
 
         {/* Desktop layout (xl+) */}
-        <div className="hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(14rem,15%)_minmax(0,1fr)_minmax(0,51%)] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8">
-          <div className="min-w-0 rounded-app-panel border border-app-border bg-app-surface p-6">
+        <div className="hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(13rem,14%)_minmax(0,1fr)_minmax(0,50%)] xl:gap-4 xl:overflow-hidden xl:px-6 xl:py-5">
+          <div className="min-w-0 rounded-app-panel border border-app-border bg-app-surface p-3">
             <Sidebar
               activeSection={activeSection}
               componentsOpen={componentsOpen}
@@ -216,10 +213,7 @@ function GeneratorContent() {
               />
             ) : (
               <>
-                <div className="border-b border-app-border px-6 py-4 text-md font-medium tracking-wide text-slate-400">
-                  Live Preview
-                </div>
-                <div className="flex flex-1 overflow-hidden">
+                <div className="flex flex-1 overflow-hidden rounded-app-panel">
                   <Preview />
                 </div>
               </>

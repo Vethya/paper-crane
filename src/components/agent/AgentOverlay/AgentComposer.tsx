@@ -113,7 +113,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
 
   return (
     <div className="shrink-0 p-4">
-      <div className="flex flex-col gap-5 rounded-app-card border border-app-controlBorder bg-app-surfaceElevated px-4 pb-3 pt-4 shadow-[0_18px_60px_-36px_rgba(255,255,255,0.35)]">
+      <div className="flex flex-col gap-3 rounded-app-card border border-app-border bg-app-surface px-4 pb-3 pt-3.5 transition-colors focus-within:border-app-borderStrong">
         <textarea
           ref={textareaRef}
           rows={1}
@@ -122,7 +122,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
           onKeyDown={handleTextareaKeyDown}
           placeholder={placeholder}
           disabled={isStreaming}
-          className="w-full resize-none bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none disabled:opacity-50"
+          className="w-full resize-none bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none disabled:opacity-50"
           style={{ maxHeight: '12rem' }}
         />
 
@@ -131,7 +131,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
           <div ref={dropdownRef} className="relative">
             <button
               onClick={() => setDropdownOpen((v) => !v)}
-              className="flex items-center gap-1.5 rounded-app-button border border-app-controlBorder bg-app-control px-3 py-2 text-xs font-medium text-white transition hover:border-app-borderStrong hover:bg-app-controlHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="-ml-2 flex items-center gap-1.5 rounded-app-button px-2 py-1.5 text-xs font-medium text-slate-400 transition hover:bg-app-control hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <ActiveIcon className="h-3.5 w-3.5" />
               {mode}
@@ -168,13 +168,13 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
           <button
             onClick={submit}
             disabled={!canSend}
-            className="flex items-center justify-center rounded-app-button border border-white/90 bg-white p-2 text-app-background transition hover:bg-app-primaryHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-40"
+            className="flex h-8 w-8 items-center justify-center rounded-app-button bg-white text-app-background transition hover:bg-app-primaryHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:bg-app-control disabled:text-slate-500"
           >
             <ArrowUp className="h-4 w-4" />
           </button>
         </div>
       </div>
-      <p className="mt-2 text-center text-xs text-slate-600">
+      <p className="mt-2 text-center text-xs text-slate-400">
         Shift+Tab to cycle modes · Enter to send · Shift+Enter for newline
       </p>
     </div>

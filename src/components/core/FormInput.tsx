@@ -34,13 +34,13 @@ export function FormInput({ onSubmit, style, className }: FormInputProps) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
-        className="col-span-3 pr-24"
+        className="col-span-3 col-start-1 row-start-1 pr-16"
       />
       <MiniButton
         type="button"
         onClick={handleSubmit}
         disabled={isDisabled}
-        className="col-start-2"
+        className="col-start-2 row-start-1 self-center"
       >
         Add
       </MiniButton>

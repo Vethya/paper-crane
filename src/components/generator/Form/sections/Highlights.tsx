@@ -4,7 +4,7 @@ import { PointerEvent, useRef, useState } from 'react'
 import { useFieldArray } from 'react-hook-form'
 import { useAtom, useAtomValue } from 'jotai'
 import { MdClose, MdDragIndicator } from 'react-icons/md'
-import { Check, RotateCcw } from 'lucide-react'
+import { EditReviewActions } from '../../../core/EditReviewActions'
 import { Textarea } from '../../../core/Input'
 import { FormInput } from '../../../core/FormInput'
 import { IconButton } from '../../../core/Button'
@@ -187,8 +187,10 @@ export default function Highlights({
 
   return (
     <div className={twMerge(className)}>
-      <label className="mb-2 block text-white">{label}</label>
-      <div className="my-2 flex flex-col gap-2">
+      <label className="mb-1.5 block text-[13px] font-medium text-slate-400">
+        {label}
+      </label>
+      <div className="flex flex-col gap-1.5">
         {fields.map((field, i) => {
           const edit = getFieldEdit(i)
 
@@ -201,7 +203,7 @@ export default function Highlights({
               style={{ transform: getRowTransform(i) }}
               className={twMerge(
                 clsx(
-                  'relative grid grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start gap-2 rounded-app-button bg-app-background/40 p-1 transition-[transform,background-color,box-shadow] duration-200 ease-out',
+                  'group/highlight relative grid grid-cols-[1.5rem_minmax(0,1fr)_2rem] items-start gap-1.5 rounded-app-button transition-[transform,background-color,box-shadow] duration-200 ease-out',
                   dragState?.sourceIndex === i
                     ? 'z-20 bg-app-surface shadow-lg shadow-black/20 transition-none'
                     : dragState && 'z-10'
@@ -215,7 +217,7 @@ export default function Highlights({
                 onPointerMove={handlePointerMove}
                 onPointerUp={finishDrag}
                 onPointerCancel={finishDrag}
-                className="h-11 touch-none justify-center cursor-grab active:cursor-grabbing text-slate-300 hover:text-white"
+                className="h-9 touch-none justify-center cursor-grab text-slate-500 opacity-60 transition-opacity hover:text-white group-hover/highlight:opacity-100 active:cursor-grabbing"
               >
                 <MdDragIndicator />
               </IconButton>
@@ -225,48 +227,30 @@ export default function Highlights({
               >
                 <div
                   className={clsx(
-                    'rounded transition-shadow',
+                    'rounded-app-button transition-shadow',
                     edit && 'review-field-highlight'
                   )}
                 >
                   <Textarea
                     name={`${name}.${i}`}
                     placeholder={placeholder}
-                    rows={3}
-                    className="min-h-20 min-w-0"
+                    rows={2}
+                    className="min-h-16 min-w-0"
                   />
                 </div>
                 {edit && (
-                  <div className="flex items-start gap-2">
-                    <p className="review-reason flex-1 text-xs italic leading-snug">
-                      {edit.reason}
-                    </p>
-                    <div className="flex shrink-0 gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleApprove(edit)}
-                        className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
-                      >
-                        <Check className="h-3 w-3" />
-                        Keep
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleReject(edit)}
-                        className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
-                      >
-                        <RotateCcw className="h-3 w-3" />
-                        Restore
-                      </button>
-                    </div>
-                  </div>
+                  <EditReviewActions
+                    reason={edit.reason}
+                    onKeep={() => handleApprove(edit)}
+                    onRestore={() => handleReject(edit)}
+                  />
                 )}
               </div>
               <IconButton
                 type="button"
                 aria-label={`Remove ${label.toLowerCase()} ${i + 1}`}
                 onClick={() => remove(i)}
-                className="h-11 justify-center text-slate-300 hover:text-white"
+                className="h-9 justify-center text-slate-500 opacity-0 transition-opacity hover:text-white focus:opacity-100 group-hover/highlight:opacity-100"
               >
                 <MdClose />
               </IconButton>
@@ -274,7 +258,7 @@ export default function Highlights({
           )
         })}
         <FormInput
-          className={fields.length > 0 ? 'ml-[3.25rem]' : ''}
+          className={fields.length > 0 ? 'ml-[1.875rem] mr-[2.375rem]' : ''}
           onSubmit={append}
         />
       </div>
