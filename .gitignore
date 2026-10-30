@@ -2,12 +2,14 @@
 
 # dependencies
 /node_modules
+/.pnpm-store
 /latex-api/node_modules
 /.pnp
 .pnp.js
 
 # testing
 /coverage
+/storybook-static
 
 # next.js
 next-env.d.ts

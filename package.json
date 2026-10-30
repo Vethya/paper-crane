@@ -10,6 +10,9 @@
     "start": "next start -p 3026",
     "build": "next build",
     "lint": "next lint",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test-storybook": "vitest run --project storybook",
     "format": "prettier --write src",
     "format:check": "prettier --check src",
     "postinstall": "node scripts/copy-siglum-worker.mjs"
@@ -48,6 +51,10 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@storybook/addon-a11y": "10.6.3",
+    "@storybook/addon-docs": "10.6.3",
+    "@storybook/addon-vitest": "10.6.3",
+    "@storybook/nextjs-vite": "10.6.3",
     "@tailwindcss/typography": "^0.5.16",
     "@types/archiver": "^6.0.3",
     "@types/common-tags": "^1.8.4",
@@ -56,17 +63,23 @@
     "@types/react-dom": "^19.0.2",
     "@typescript-eslint/eslint-plugin": "^8.19.1",
     "@typescript-eslint/parser": "^8.19.1",
+    "@vitest/browser": "^4.1.12",
+    "@vitest/browser-playwright": "4.1.12",
     "autoprefixer": "^10.4.0",
     "eslint": "^9.17.0",
     "eslint-config-next": "^15.1.4",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "^5.0.0",
+    "playwright": "^1.64.1",
     "postcss": "^8.5.6",
     "prettier": "^3.4.2",
+    "storybook": "10.6.3",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vite": "^8.3.5",
+    "vitest": "4.1.12"
   },
   "prettier": {
     "semi": false,
@@ -74,6 +87,8 @@
     "trailingComma": "none"
   },
   "eslintConfig": {
+    "root": true,
+    "ignorePatterns": ["storybook-static"],
     "extends": [
       "plugin:react/recommended",
       "plugin:@typescript-eslint/recommended",
