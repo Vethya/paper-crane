@@ -1,13 +1,24 @@
 import type { Decorator } from '@storybook/nextjs-vite'
 import type { ReactNode } from 'react'
 import { useHydrateAtoms } from 'jotai/utils'
+import { useForm } from 'react-hook-form'
+import type { FormValues } from '@/types'
 import {
   agentModeAtom,
   agentIsStreamingAtom,
-  type AgentMode
+  agentOpenAtom,
+  agentMessagesAtom,
+  agentResumeIdAtom,
+  type AgentMode,
+  type AgentMessage
 } from '@/atoms/agentAtom'
+import {
+  agentPendingEditsAtom,
+  agentEditSummaryAtom,
+  type PendingEdit
+} from '@/atoms/agentEdits'
 import { isLoadingResumeAtom, resumeAtom } from '@/atoms/resume'
-import { formDataAtom } from '@/atoms/formData'
+import { formDataAtom, formSetValueAtom } from '@/atoms/formData'
 import { resume } from './fixtures/resume'
 
 function Seed({
@@ -20,13 +31,26 @@ function Seed({
     streaming?: boolean
     loading?: boolean
     pdf?: boolean
+    open?: boolean
+    edits?: PendingEdit[]
+    messages?: AgentMessage[]
+    summary?: string
+    resumeId?: string
+    form?: FormValues
   }
 }) {
+  const form = useForm<FormValues>({ defaultValues: state.form ?? resume })
   useHydrateAtoms([
     [agentModeAtom, state.mode ?? 'Chat'],
     [agentIsStreamingAtom, !!state.streaming],
     [isLoadingResumeAtom, !!state.loading],
-    [formDataAtom, resume],
+    [formDataAtom, state.form ?? resume],
+    [formSetValueAtom, () => form.setValue],
+    [agentOpenAtom, !!state.open],
+    [agentMessagesAtom, state.messages ?? []],
+    [agentPendingEditsAtom, state.edits ?? []],
+    [agentEditSummaryAtom, state.summary ?? ''],
+    [agentResumeIdAtom, state.resumeId ?? null],
     [
       resumeAtom,
       {

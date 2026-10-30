@@ -16,6 +16,8 @@ export function sandbox({ parameters }: StoryContext) {
     const path = new URL(url, location.href).pathname
     if (!path.startsWith('/api/')) return original(input, init)
     if (parameters.apiLoading) return new Promise<Response>(() => {})
+    if (parameters.apiText && path.startsWith('/api/agent/chat'))
+      return new Response(parameters.apiText)
     const method = (
       init?.method ?? (input instanceof Request ? input.method : 'GET')
     ).toUpperCase()
