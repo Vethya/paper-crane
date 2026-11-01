@@ -25,12 +25,7 @@ import {
 } from '../../atoms/resume'
 import { useRenderIndicator } from '@/hooks/useRenderIndicator'
 import { formDataAtom } from '../../atoms/formData'
-import {
-  clampPdfPage,
-  retainPdfUrl,
-  releasePdfUrl,
-  hasPdfUrlViewers
-} from '../../lib/pdfBuffer'
+import { clampPdfPage, retainPdfUrl, releasePdfUrl } from '../../lib/pdfBuffer'
 
 // Configure PDF.js before either component is rendered. If the worker is
 // configured in an effect, Document can start loading the PDF first and leave
@@ -208,7 +203,6 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
   const [containerWidth, setContainerWidth] = useState(0)
   const scrollRef = useRef<HTMLElement>(null)
   const swapScroll = useRef<{ top: number; left: number } | null>(null)
-  const mounted = useRef(false)
   const pageWidth =
     containerWidth > 0 ? (containerWidth - 64) * zoom : undefined
   const target = useRef({ pageNumber, pageWidth, candidate })
@@ -226,19 +220,6 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
       releasePdfUrl(candidateUrl)
     }
   }, [displayedUrl, candidateUrl])
-
-  useEffect(() => {
-    mounted.current = true
-    return () => {
-      mounted.current = false
-      queueMicrotask(() => {
-        if (mounted.current) return
-        setResume((current) =>
-          hasPdfUrlViewers(current.url) ? current : { ...current, url: '' }
-        )
-      })
-    }
-  }, [setResume])
 
   useLayoutEffect(() => {
     if (!swapScroll.current || !scrollRef.current) return

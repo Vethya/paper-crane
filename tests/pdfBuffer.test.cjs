@@ -83,6 +83,45 @@ test('superseded and failed candidates retire while the last good PDF remains al
   assert.equal(h.hasPdfUrlViewers('blob:good'), true)
 })
 
+test('the atom lease preserves a PDF across viewer unmount and remount until the generator leaves', () => {
+  const h = harness()
+  h.retainPdfUrl('blob:pdf') // Atom.
+  h.retainPdfUrl('blob:pdf') // Displayed buffer.
+  h.releasePdfUrl('blob:pdf') // Components panel unmounts the viewer.
+  h.flush()
+  assert.equal(h.hasPdfUrlViewers('blob:pdf'), false)
+  assert.deepEqual(h.revoked, [])
+
+  h.retainPdfUrl('blob:pdf') // Remounted viewer loads the atom URL as a candidate.
+  h.flush()
+  assert.equal(h.hasPdfUrlViewers('blob:pdf'), true)
+  assert.deepEqual(h.revoked, [])
+  h.releasePdfUrl('blob:pdf') // Candidate promotes to the displayed buffer.
+  h.retainPdfUrl('blob:pdf')
+  h.flush()
+  assert.equal(h.hasPdfUrlViewers('blob:pdf'), true)
+  assert.deepEqual(h.revoked, [])
+  h.releasePdfUrl('blob:pdf') // Viewer unmounts when leaving the generator.
+  h.flush()
+  assert.deepEqual(h.revoked, [])
+  h.releasePdfUrl('blob:pdf') // Generator clears the atom URL.
+  h.flush()
+  assert.deepEqual(h.revoked, ['blob:pdf'])
+})
+
+test('leaving the generator while the Components panel is open releases the atom-only lease', () => {
+  const h = harness()
+  h.retainPdfUrl('blob:pdf') // Atom.
+  h.retainPdfUrl('blob:pdf') // Viewer.
+  h.releasePdfUrl('blob:pdf') // Components panel opens.
+  h.flush()
+  assert.equal(h.hasPdfUrlViewers('blob:pdf'), false)
+  assert.deepEqual(h.revoked, [])
+  h.releasePdfUrl('blob:pdf') // Generator unmount clears the atom.
+  h.flush()
+  assert.deepEqual(h.revoked, ['blob:pdf'])
+})
+
 test('URLs replaced before React commits a candidate are also retired', () => {
   const h = harness()
   for (const url of ['blob:a', 'blob:b']) {

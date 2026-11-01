@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai'
 import { Loader2 } from 'lucide-react'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { ProfileSection } from './sections/ProfileSection'
@@ -66,6 +66,7 @@ export function Form({
   const currSection = activeSection
   const resumeId = searchParams.get('id')
 
+  const store = useStore()
   const [, setResume] = useAtom(resumeAtom)
   const [, setFormData] = useAtom(formDataAtom)
   const [, setResumeTags] = useAtom(resumeTagsAtom)
@@ -114,6 +115,11 @@ export function Form({
           { ...getTemplateData(buildPayload), owner },
           { force }
         )
+        if (result.status === 'skipped') {
+          if (result.built && owner.active && shouldCommit())
+            markBuilt(buildPayload)
+          return
+        }
         if (result.status !== 'done') return
         if (!owner.active || !shouldCommit()) {
           URL.revokeObjectURL(result.url)
@@ -233,6 +239,7 @@ export function Form({
         )
         if (
           !resumeId &&
+          !store.get(resumeAtom).url &&
           ![
             payload.basics,
             payload.work,
@@ -262,7 +269,8 @@ export function Form({
     isLoadingResume,
     generateAndSetResume,
     resumeId,
-    owner
+    owner,
+    store
   ])
 
   // Register setValue so the agent edit system can apply / restore values from outside the form

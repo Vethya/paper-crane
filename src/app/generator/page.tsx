@@ -24,6 +24,8 @@ import { activeSectionSetterAtom } from '../../atoms/activeSection'
 import { Blocks } from 'lucide-react'
 import type { ResumeComponentType } from '@/lib/resumeComponents'
 import { useIsHydrated } from '@/hooks/useIsHydrated'
+import { resumeAtom } from '../../atoms/resume'
+import { hasPdfUrlViewers } from '../../lib/pdfBuffer'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
@@ -69,6 +71,21 @@ function GeneratorContent() {
   const showRedirectDialog = !isPending && !!session && !resumeId
   const setAgentResumeId = useSetAtom(agentResumeIdAtom)
   const setActiveSectionSetter = useSetAtom(activeSectionSetterAtom)
+  const setResume = useSetAtom(resumeAtom)
+  const mounted = useRef(false)
+
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      queueMicrotask(() => {
+        if (mounted.current) return
+        setResume((current) =>
+          hasPdfUrlViewers(current.url) ? current : { ...current, url: '' }
+        )
+      })
+    }
+  }, [setResume])
 
   const changeActiveSection = useCallback(
     (section: string) => {
