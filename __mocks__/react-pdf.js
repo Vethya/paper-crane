@@ -11,7 +11,10 @@ export function Document({ children, onLoadSuccess, file }) {
     file === '/blank.pdf' ? null : children
   )
 }
-export function Page({ pageNumber }) {
+export function Page({ pageNumber, onRenderSuccess }) {
+  useEffect(() => {
+    onRenderSuccess?.({ pageNumber })
+  }, [pageNumber, onRenderSuccess])
   return createElement(
     'div',
     null,

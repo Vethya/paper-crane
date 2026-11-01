@@ -2,6 +2,7 @@ import { atom, type SetStateAction } from 'jotai'
 import { formDataAtom } from './formData'
 import { agentPendingEditsAtom } from './agentEdits'
 import { prepareResumeBuild } from '../lib/resumeBuild'
+import { retainPdfUrl, releasePdfUrl } from '../lib/pdfBuffer'
 import type { FormValues } from '../types'
 
 export interface Resume {
@@ -16,15 +17,15 @@ const baseResumeAtom = atom<Resume>({
   isError: false
 })
 
-// Each compile creates a new blob URL; revoke the replaced one so old PDFs
-// don't stay in memory for the rest of the session.
+// Transfer the atom's URL lease. Preview leases keep mounted PDFs alive.
 export const resumeAtom = atom(
   (get) => get(baseResumeAtom),
   (get, set, update: SetStateAction<Resume>) => {
     const previous = get(baseResumeAtom)
     const next = typeof update === 'function' ? update(previous) : update
-    if (previous.url !== next.url && previous.url.startsWith('blob:')) {
-      URL.revokeObjectURL(previous.url)
+    if (previous.url !== next.url) {
+      retainPdfUrl(next.url)
+      releasePdfUrl(previous.url)
     }
     set(baseResumeAtom, next)
   }

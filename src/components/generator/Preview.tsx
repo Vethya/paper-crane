@@ -1,8 +1,14 @@
 'use client'
 
 import dynamic from 'next/dynamic'
-import { useAtom, useAtomValue } from 'jotai'
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useAtom, useAtomValue, useStore } from 'jotai'
+import {
+  useState,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef
+} from 'react'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +24,7 @@ import {
   isPreviewStaleAtom
 } from '../../atoms/resume'
 import { formDataAtom } from '../../atoms/formData'
+import { clampPdfPage, retainPdfUrl, releasePdfUrl } from '../../lib/pdfBuffer'
 
 // Configure PDF.js before either component is rendered. If the worker is
 // configured in an effect, Document can start loading the PDF first and leave
@@ -36,6 +43,11 @@ const Page = dynamic(
   () => loadPdfModule().then((mod) => ({ default: mod.Page })),
   { ssr: false }
 )
+
+interface PdfBuffer {
+  url: string
+  numPages: number
+}
 
 interface PreviewProps {
   className?: string
@@ -159,15 +171,59 @@ function triggerDownload(url: string, filename: string) {
 }
 
 export function Preview({ className }: PreviewProps) {
-  const [resume] = useAtom(resumeAtom)
+  const [resume, setResume] = useAtom(resumeAtom)
+  const store = useStore()
   const formData = useAtomValue(formDataAtom)
   const isLoadingResume = useAtomValue(isLoadingResumeAtom)
   const hasJson = formData !== null
-  const [numPages, setNumPages] = useState(1)
+  const [buffers, setBuffers] = useState<{
+    requestedUrl: string
+    displayed: PdfBuffer | null
+    candidate: PdfBuffer | null
+  }>({ requestedUrl: '', displayed: null, candidate: null })
+  // Adjust before children commit so a superseded candidate cannot stay mounted.
+  if (buffers.requestedUrl !== resume.url) {
+    setBuffers({
+      ...buffers,
+      requestedUrl: resume.url,
+      candidate:
+        resume.url && resume.url !== buffers.displayed?.url
+          ? { url: resume.url, numPages: 0 }
+          : null
+    })
+  }
+  const { displayed, candidate } = buffers
+  const numPages = displayed?.numPages ?? 1
   const [pageNumber, setPageNumber] = useState(1)
   const [zoom, setZoom] = useState(1.0)
   const containerRef = useRef<HTMLOutputElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
+  const scrollRef = useRef<HTMLElement>(null)
+  const swapScroll = useRef<{ top: number; left: number } | null>(null)
+  const pageWidth =
+    containerWidth > 0 ? (containerWidth - 64) * zoom : undefined
+  const target = useRef({ pageNumber, pageWidth, candidate })
+  useLayoutEffect(() => {
+    target.current = { pageNumber, pageWidth, candidate }
+  })
+
+  const displayedUrl = displayed?.url ?? ''
+  const candidateUrl = candidate?.url ?? ''
+  useLayoutEffect(() => {
+    retainPdfUrl(displayedUrl)
+    retainPdfUrl(candidateUrl)
+    return () => {
+      releasePdfUrl(displayedUrl)
+      releasePdfUrl(candidateUrl)
+    }
+  }, [displayedUrl, candidateUrl])
+
+  useLayoutEffect(() => {
+    if (!swapScroll.current || !scrollRef.current) return
+    scrollRef.current.scrollTop = swapScroll.current.top
+    scrollRef.current.scrollLeft = swapScroll.current.left
+    swapScroll.current = null
+  }, [displayedUrl])
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -178,19 +234,46 @@ export function Preview({ className }: PreviewProps) {
     return () => ro.disconnect()
   }, [])
 
-  const handleDocumentLoadSuccess = useCallback((pdf: { numPages: number }) => {
-    setNumPages(pdf.numPages)
-    setPageNumber(1)
-  }, [])
+  const failCandidate = (url: string) => {
+    if (target.current.candidate?.url !== url) return
+    setResume((current) =>
+      current.url === url
+        ? { ...current, url: displayedUrl, isError: true }
+        : current
+    )
+  }
 
-  const handleDocumentLoadError = useCallback((error: Error) => {
-    console.warn('Failed to load PDF document:', error)
-  }, [])
+  const promoteCandidate = (
+    url: string,
+    renderedPage: number,
+    width: number
+  ) => {
+    const current = target.current
+    const pdf = current.candidate
+    if (
+      pdf?.url !== url ||
+      store.get(resumeAtom).url !== url ||
+      current.pageWidth !== width ||
+      renderedPage !== clampPdfPage(current.pageNumber, pdf.numPages)
+    )
+      return
+    if (scrollRef.current) {
+      swapScroll.current = {
+        top: scrollRef.current.scrollTop,
+        left: scrollRef.current.scrollLeft
+      }
+    }
+    setPageNumber(renderedPage)
+    setBuffers((state) =>
+      state.candidate?.url === url
+        ? { ...state, displayed: pdf, candidate: null }
+        : state
+    )
+  }
 
   const handleDownloadPdf = useCallback(() => {
-    if (!resume.url) return
-    triggerDownload(resume.url, 'resume.pdf')
-  }, [resume.url])
+    if (displayedUrl) triggerDownload(displayedUrl, 'resume.pdf')
+  }, [displayedUrl])
 
   const handleDownloadLatex = useCallback(async () => {
     if (!formData) return
@@ -221,9 +304,8 @@ export function Preview({ className }: PreviewProps) {
   }, [formData])
 
   const handlePrint = useCallback(() => {
-    if (!resume.url) return
-    window.open(resume.url, '_blank')
-  }, [resume.url])
+    if (displayedUrl) window.open(displayedUrl, '_blank')
+  }, [displayedUrl])
 
   const handlePrevPage = useCallback(() => {
     setPageNumber((p) => Math.max(1, p - 1))
@@ -248,9 +330,7 @@ export function Preview({ className }: PreviewProps) {
   }, [])
 
   const zoomIdx = ZOOM_STEPS.indexOf(zoom)
-  const pageWidth =
-    containerWidth > 0 ? (containerWidth - 64) * zoom : undefined
-  const hasPdf = !!resume.url
+  const hasPdf = !!displayed
   const isBuilding = resume.isLoading || isLoadingResume
   const isNarrow = containerWidth > 0 && containerWidth < 520
 
@@ -363,51 +443,83 @@ export function Preview({ className }: PreviewProps) {
 
       {/* PDF viewer */}
       <article
+        ref={scrollRef}
         className="relative flex-1 overflow-y-auto bg-app-background"
-        style={{ overflowX: zoom > 1 ? 'auto' : 'hidden' }}
+        style={{
+          overflowX: zoom > 1 ? 'auto' : 'hidden',
+          overflowAnchor: 'none'
+        }}
       >
         {resume.isError && (
-          <div className="sticky top-0 z-10 flex justify-center px-4 pt-4">
+          <div
+            role="alert"
+            className="sticky top-0 z-10 flex justify-center px-4 pt-4"
+          >
             <p className="rounded-app-button border border-red-400/30 bg-app-surface px-3 py-2 text-xs text-red-400 shadow-lg">
               Couldn’t build the PDF. Showing the last version that worked.
               Press MAKE to try again.
             </p>
           </div>
         )}
-        {hasPdf ? (
-          <Document
-            key={resume.url}
-            file={resume.url}
-            onLoadSuccess={handleDocumentLoadSuccess}
-            onLoadError={handleDocumentLoadError}
-            loading=""
-            className={clsx(
-              'w-full transition-opacity',
-              isBuilding && 'opacity-60'
-            )}
-          >
-            {pageWidth !== undefined && (
-              <Page
-                pageNumber={pageNumber}
-                width={pageWidth}
-                renderAnnotationLayer={false}
-                renderTextLayer={false}
+        {[displayed, candidate].map((pdf) =>
+          pdf ? (
+            <div
+              key={pdf.url}
+              aria-hidden={pdf !== displayed}
+              className={clsx(
+                'w-full',
+                pdf !== displayed &&
+                  'pointer-events-none invisible absolute left-0 top-0'
+              )}
+            >
+              <Document
+                file={pdf.url}
+                onLoadSuccess={({ numPages }) =>
+                  setBuffers((state) =>
+                    state.candidate?.url === pdf.url &&
+                    state.candidate.numPages !== numPages
+                      ? { ...state, candidate: { url: pdf.url, numPages } }
+                      : state
+                  )
+                }
+                onSourceError={() => failCandidate(pdf.url)}
+                onLoadError={() => failCandidate(pdf.url)}
                 loading=""
-                className="flex justify-center !bg-transparent py-8 [&>canvas]:rounded-sm [&>canvas]:shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.18)]"
-              />
-            )}
-          </Document>
-        ) : (
-          !isBuilding && (
-            <div className="flex h-full flex-col items-center justify-center gap-1 px-8 text-center">
-              <p className="text-sm font-medium text-white">No preview yet</p>
-              <p className="max-w-xs text-xs text-slate-400">
-                Fill in your details, then press MAKE to build your resume.
-              </p>
+                error=""
+                className={clsx(
+                  'w-full transition-opacity',
+                  isBuilding && 'opacity-60'
+                )}
+              >
+                {pdf.numPages > 0 && pageWidth !== undefined && (
+                  <Page
+                    pageNumber={clampPdfPage(pageNumber, pdf.numPages)}
+                    width={pageWidth}
+                    onRenderSuccess={({ pageNumber }) =>
+                      promoteCandidate(pdf.url, pageNumber, pageWidth)
+                    }
+                    onLoadError={() => failCandidate(pdf.url)}
+                    onRenderError={() => failCandidate(pdf.url)}
+                    renderAnnotationLayer={false}
+                    renderTextLayer={false}
+                    loading=""
+                    error=""
+                    className="flex justify-center !bg-transparent py-8 [&>canvas]:rounded-sm [&>canvas]:shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.18)]"
+                  />
+                )}
+              </Document>
             </div>
-          )
+          ) : null
         )}
-        {isBuilding && !hasPdf && (
+        {!hasPdf && !candidate && !isBuilding && (
+          <div className="flex h-full flex-col items-center justify-center gap-1 px-8 text-center">
+            <p className="text-sm font-medium text-white">No preview yet</p>
+            <p className="max-w-xs text-xs text-slate-400">
+              Fill in your details, then press MAKE to build your resume.
+            </p>
+          </div>
+        )}
+        {(isBuilding || candidate) && !hasPdf && (
           <div className="flex h-full items-center justify-center gap-2 text-sm text-slate-400">
             <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
             Building your resume…
