@@ -162,15 +162,30 @@
 \newtoggle{lefttitledefined}
 \newtoggle{centertitledefined}
 \newtoggle{righttitledefined}
+\newsavebox{\subsectiontitles}
 
 \newenvironment{cvsubsection}[4][1]{
 	\notblank{#2}{\toggletrue{lefttitledefined}}{}
 	\notblank{#3}{\toggletrue{centertitledefined}}{}
 	\notblank{#4}{\toggletrue{righttitledefined}}{}
 	\ifboolexpr{togl {lefttitledefined} or togl {centertitledefined} or togl {righttitledefined}}{
-		\begin{tabu} to 1\textwidth { X[l,p] X[c,p] X[r,p] }
-			\textbf{#2} & \textbf{#3} & \textbf{#4} \\
-		\end{tabu}
+		\sbox{\subsectiontitles}{\begin{tabular}{lcr}
+			\textbf{#2} & \textbf{#3} & \textbf{#4}
+		\end{tabular}}
+		\ifdim\wd\subsectiontitles>\textwidth
+			% Let wide titles wrap in reading order, keeping the date intact.
+			\begin{adjustwidth}{\tabcolsep}{\tabcolsep}
+			\noindent\textbf{#2}\par
+			\noindent\textbf{#3}\par
+			\noindent\hfill\mbox{\textbf{#4}}\par
+			\end{adjustwidth}
+		\else
+			% One text row with even gaps, so extraction follows the section
+			% heading. A page-centred middle column gets read as its own block.
+			\begin{tabular*}{\textwidth}{@{\extracolsep{\fill}\hspace{\tabcolsep}}lcr}
+				\textbf{#2} & \textbf{#3} & \textbf{#4} \\
+			\end{tabular*}
+		\fi
 		% Add space according to the specidied number of lines
 		\ifnumcomp{#1}{=}{1}{\vspace*{\aftersinglelinesubsectionheaderspace}}{
 			\ifnumcomp{#1}{=}{2}{\vspace*{\afterdoublelinesubsectionheaderspace}}{
