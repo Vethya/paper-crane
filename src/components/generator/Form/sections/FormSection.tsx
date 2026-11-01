@@ -10,8 +10,10 @@ interface Props {
 
 export function FormSection({ title = '', children, className }: Props) {
   return (
-    <fieldset className={twMerge(clsx('w-full px-8 pb-8', className))}>
-      <h2 className="my-6 text-xl tracking-wide">{title}</h2>
+    <fieldset className={twMerge(clsx('w-full px-6 pb-8', className))}>
+      <h2 className="pb-5 pt-6 text-lg font-semibold tracking-tight">
+        {title}
+      </h2>
       {children}
     </fieldset>
   )

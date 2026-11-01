@@ -5,21 +5,14 @@ import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 const fieldClasses =
-  'w-full bg-transparent p-4 text-white text-sm rounded focus:outline focus:outline-1 focus:outline-green-500 placeholder:text-slate-400 placeholder:opacity-50'
-const fieldStyle = { border: '1px solid #4b5563' }
+  'w-full rounded-app-button border border-app-border bg-app-control px-3 py-2 text-sm text-white transition-[border-color,background-color,box-shadow] placeholder:text-app-textMuted/70 hover:border-app-controlBorder focus:border-app-borderStrong focus:bg-transparent focus:outline-none focus:ring-[3px] focus:ring-white/[0.06] disabled:opacity-50'
 
 interface StyledInputProps extends InputHTMLAttributes<HTMLInputElement> {
   className?: string
 }
 
 export function StyledInput({ className, ...props }: StyledInputProps) {
-  return (
-    <input
-      className={twMerge(clsx(fieldClasses, className))}
-      style={fieldStyle}
-      {...props}
-    />
-  )
+  return <input className={twMerge(clsx(fieldClasses, className))} {...props} />
 }
 
 interface StyledTextareaProps
@@ -31,9 +24,8 @@ export function StyledTextarea({ className, ...props }: StyledTextareaProps) {
   return (
     <textarea
       className={twMerge(
-        clsx(fieldClasses, 'min-h-28 resize-y leading-relaxed', className)
+        clsx(fieldClasses, 'min-h-24 resize-y leading-relaxed', className)
       )}
-      style={fieldStyle}
       {...props}
     />
   )

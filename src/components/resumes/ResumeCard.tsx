@@ -67,14 +67,14 @@ export function ResumeCard({
     <>
       <Link
         href={`/generator?id=${id}`}
-        className="group relative flex flex-col gap-4 rounded-app-card border border-app-border bg-app-surface p-5 transition hover:border-app-borderStrong hover:bg-app-surfaceElevated"
+        className="group relative flex min-h-[8.5rem] flex-col gap-3 rounded-app-card border border-app-border bg-app-surface p-4 transition-colors hover:border-app-controlBorder hover:bg-app-surfaceElevated"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-app-button bg-white/10 text-slate-200">
-              <FiFileText size={18} />
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-app-button bg-app-control text-slate-400">
+              <FiFileText size={16} />
             </span>
-            <span className="font-medium text-slate-100 group-hover:text-white transition-colors line-clamp-2 leading-snug">
+            <span className="line-clamp-2 font-medium leading-snug text-white">
               {title}
             </span>
           </div>
@@ -87,7 +87,8 @@ export function ResumeCard({
                   e.stopPropagation()
                 }}
                 disabled={deleting}
-                className="flex h-7 w-7 items-center justify-center rounded-app-button border border-transparent text-slate-400 transition hover:border-app-controlBorder hover:bg-app-controlHover hover:text-white data-[state=open]:border-app-controlBorder data-[state=open]:bg-app-controlHover data-[state=open]:text-white"
+                aria-label={`Actions for ${title}`}
+                className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 opacity-0 transition hover:bg-app-controlHover hover:text-white focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:bg-app-controlHover data-[state=open]:text-white data-[state=open]:opacity-100"
               >
                 <FiMoreVertical size={15} />
               </button>

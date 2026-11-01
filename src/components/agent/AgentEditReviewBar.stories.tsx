@@ -48,5 +48,5 @@ export const Multiple: Story = {
     }
   }
 }
-export const Approved: Story = { parameters: { action: 'Approve All' } }
-export const Rejected: Story = { parameters: { action: 'Reject All' } }
+export const Approved: Story = { parameters: { action: 'Keep all' } }
+export const Rejected: Story = { parameters: { action: 'Restore all' } }

@@ -12,13 +12,15 @@ import { WorkSection } from './sections/WorkSection'
 import { SkillsSection } from './sections/SkillsSection'
 import { AwardSection } from './sections/AwardsSection'
 import { ProjectsSection } from './sections/projectsSection'
-import { resumeAtom, isLoadingResumeAtom } from '../../../atoms/resume'
+import {
+  resumeAtom,
+  isLoadingResumeAtom,
+  markBuiltAtom,
+  resumeTitleAtom
+} from '../../../atoms/resume'
 import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
 import { AgentFieldFocuser } from '../../agent/AgentFieldFocuser'
-import {
-  agentPendingEditsAtom,
-  type PendingEdit
-} from '../../../atoms/agentEdits'
+import { agentPendingEditsAtom } from '../../../atoms/agentEdits'
 import { resumeTagsAtom } from '../../../atoms/resumeTags'
 import { FormValues } from '../../../types'
 import clsx from 'clsx'
@@ -26,83 +28,11 @@ import { twMerge } from 'tailwind-merge'
 
 import latex from '../../../lib/latex'
 import getTemplateData from '../../../lib/templates'
+import { prepareResumeBuild } from '../../../lib/resumeBuild'
 
 async function generateResume(formData: FormValues): Promise<string> {
   const { texDoc, opts } = getTemplateData(formData)
   return latex(texDoc, opts)
-}
-
-function setNestedValue(
-  obj: Record<string, unknown>,
-  path: string,
-  value: unknown
-) {
-  const parts = path.split('.')
-  let target: Record<string, unknown> = obj
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i]
-    const idx = Number(key)
-    const next =
-      !isNaN(idx) && Array.isArray(target) ? target[idx] : target[key]
-    target = next as Record<string, unknown>
-    if (target == null) return
-  }
-  target[parts[parts.length - 1]] = value
-}
-
-function applyPendingEdits(formValues: FormValues, edits: PendingEdit[]) {
-  const vals = formValues as Record<string, unknown>
-
-  for (const edit of edits) {
-    if (edit.status !== 'pending') continue
-
-    if (edit.type === 'set') {
-      setNestedValue(vals, edit.fieldPath, edit.newValue)
-    } else if (edit.type === 'append') {
-      const arr = (vals[edit.arrayPath] ?? []) as Record<string, unknown>[]
-      const existing = arr.find((e) => e._agentEditId === edit.id)
-      if (existing) {
-        Object.assign(existing, edit.entry)
-      } else {
-        arr.push(edit.entry)
-        vals[edit.arrayPath] = arr
-      }
-    }
-  }
-
-  // Apply removes last so indices stay valid during set/append passes
-  const removeMap = new Map<string, Set<number>>()
-  for (const edit of edits) {
-    if (edit.type === 'remove' && edit.status === 'pending') {
-      if (!removeMap.has(edit.arrayPath))
-        removeMap.set(edit.arrayPath, new Set())
-      removeMap.get(edit.arrayPath)!.add(edit.entryIndex)
-    }
-  }
-  for (const [arrayPath, indices] of removeMap) {
-    const current = (vals[arrayPath] ?? []) as unknown[]
-    vals[arrayPath] = current.filter((_, i) => !indices.has(i))
-  }
-}
-
-const ARRAY_PATHS = [
-  'work',
-  'education',
-  'skills',
-  'projects',
-  'awards'
-] as const
-
-function stripAgentMarkers(formValues: FormValues) {
-  const vals = formValues as Record<string, unknown>
-  for (const key of ARRAY_PATHS) {
-    const arr = vals[key]
-    if (!Array.isArray(arr)) continue
-    for (const entry of arr) {
-      if (entry && typeof entry === 'object')
-        delete (entry as Record<string, unknown>)._agentEditId
-    }
-  }
 }
 
 const initialFormValues: FormValues = {
@@ -135,6 +65,8 @@ export function Form({
   const [, setResumeTags] = useAtom(resumeTagsAtom)
   const [isLoadingResume, setIsLoadingResume] = useAtom(isLoadingResumeAtom)
   const setFormSetValue = useSetAtom(formSetValueAtom)
+  const markBuilt = useSetAtom(markBuiltAtom)
+  const setResumeTitle = useSetAtom(resumeTitleAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
 
@@ -143,13 +75,15 @@ export function Form({
       formValues: FormValues,
       shouldCommit: () => boolean = () => true
     ) => {
+      const buildPayload = prepareResumeBuild(formValues)
       setResume((current) => ({ ...current, isError: false, isLoading: true }))
       try {
-        const newResumeUrl = await generateResume(formValues)
+        const newResumeUrl = await generateResume(buildPayload)
         if (!shouldCommit()) {
           URL.revokeObjectURL(newResumeUrl)
           return
         }
+        markBuilt(buildPayload)
         setResume({ url: newResumeUrl, isError: false, isLoading: false })
       } catch (error) {
         if (!shouldCommit()) return
@@ -161,7 +95,7 @@ export function Form({
         }))
       }
     },
-    [setResume]
+    [setResume, markBuilt]
   )
 
   useEffect(() => {
@@ -179,6 +113,7 @@ export function Form({
           formContext.reset(content)
           setFormData(content)
           setResumeTags(data.tags ?? [])
+          setResumeTitle(data.title ?? '')
           void generateAndSetResume(content, () => !cancelled)
         } finally {
           if (!cancelled) setIsLoadingResume(false)
@@ -213,6 +148,7 @@ export function Form({
     formContext,
     setFormData,
     setResumeTags,
+    setResumeTitle,
     setIsLoadingResume,
     generateAndSetResume
   ])
@@ -227,9 +163,7 @@ export function Form({
   const handleFormSubmit = useCallback(async () => {
     onMake?.()
 
-    const formValues = structuredClone(formContext.getValues())
-    applyPendingEdits(formValues, pendingEdits)
-    stripAgentMarkers(formValues)
+    const formValues = prepareResumeBuild(formContext.getValues(), pendingEdits)
 
     await generateAndSetResume(formValues)
   }, [formContext, generateAndSetResume, onMake, pendingEdits])

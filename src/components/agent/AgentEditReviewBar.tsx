@@ -278,7 +278,7 @@ export function AgentEditReviewBar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-          className="review-accent-border fixed bottom-0 left-0 right-0 z-40 border-t bg-app-background/95 backdrop-blur-sm shadow-[0_-4px_32px_rgba(0,0,0,0.5)]"
+          className="fixed bottom-0 left-0 right-0 z-40 border-t border-app-border bg-app-surface/95 shadow-[0_-8px_24px_rgba(0,0,0,0.12)] backdrop-blur"
         >
           <AnimatePresence>
             {locationsOpen && (
@@ -287,9 +287,9 @@ export function AgentEditReviewBar() {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 12, opacity: 0 }}
                 transition={{ duration: 0.16 }}
-                className="review-accent-border fixed bottom-[6rem] left-4 right-4 z-50 mx-auto max-h-[min(60vh,24rem)] max-w-2xl overflow-hidden rounded-app-panel border bg-app-background shadow-2xl shadow-black/50"
+                className="fixed bottom-[6rem] left-4 right-4 z-50 mx-auto max-h-[min(60vh,24rem)] max-w-2xl overflow-hidden rounded-app-panel border border-app-border bg-app-surfaceElevated shadow-2xl shadow-black/30"
               >
-                <div className="border-b border-white/10 px-4 py-3">
+                <div className="border-b border-app-border px-4 py-3">
                   <p className="text-sm font-medium text-slate-100">
                     Review locations
                   </p>
@@ -336,7 +336,7 @@ export function AgentEditReviewBar() {
               <button
                 type="button"
                 onClick={() => setLocationsOpen((open) => !open)}
-                className="flex h-6 w-32 items-center justify-center rounded-app-button border border-app-controlBorder bg-app-control text-white transition-colors hover:border-app-borderStrong hover:bg-app-controlHover"
+                className="flex h-5 w-16 items-center justify-center rounded-full bg-app-control text-slate-400 transition-colors hover:bg-app-controlHover hover:text-white"
                 title={
                   locationsOpen
                     ? 'Hide review locations'
@@ -398,18 +398,18 @@ export function AgentEditReviewBar() {
                 <button
                   type="button"
                   onClick={rejectAll}
-                  className="flex items-center gap-1.5 rounded-app-button px-3 py-1.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
+                  className="flex h-8 items-center gap-1.5 rounded-app-button px-3 text-xs font-medium text-slate-400 transition-colors hover:bg-app-control hover:text-white"
                 >
                   <RotateCcw className="h-3 w-3" />
-                  Reject All
+                  Restore all
                 </button>
                 <button
                   type="button"
                   onClick={approveAll}
-                  className="flex items-center gap-1.5 rounded-app-button px-3 py-1.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
+                  className="flex h-8 items-center gap-1.5 rounded-app-button bg-white px-3 text-xs font-semibold text-app-background transition-colors hover:bg-app-primaryHover"
                 >
                   <Check className="h-3 w-3" />
-                  Approve All
+                  Keep all
                 </button>
               </div>
             </div>

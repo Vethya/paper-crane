@@ -11,7 +11,12 @@ import {
 } from '@/components/ui/dropdown-menu'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
-import { resumeAtom, isLoadingResumeAtom } from '../../atoms/resume'
+import { LoaderCircle } from 'lucide-react'
+import {
+  resumeAtom,
+  isLoadingResumeAtom,
+  isPreviewStaleAtom
+} from '../../atoms/resume'
 import { formDataAtom } from '../../atoms/formData'
 
 // Configure PDF.js before either component is rendered. If the worker is
@@ -244,167 +249,192 @@ export function Preview({ className }: PreviewProps) {
 
   const zoomIdx = ZOOM_STEPS.indexOf(zoom)
   const pageWidth =
-    containerWidth > 0 ? containerWidth * 0.92 * zoom : undefined
-  const pdfFile = resume.url || '/blank.pdf'
-
-  const btnClass =
-    'flex items-center gap-1.5 px-2 py-1.5 rounded hover:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed transition-colors text-white/80 text-xs'
+    containerWidth > 0 ? (containerWidth - 64) * zoom : undefined
+  const hasPdf = !!resume.url
+  const isBuilding = resume.isLoading || isLoadingResume
   const isNarrow = containerWidth > 0 && containerWidth < 520
+
+  const toolButton =
+    'flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-slate-400 transition-colors hover:bg-app-control hover:text-white disabled:pointer-events-none disabled:opacity-40'
+  const menuItem =
+    'flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-slate-300 focus:bg-app-control focus:text-white data-[disabled]:opacity-40'
 
   return (
     <output
       ref={containerRef}
       className={twMerge(
-        clsx('flex-1 w-full flex flex-col bg-app-control', className)
+        clsx('flex w-full flex-1 flex-col bg-app-surface', className)
       )}
     >
       {/* Toolbar */}
-      <div className="grid grid-cols-3 items-center gap-1 px-3 py-2 bg-app-surfaceElevated border-b border-white/10 text-sm shrink-0">
-        {/* Left group: downloads — dropdown on narrow, individual buttons on wide */}
-        <div className="flex items-center gap-1 justify-start">
-          {isNarrow ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className={btnClass} title="Download">
-                  <IconDownload />
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="start"
-                className="min-w-[130px] bg-app-surfaceElevated border border-white/10 rounded shadow-lg py-1"
-              >
-                <DropdownMenuItem
-                  onClick={handleDownloadPdf}
-                  disabled={!resume.url || isLoadingResume}
-                  className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
-                >
-                  <IconDownload /> PDF
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleDownloadLatex}
-                  disabled={!hasJson || isLoadingResume}
-                  className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
-                >
-                  <IconDownload /> LaTeX
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={handleDownloadJson}
-                  disabled={!hasJson || isLoadingResume}
-                  className="flex items-center gap-2 px-3 py-1.5 text-white/70 hover:text-white focus:text-white hover:bg-white/10 focus:bg-white/10 disabled:opacity-40 disabled:cursor-not-allowed text-xs cursor-pointer"
-                >
-                  <IconDownload /> JSON
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <>
-              <button
-                className={btnClass}
-                onClick={handleDownloadPdf}
-                disabled={!resume.url || isLoadingResume}
-                title="Download PDF"
-              >
-                <IconDownload /> PDF
-              </button>
-              <button
-                className={btnClass}
-                onClick={handleDownloadLatex}
-                disabled={!hasJson || isLoadingResume}
-                title="Download LaTeX source (ZIP)"
-              >
-                <IconDownload /> LaTeX
-              </button>
-              <button
-                className={btnClass}
-                onClick={handleDownloadJson}
-                disabled={!hasJson || isLoadingResume}
-                title="Download JSON"
-              >
-                <IconDownload /> JSON
-              </button>
-            </>
-          )}
-        </div>
+      <div className="flex h-12 shrink-0 items-center gap-1 border-b border-app-border pl-4 pr-2">
+        <span className="text-sm font-medium text-white">Preview</span>
+        <PreviewStatus hasPdf={hasPdf} />
+        <div className="flex-1" />
 
-        {/* Center group: page navigation — always truly centered */}
-        <div className="flex items-center gap-1 justify-center">
-          <button
-            className={btnClass}
-            onClick={handlePrevPage}
-            disabled={pageNumber <= 1}
-            title="Previous page"
+        {numPages > 1 && (
+          <div className="mr-1 flex items-center">
+            <button
+              className={toolButton}
+              onClick={handlePrevPage}
+              disabled={pageNumber <= 1}
+              title="Previous page"
+            >
+              <IconArrowLeft />
+            </button>
+            <span className="px-1 text-xs tabular-nums text-slate-400">
+              {pageNumber} / {numPages}
+            </span>
+            <button
+              className={toolButton}
+              onClick={handleNextPage}
+              disabled={pageNumber >= numPages}
+              title="Next page"
+            >
+              <IconArrowRight />
+            </button>
+          </div>
+        )}
+        <button
+          className={toolButton}
+          onClick={handleZoomOut}
+          disabled={zoomIdx <= 0}
+          title="Zoom out"
+        >
+          <IconZoomOut />
+        </button>
+        <button
+          className={toolButton}
+          onClick={handleZoomIn}
+          disabled={zoomIdx >= ZOOM_STEPS.length - 1}
+          title="Zoom in"
+        >
+          <IconZoomIn />
+        </button>
+        <button
+          className={toolButton}
+          onClick={handlePrint}
+          disabled={!hasPdf || isBuilding}
+          title="Print"
+        >
+          <IconPrinter />
+        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              className="ml-1 flex h-8 items-center gap-1.5 rounded-md border border-app-border px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-control"
+              title="Download"
+            >
+              <IconDownload />
+              {!isNarrow && 'Download'}
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="end"
+            className="min-w-[180px] rounded-app-card border border-app-border bg-app-surfaceElevated py-1 shadow-lg"
           >
-            <IconArrowLeft />
-          </button>
-          <span className="text-white/60 text-xs px-1 tabular-nums whitespace-nowrap">
-            {isNarrow
-              ? `${pageNumber}/${numPages}`
-              : `Page ${pageNumber} / ${numPages}`}
-          </span>
-          <button
-            className={btnClass}
-            onClick={handleNextPage}
-            disabled={pageNumber >= numPages}
-            title="Next page"
-          >
-            <IconArrowRight />
-          </button>
-        </div>
-
-        {/* Right group: zoom + print */}
-        <div className="flex items-center gap-1 justify-end">
-          <button
-            className={btnClass}
-            onClick={handleZoomOut}
-            disabled={zoomIdx <= 0}
-            title="Zoom out"
-          >
-            <IconZoomOut />
-          </button>
-          <button
-            className={btnClass}
-            onClick={handleZoomIn}
-            disabled={zoomIdx >= ZOOM_STEPS.length - 1}
-            title="Zoom in"
-          >
-            <IconZoomIn />
-          </button>
-          <button
-            className={btnClass}
-            onClick={handlePrint}
-            disabled={!resume.url || isLoadingResume}
-            title="Print"
-          >
-            <IconPrinter />
-          </button>
-        </div>
+            <DropdownMenuItem
+              onClick={handleDownloadPdf}
+              disabled={!hasPdf || isBuilding}
+              className={menuItem}
+            >
+              PDF
+              <span className="ml-auto text-xs text-slate-400">.pdf</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={handleDownloadLatex}
+              disabled={!hasJson || isBuilding}
+              className={menuItem}
+            >
+              LaTeX source
+              <span className="ml-auto text-xs text-slate-400">.zip</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={handleDownloadJson}
+              disabled={!hasJson || isBuilding}
+              className={menuItem}
+            >
+              JSON
+              <span className="ml-auto text-xs text-slate-400">.json</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* PDF viewer */}
       <article
-        className="flex-1 overflow-y-auto"
+        className="relative flex-1 overflow-y-auto bg-app-background"
         style={{ overflowX: zoom > 1 ? 'auto' : 'hidden' }}
       >
-        <Document
-          key={pdfFile}
-          file={pdfFile}
-          onLoadSuccess={handleDocumentLoadSuccess}
-          onLoadError={handleDocumentLoadError}
-          loading=""
-          className="w-full"
-        >
-          {pageWidth !== undefined && (
-            <Page
-              pageNumber={pageNumber}
-              width={pageWidth}
-              renderAnnotationLayer={false}
-              renderTextLayer={false}
-              loading=""
-              className="flex justify-center py-6"
-            />
-          )}
-        </Document>
+        {resume.isError && (
+          <div className="sticky top-0 z-10 flex justify-center px-4 pt-4">
+            <p className="rounded-app-button border border-red-400/30 bg-app-surface px-3 py-2 text-xs text-red-400 shadow-lg">
+              Couldn’t build the PDF. Showing the last version that worked.
+              Press MAKE to try again.
+            </p>
+          </div>
+        )}
+        {hasPdf ? (
+          <Document
+            key={resume.url}
+            file={resume.url}
+            onLoadSuccess={handleDocumentLoadSuccess}
+            onLoadError={handleDocumentLoadError}
+            loading=""
+            className={clsx(
+              'w-full transition-opacity',
+              isBuilding && 'opacity-60'
+            )}
+          >
+            {pageWidth !== undefined && (
+              <Page
+                pageNumber={pageNumber}
+                width={pageWidth}
+                renderAnnotationLayer={false}
+                renderTextLayer={false}
+                loading=""
+                className="flex justify-center !bg-transparent py-8 [&>canvas]:rounded-sm [&>canvas]:shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.18)]"
+              />
+            )}
+          </Document>
+        ) : (
+          !isBuilding && (
+            <div className="flex h-full flex-col items-center justify-center gap-1 px-8 text-center">
+              <p className="text-sm font-medium text-white">No preview yet</p>
+              <p className="max-w-xs text-xs text-slate-400">
+                Fill in your details, then press MAKE to build your resume.
+              </p>
+            </div>
+          )
+        )}
+        {isBuilding && !hasPdf && (
+          <div className="flex h-full items-center justify-center gap-2 text-sm text-slate-400">
+            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+            Building your resume…
+          </div>
+        )}
       </article>
     </output>
   )
+}
+
+function PreviewStatus({ hasPdf }: { hasPdf: boolean }) {
+  const resume = useAtomValue(resumeAtom)
+  const isStale = useAtomValue(isPreviewStaleAtom)
+  const base = 'ml-2 flex items-center gap-1.5 text-xs'
+
+  if (resume.isLoading)
+    return (
+      <span className={clsx(base, 'text-slate-400')}>
+        <LoaderCircle className="h-3 w-3 animate-spin" aria-hidden="true" />
+        Building…
+      </span>
+    )
+  if (resume.isError)
+    return <span className={clsx(base, 'text-red-400')}>Build failed</span>
+  if (isStale)
+    return <span className={clsx(base, 'review-accent-text')}>Out of date</span>
+  if (hasPdf)
+    return <span className={clsx(base, 'text-slate-400')}>Up to date</span>
+  return null
 }
