@@ -2,7 +2,7 @@ import type { LaTeXOpts, TemplateData } from '../types'
 
 type Result =
   | { status: 'done'; url: string }
-  | { status: 'skipped' }
+  | { status: 'skipped'; built: boolean }
   | { status: 'stale' }
 type Request = TemplateData & { owner: unknown }
 type Job = Request & {
@@ -85,13 +85,13 @@ export function createRenderScheduler({
                 matches(latest) &&
                 (latest === running || latest === pending)
               ) {
-                return resolve({ status: 'skipped' })
+                return resolve({ status: 'skipped', built: false })
               }
               pending?.resolve({ status: 'stale' })
               pending = undefined
               latest = { ...input, key, resolve, reject }
               if (!force && successful && matches(successful)) {
-                return resolve({ status: 'skipped' })
+                return resolve({ status: 'skipped', built: true })
               }
               pending = latest
               void drain()

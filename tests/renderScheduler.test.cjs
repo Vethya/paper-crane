@@ -20,7 +20,8 @@ const source = ts.transpileModule(
 const opts = { cmd: 'pdflatex' }
 const request = (texDoc, owner = 'resume') => ({ texDoc, opts, owner })
 const stale = { status: 'stale' }
-const skipped = { status: 'skipped' }
+const skipped = { status: 'skipped', built: false }
+const built = { status: 'skipped', built: true }
 const plain = (value) => JSON.parse(JSON.stringify(value))
 
 function deferred() {
@@ -121,7 +122,7 @@ test('hash skip covers running, pending, and last successful work', async () => 
   await waitFor(() => h.calls.length === 2)
   h.calls[1].resolve('blob:b')
   await b
-  assert.deepEqual(plain(await h.request(request('b'))), skipped)
+  assert.deepEqual(plain(await h.request(request('b'))), built)
   assert.equal(h.calls.length, 2)
 })
 
@@ -236,7 +237,7 @@ test('last successful hash can supersede different running work', async () => {
   await a
   const b = h.request(request('b'))
   await waitFor(() => h.calls.length === 2)
-  assert.deepEqual(plain(await h.request(request('a'))), skipped)
+  assert.deepEqual(plain(await h.request(request('a'))), built)
   h.calls[1].reject(new Error('Superseded by existing preview'))
   assert.deepEqual(plain(await b), stale)
   assert.equal(h.calls.length, 2)
@@ -263,7 +264,7 @@ test('default hash is SHA-256 of the source and options JSON', async () => {
   await waitFor(() => h.calls.length === 1)
   h.calls[0].resolve('blob:a')
   await a
-  assert.deepEqual(plain(await h.request(request('a'))), skipped)
+  assert.deepEqual(plain(await h.request(request('a'))), built)
   assert.equal(h.digests.length, 2)
   const serialized = JSON.stringify(['a', opts])
   assert.deepEqual(h.digests[0], { algorithm: 'SHA-256', data: serialized })
@@ -313,3 +314,188 @@ test('returning to a superseded running document schedules a publishable render'
   })
   assert.deepEqual(h.revoked, ['blob:stale-a'])
 })
+
+// Run Form's real hooks with controlled effects, timers, atoms, and compiler.
+function formHarness() {
+  const h = harness()
+  const effects = [],
+    callbacks = [],
+    memos = [],
+    marked = []
+  let resume = { url: '', isLoading: false, isError: false }
+  let values = {},
+    changed,
+    timer
+  const store = { get: () => resume }
+  const setResume = (update) => {
+    resume = typeof update === 'function' ? update(resume) : update
+  }
+  const form = {
+    getValues: () => values,
+    trigger: async () => true,
+    handleSubmit: (callback) => callback,
+    watch(callback) {
+      changed = callback
+      return { unsubscribe() {} }
+    }
+  }
+  function load(path, modules = {}, globals = {}) {
+    const exports = {}
+    const compiled = ts.transpileModule(
+      readFileSync(join(__dirname, '..', path), 'utf8'),
+      {
+        compilerOptions: {
+          module: ts.ModuleKind.CommonJS,
+          target: ts.ScriptTarget.ES2020,
+          jsx: ts.JsxEmit.ReactJSX
+        }
+      }
+    ).outputText
+    vm.runInNewContext(compiled, {
+      exports,
+      require: (name) => modules[name] ?? {},
+      structuredClone,
+      ...globals
+    })
+    return exports
+  }
+  const { Form } = load(
+    'src/components/generator/Form/index.tsx',
+    {
+      react: {
+        useEffect: (effect) => effects.push(effect),
+        useCallback(callback) {
+          callbacks.push(callback)
+          return callback
+        },
+        useMemo(factory) {
+          const value = factory()
+          memos.push(value)
+          return value
+        }
+      },
+      'react/jsx-runtime': { jsx() {}, jsxs() {} },
+      'next/navigation': { useSearchParams: () => ({ get: () => null }) },
+      'react-hook-form': { useForm: () => form },
+      jotai: {
+        useStore: () => store,
+        useAtom: (atom) => [false, atom === 'resume' ? setResume : () => {}],
+        useAtomValue: () => [],
+        useSetAtom: (atom) =>
+          atom === 'built' ? (payload) => marked.push(payload) : () => {}
+      },
+      '../../../atoms/resume': { resumeAtom: 'resume', markBuiltAtom: 'built' },
+      '../../../lib/resumeBuild': load('src/lib/resumeBuild.ts'),
+      '../../../lib/renderScheduler': { createRenderScheduler: () => h },
+      // A template fixture where empty work entries leave the LaTeX unchanged.
+      '../../../lib/templates': {
+        default: (payload) => ({
+          texDoc: JSON.stringify(payload.basics ?? {}),
+          opts
+        })
+      },
+      clsx: { default: () => '' },
+      'tailwind-merge': { twMerge: () => '' }
+    },
+    {
+      document: {
+        hidden: false,
+        addEventListener() {},
+        removeEventListener() {}
+      },
+      localStorage: { getItem: () => null },
+      setTimeout: (callback) => {
+        timer = callback
+        return 1
+      },
+      clearTimeout: () => {
+        timer = undefined
+      },
+      URL: { revokeObjectURL: (url) => h.revoked.push(url) }
+    }
+  )
+  Form({})
+  return {
+    ...h,
+    marked,
+    owner: memos[1],
+    generate: callbacks[0],
+    get resume() {
+      return resume
+    },
+    startAuto: () => effects[3](),
+    async change(payload) {
+      values = payload
+      changed()
+      await timer?.()
+    }
+  }
+}
+
+test('empty guest content skips initially, but renders after clearing an existing preview', async () => {
+  const h = formHarness()
+  h.startAuto()
+  await h.change({ basics: { name: '' }, work: [] })
+  assert.equal(h.calls.length, 0)
+  const populated = h.change({ basics: { name: 'Ada' } })
+  await waitFor(() => h.calls.length === 1)
+  h.calls[0].resolve('blob:populated')
+  await populated
+  const cleared = h.change({ basics: { name: '' }, work: [] })
+  await waitFor(() => h.calls.length === 2)
+  assert.equal(h.calls[1].texDoc, JSON.stringify({ name: '' }))
+  h.calls[1].resolve('blob:empty')
+  await cleared
+  assert.equal(h.resume.url, 'blob:empty')
+  assert.equal(h.resume.isLoading, false)
+})
+
+test('successful skip marks the unfiltered payload built and clears loading', async () => {
+  const h = formHarness()
+  const payload = { basics: { name: 'Ada' } }
+  const first = h.generate(payload)
+  await waitFor(() => h.calls.length === 1)
+  h.calls[0].resolve('blob:preview')
+  await first
+  const withEmptyWork = { ...payload, work: [{ company: '', highlights: [] }] }
+  await h.generate(withEmptyWork)
+  assert.equal(h.calls.length, 1)
+  assert.deepEqual(plain(h.marked), [payload, withEmptyWork])
+  assert.deepEqual(plain(h.resume), {
+    url: 'blob:preview',
+    isLoading: false,
+    isError: false
+  })
+})
+
+test('in-flight skip does not mark unbuilt data or clear another render loading state', async () => {
+  const h = formHarness()
+  const payload = { basics: { name: 'Ada' } }
+  const first = h.generate(payload)
+  await waitFor(() => h.calls.length === 1)
+  await h.generate({ ...payload, work: [{ company: '', highlights: [] }] })
+  assert.deepEqual(h.marked, [])
+  assert.equal(h.resume.isLoading, true)
+  h.calls[0].resolve('blob:preview')
+  await first
+  assert.deepEqual(plain(h.marked), [payload])
+  assert.equal(h.resume.isLoading, false)
+})
+
+for (const guard of ['inactive owner', 'cancelled commit']) {
+  test(`successful skip cannot mark built for ${guard}`, async () => {
+    const h = formHarness()
+    const payload = { basics: { name: 'Ada' } }
+    const first = h.generate(payload)
+    await waitFor(() => h.calls.length === 1)
+    h.calls[0].resolve('blob:preview')
+    await first
+    const skipped = h.generate(
+      { ...payload, work: [] },
+      () => guard !== 'cancelled commit'
+    )
+    if (guard === 'inactive owner') h.owner.active = false
+    await skipped
+    assert.deepEqual(plain(h.marked), [payload])
+  })
+}
