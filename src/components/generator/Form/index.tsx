@@ -1,9 +1,9 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai'
 import { Loader2 } from 'lucide-react'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { ProfileSection } from './sections/ProfileSection'
@@ -26,19 +26,24 @@ import { FormValues } from '../../../types'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-import latex from '../../../lib/latex'
+import latex, { prewarm } from '../../../lib/latex'
 import getTemplateData from '../../../lib/templates'
 import { prepareResumeBuild } from '../../../lib/resumeBuild'
-
-async function generateResume(formData: FormValues): Promise<string> {
-  const { texDoc, opts } = getTemplateData(formData)
-  return latex(texDoc, opts)
-}
+import { createRenderScheduler } from '../../../lib/renderScheduler'
 
 const initialFormValues: FormValues = {
   headings: {},
   sections: ['profile', 'education', 'work', 'skills', 'projects', 'awards'],
   selectedTemplate: 1
+}
+
+function hasContent(value: unknown): boolean {
+  if (typeof value === 'string') return value.trim().length > 0
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    Object.values(value).some(hasContent)
+  )
 }
 
 interface FormProps {
@@ -60,6 +65,7 @@ export function Form({
   const currSection = activeSection
   const resumeId = searchParams.get('id')
 
+  const store = useStore()
   const [, setResume] = useAtom(resumeAtom)
   const [, setFormData] = useAtom(formDataAtom)
   const [, setResumeTags] = useAtom(resumeTagsAtom)
@@ -69,37 +75,85 @@ export function Form({
   const setResumeTitle = useSetAtom(resumeTitleAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
+  const scheduler = useMemo(() => createRenderScheduler({ compile: latex }), [])
+  const owner = useMemo(
+    () => ({ resumeId, active: true, ready: !resumeId, renders: 0 }),
+    [resumeId]
+  )
+
+  useEffect(() => {
+    owner.active = true
+    return () => {
+      owner.active = false
+      scheduler.invalidate()
+      setResume((current) => ({ ...current, isLoading: false }))
+    }
+  }, [owner, scheduler, setResume])
+
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === 'function') {
+      const task = window.requestIdleCallback(() => void prewarm())
+      return () => window.cancelIdleCallback(task)
+    }
+    const task = setTimeout(() => void prewarm(), 0)
+    return () => clearTimeout(task)
+  }, [])
 
   const generateAndSetResume = useCallback(
     async (
       formValues: FormValues,
-      shouldCommit: () => boolean = () => true
+      shouldCommit: () => boolean = () => true,
+      force = false
     ) => {
       const buildPayload = prepareResumeBuild(formValues)
+      owner.renders++
       setResume((current) => ({ ...current, isError: false, isLoading: true }))
       try {
-        const newResumeUrl = await generateResume(buildPayload)
-        if (!shouldCommit()) {
-          URL.revokeObjectURL(newResumeUrl)
+        const result = await scheduler.request(
+          { ...getTemplateData(buildPayload), owner },
+          { force }
+        )
+        if (result.status === 'skipped') {
+          if (result.built && owner.active && shouldCommit())
+            markBuilt(buildPayload)
+          return
+        }
+        if (result.status !== 'done') return
+        if (!owner.active || !shouldCommit()) {
+          URL.revokeObjectURL(result.url)
           return
         }
         markBuilt(buildPayload)
-        setResume({ url: newResumeUrl, isError: false, isLoading: false })
+        setResume({ url: result.url, isError: false, isLoading: false })
       } catch (error) {
-        if (!shouldCommit()) return
+        if (!owner.active || !shouldCommit()) return
         console.error(error)
         setResume((current) => ({
           ...current,
           isError: true,
           isLoading: false
         }))
+      } finally {
+        owner.renders--
+        if (owner.active)
+          setResume((current) => ({
+            ...current,
+            isLoading: owner.renders > 0
+          }))
       }
     },
-    [setResume, markBuilt]
+    [setResume, markBuilt, scheduler, owner]
   )
 
   useEffect(() => {
     let cancelled = false
+    let loaded: FormValues | undefined
+    const renderLoaded = () => {
+      if (cancelled || document.hidden || !loaded) return
+      void generateAndSetResume(loaded, () => !cancelled)
+      loaded = undefined
+    }
+    document.addEventListener('visibilitychange', renderLoaded)
 
     async function loadData() {
       if (resumeId) {
@@ -114,17 +168,21 @@ export function Form({
           setFormData(content)
           setResumeTags(data.tags ?? [])
           setResumeTitle(data.title ?? '')
-          void generateAndSetResume(content, () => !cancelled)
+          owner.ready = true
+          loaded = content
+          renderLoaded()
         } finally {
           if (!cancelled) setIsLoadingResume(false)
         }
       } else {
+        setIsLoadingResume(false)
         const lastSession = localStorage.getItem('jsonResume')
         if (lastSession) {
           const jsonResume = JSON.parse(lastSession) as FormValues
           formContext.reset(jsonResume)
           setFormData(jsonResume)
         } else {
+          formContext.reset(initialFormValues)
           setFormData(initialFormValues)
         }
       }
@@ -142,6 +200,7 @@ export function Form({
     return () => {
       cancelled = true
       subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', renderLoaded)
     }
   }, [
     resumeId,
@@ -150,7 +209,65 @@ export function Form({
     setResumeTags,
     setResumeTitle,
     setIsLoadingResume,
-    generateAndSetResume
+    generateAndSetResume,
+    owner
+  ])
+
+  useEffect(() => {
+    let cancelled = false
+    let revision = 0
+    let timer: ReturnType<typeof setTimeout>
+    const enabled = () =>
+      !cancelled &&
+      owner.ready &&
+      !document.hidden &&
+      !isLoadingResume &&
+      localStorage.getItem('autoRender') !== '0'
+    const changed = () => {
+      const version = ++revision
+      clearTimeout(timer)
+      if (!enabled()) return
+      timer = setTimeout(async () => {
+        if (!enabled()) return
+        const valid = await formContext.trigger()
+        if (!valid || !enabled() || version !== revision) return
+        const payload = prepareResumeBuild(
+          formContext.getValues(),
+          pendingEdits
+        )
+        if (
+          !resumeId &&
+          !store.get(resumeAtom).url &&
+          ![
+            payload.basics,
+            payload.work,
+            payload.education,
+            payload.skills,
+            payload.projects,
+            payload.awards
+          ].some(hasContent)
+        )
+          return
+        await generateAndSetResume(payload)
+      }, 700)
+    }
+    const subscription = formContext.watch(changed)
+    document.addEventListener('visibilitychange', changed)
+    changed()
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+      subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', changed)
+    }
+  }, [
+    formContext,
+    pendingEdits,
+    isLoadingResume,
+    generateAndSetResume,
+    resumeId,
+    owner,
+    store
   ])
 
   // Register setValue so the agent edit system can apply / restore values from outside the form
@@ -161,12 +278,13 @@ export function Form({
   }, [controlsExternalUpdates, setFormSetValue, formContext.setValue])
 
   const handleFormSubmit = useCallback(async () => {
+    if (!owner.ready) return
     onMake?.()
 
     const formValues = prepareResumeBuild(formContext.getValues(), pendingEdits)
 
-    await generateAndSetResume(formValues)
-  }, [formContext, generateAndSetResume, onMake, pendingEdits])
+    await generateAndSetResume(formValues, undefined, true)
+  }, [formContext, generateAndSetResume, onMake, pendingEdits, owner])
 
   return (
     <FormProvider {...formContext}>
