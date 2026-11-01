@@ -112,7 +112,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
             <span className="text-slate-500" aria-hidden="true">
               /
             </span>
-            <ResumeTitle resumeId={resumeId} />
+            <ResumeTitle key={resumeId} resumeId={resumeId} />
           </>
         )}
       </div>
@@ -258,6 +258,14 @@ function ResumeTitle({ resumeId }: { resumeId: string }) {
   const [title, setTitle] = useAtom(resumeTitleAtom)
   const [draft, setDraft] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const renameVersion = useRef(0)
+
+  useEffect(() => {
+    // Invalidate requests when this resume changes or its header unmounts.
+    return () => {
+      renameVersion.current += 1
+    }
+  }, [resumeId])
 
   useEffect(() => {
     if (draft !== null) inputRef.current?.select()
@@ -268,13 +276,16 @@ function ResumeTitle({ resumeId }: { resumeId: string }) {
     setDraft(null)
     if (!next || next === title) return
     const previous = title
+    const version = ++renameVersion.current
     setTitle(next)
     const res = await fetch(`/api/resumes/${resumeId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ title: next })
     }).catch(() => null)
-    if (!res?.ok) setTitle(previous)
+    if (!res?.ok && renameVersion.current === version) {
+      setTitle((current) => (current === next ? previous : current))
+    }
   }
 
   if (draft !== null)

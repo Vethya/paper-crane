@@ -1,5 +1,8 @@
 import { atom, type SetStateAction } from 'jotai'
 import { formDataAtom } from './formData'
+import { agentPendingEditsAtom } from './agentEdits'
+import { prepareResumeBuild } from '../lib/resumeBuild'
+import type { FormValues } from '../types'
 
 export interface Resume {
   url: string
@@ -37,14 +40,16 @@ isLoadingResumeAtom.debugLabel = 'isLoadingResumeAtom'
 export const builtFormDataAtom = atom<string | null>(null)
 builtFormDataAtom.debugLabel = 'builtFormDataAtom'
 
-export const markBuiltAtom = atom(null, (get, set) => {
-  set(builtFormDataAtom, JSON.stringify(get(formDataAtom)))
+export const markBuiltAtom = atom(null, (_get, set, payload: FormValues) => {
+  set(builtFormDataAtom, JSON.stringify(payload))
 })
 
 export const isPreviewStaleAtom = atom((get) => {
   const built = get(builtFormDataAtom)
   const data = get(formDataAtom)
-  return built !== null && data !== null && JSON.stringify(data) !== built
+  if (built === null || data === null) return false
+  const payload = prepareResumeBuild(data, get(agentPendingEditsAtom))
+  return JSON.stringify(payload) !== built
 })
 isPreviewStaleAtom.debugLabel = 'isPreviewStaleAtom'
 
