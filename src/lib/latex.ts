@@ -7,6 +7,7 @@ type SiglumCompiler = import('@siglum/engine').SiglumCompiler
 let compilerPromise: Promise<SiglumCompiler> | null = null
 let compilationQueue: Promise<unknown> = Promise.resolve()
 let unavailablePackage: string | null = null
+const assetCache = new Map<string, Promise<Uint8Array>>()
 
 function trackUnavailablePackage(message: string) {
   const match = message.match(/fetch failed for (\S+):/)
@@ -42,6 +43,10 @@ function getCompiler(): Promise<SiglumCompiler> {
   }
 
   return compilerPromise
+}
+
+export async function prewarm(): Promise<void> {
+  await getCompiler().catch(() => {})
 }
 
 export default function latex(
@@ -88,27 +93,33 @@ async function compileLatex(texDoc: string, opts: LaTeXOpts): Promise<string> {
 async function resolveAssets(
   opts: LaTeXOpts
 ): Promise<Record<string, Uint8Array>> {
-  const additionalFiles: Record<string, Uint8Array> = {}
-
-  for (const assetPath of opts.inputs || []) {
-    additionalFiles[basename(assetPath)] = await fetchAsset(assetPath)
-  }
-
-  for (const assetPath of opts.fonts || []) {
-    additionalFiles[`fonts/${basename(assetPath)}`] =
-      await fetchAsset(assetPath)
-  }
-
-  return additionalFiles
+  return Object.fromEntries(
+    await Promise.all(
+      [
+        ...(opts.inputs ?? []).map((path) => [basename(path), path]),
+        ...(opts.fonts ?? []).map((path) => [`fonts/${basename(path)}`, path])
+      ].map(async ([name, path]) => [name, await fetchAsset(path)])
+    )
+  )
 }
 
-async function fetchAsset(assetPath: string): Promise<Uint8Array> {
-  const response = await fetch(assetPath)
-  if (!response.ok) {
-    throw new Error(`Failed to load LaTeX asset: ${assetPath}`)
-  }
+function fetchAsset(assetPath: string): Promise<Uint8Array> {
+  const cached = assetCache.get(assetPath)
+  if (cached) return cached
 
-  return new Uint8Array(await response.arrayBuffer())
+  const asset = fetch(assetPath)
+    .then(async (response) => {
+      if (!response.ok) {
+        throw new Error(`Failed to load LaTeX asset: ${assetPath}`)
+      }
+      return new Uint8Array(await response.arrayBuffer())
+    })
+    .catch((error) => {
+      assetCache.delete(assetPath)
+      throw error
+    })
+  assetCache.set(assetPath, asset)
+  return asset
 }
 
 function basename(assetPath: string): string {
