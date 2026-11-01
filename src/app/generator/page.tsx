@@ -131,14 +131,33 @@ function GeneratorContent() {
       <div className="relative z-10 flex flex-1 flex-col xl:min-h-0">
         <Header className="z-10 border-b border-app-border bg-app-background/90 backdrop-blur" />
 
-        {/* Mobile layout (below xl) */}
-        <div className="flex flex-col gap-4 px-4 py-6 xl:hidden">
-          <MobileNav
-            activeSection={activeSection}
-            onSectionChange={changeActiveSection}
-          />
+        {/* Keep the form mounted when the layout changes to preserve drafts. */}
+        <div
+          className={
+            isDesktopLayout
+              ? 'grid flex-1 auto-rows-[minmax(0,1fr)] grid-cols-[minmax(13rem,14%)_minmax(0,1fr)_minmax(0,50%)] gap-4 overflow-hidden px-6 py-5'
+              : 'flex flex-col gap-4 px-4 py-6'
+          }
+        >
+          {isDesktopLayout ? (
+            <div className="min-w-0 rounded-app-panel border border-app-border bg-app-surface p-3">
+              <Sidebar
+                activeSection={activeSection}
+                componentsOpen={componentsOpen}
+                onComponentsToggle={toggleComponents}
+                onSectionChange={changeActiveSection}
+                showComponents={!!resumeId}
+                formId="resume-form-desktop"
+              />
+            </div>
+          ) : (
+            <MobileNav
+              activeSection={activeSection}
+              onSectionChange={changeActiveSection}
+            />
+          )}
 
-          {resumeId && (
+          {!isDesktopLayout && resumeId && (
             <button
               type="button"
               onClick={toggleComponents}
@@ -149,63 +168,35 @@ function GeneratorContent() {
             </button>
           )}
 
-          <div className="rounded-app-panel border border-app-border bg-app-surface">
-            <Form
-              activeSection={activeSection}
-              formId="resume-form-mobile"
-              onMake={closeComponents}
-              controlsExternalUpdates={!isDesktopLayout}
-            />
-          </div>
-
-          <div className="flex justify-center">
-            <PrimaryButton
-              type="submit"
-              form="resume-form-mobile"
-              disabled={!isHydrated}
-              className="w-full"
-              onClick={() =>
-                previewRef.current?.scrollIntoView({ behavior: 'smooth' })
-              }
-            >
-              MAKE
-            </PrimaryButton>
-          </div>
-
-          <div
-            ref={previewRef}
-            className="flex min-h-[70svh] flex-col rounded-app-panel border border-app-border bg-app-surface"
-          >
-            <div className="flex flex-1 overflow-hidden rounded-app-panel">
-              <Preview />
-            </div>
-          </div>
-        </div>
-
-        {/* Desktop layout (xl+) */}
-        <div className="hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(13rem,14%)_minmax(0,1fr)_minmax(0,50%)] xl:gap-4 xl:overflow-hidden xl:px-6 xl:py-5">
-          <div className="min-w-0 rounded-app-panel border border-app-border bg-app-surface p-3">
-            <Sidebar
-              activeSection={activeSection}
-              componentsOpen={componentsOpen}
-              onComponentsToggle={toggleComponents}
-              onSectionChange={changeActiveSection}
-              showComponents={!!resumeId}
-              formId="resume-form-desktop"
-            />
-          </div>
-
           <div className="rounded-app-panel border border-app-border bg-app-surface xl:overflow-hidden">
             <Form
               activeSection={activeSection}
-              formId="resume-form-desktop"
+              formId={isDesktopLayout ? 'resume-form-desktop' : 'resume-form'}
               onMake={closeComponents}
-              controlsExternalUpdates={isDesktopLayout}
             />
           </div>
 
-          <div className="flex min-h-0 flex-col rounded-app-panel border border-app-border bg-app-surface">
-            {componentsOpen && resumeId ? (
+          {!isDesktopLayout && (
+            <div className="flex justify-center">
+              <PrimaryButton
+                type="submit"
+                form="resume-form"
+                disabled={!isHydrated}
+                className="w-full"
+                onClick={() =>
+                  previewRef.current?.scrollIntoView({ behavior: 'smooth' })
+                }
+              >
+                MAKE
+              </PrimaryButton>
+            </div>
+          )}
+
+          <div
+            ref={previewRef}
+            className={`flex flex-col rounded-app-panel border border-app-border bg-app-surface ${isDesktopLayout ? 'min-h-0' : 'min-h-[70svh]'}`}
+          >
+            {isDesktopLayout && componentsOpen && resumeId ? (
               <ComponentsPanel
                 activeType={componentsType}
                 onActiveTypeChange={setComponentsType}
@@ -222,7 +213,7 @@ function GeneratorContent() {
         </div>
       </div>
 
-      {componentsOpen && resumeId && (
+      {!isDesktopLayout && componentsOpen && resumeId && (
         <ComponentsPanel
           activeType={componentsType}
           onActiveTypeChange={setComponentsType}
