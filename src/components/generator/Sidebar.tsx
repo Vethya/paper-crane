@@ -3,12 +3,12 @@
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { useAtomValue } from 'jotai'
-import { Blocks, LoaderCircle } from 'lucide-react'
+import { Blocks } from 'lucide-react'
 import { PrimaryButton } from '../core/Button'
 import {
   isLoadingResumeAtom,
   isPreviewStaleAtom,
-  resumeAtom
+  autoRenderAtom
 } from '@/atoms/resume'
 import { useIsHydrated } from '@/hooks/useIsHydrated'
 
@@ -87,35 +87,23 @@ export function Sidebar({
         disabled={!isHydrated || isLoadingResume}
         className="w-full min-w-0 px-3"
       >
-        MAKE
+        Render
+        <RenderBadge />
       </PrimaryButton>
-      <BuildStatus />
     </aside>
   )
 }
 
-function BuildStatus() {
-  const resume = useAtomValue(resumeAtom)
+export function RenderBadge() {
+  const autoRender = useAtomValue(autoRenderAtom)
   const isStale = useAtomValue(isPreviewStaleAtom)
 
-  if (resume.isLoading)
+  if (!autoRender && isStale)
     return (
-      <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-slate-400">
-        <LoaderCircle className="h-3 w-3 animate-spin" aria-hidden="true" />
-        Building PDF…
-      </p>
-    )
-  if (resume.isError)
-    return (
-      <p className="mt-2 text-center text-xs text-red-400">
-        Couldn’t build the PDF
-      </p>
-    )
-  if (isStale)
-    return (
-      <p className="review-accent-text mt-2 text-center text-xs">
-        Preview is out of date
-      </p>
+      <span
+        className="h-1.5 w-1.5 rounded-full bg-current"
+        aria-hidden="true"
+      />
     )
   return null
 }

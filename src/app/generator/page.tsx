@@ -8,6 +8,7 @@ import { Form } from '../../components/generator/Form'
 import { Header } from '../../components/generator/Header'
 import {
   MobileNav,
+  RenderBadge,
   Sidebar,
   sectionLinks
 } from '../../components/generator/Sidebar'
@@ -204,7 +205,8 @@ function GeneratorContent() {
                   previewRef.current?.scrollIntoView({ behavior: 'smooth' })
                 }
               >
-                MAKE
+                Render
+                <RenderBadge />
               </PrimaryButton>
             </div>
           )}
@@ -222,7 +224,11 @@ function GeneratorContent() {
             ) : (
               <>
                 <div className="flex flex-1 overflow-hidden rounded-app-panel">
-                  <Preview />
+                  <Preview
+                    formId={
+                      isDesktopLayout ? 'resume-form-desktop' : 'resume-form'
+                    }
+                  />
                 </div>
               </>
             )}

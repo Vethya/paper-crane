@@ -39,7 +39,7 @@ export function ProductMockup() {
             </div>
           ))}
           <div className="mt-5 rounded-lg border border-[#2563eb] bg-[#2563eb] px-3 py-2 text-center text-[10px] font-semibold text-[#ffffff]">
-            MAKE
+            Render
           </div>
         </aside>
 

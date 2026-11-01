@@ -21,8 +21,9 @@ import { LoaderCircle } from 'lucide-react'
 import {
   resumeAtom,
   isLoadingResumeAtom,
-  isPreviewStaleAtom
+  autoRenderAtom
 } from '../../atoms/resume'
+import { useRenderIndicator } from '@/hooks/useRenderIndicator'
 import { formDataAtom } from '../../atoms/formData'
 import { clampPdfPage, retainPdfUrl, releasePdfUrl } from '../../lib/pdfBuffer'
 
@@ -51,6 +52,7 @@ interface PdfBuffer {
 
 interface PreviewProps {
   className?: string
+  formId?: string
 }
 
 const ZOOM_STEPS = [1.0, 1.25, 1.5, 2.0]
@@ -170,8 +172,9 @@ function triggerDownload(url: string, filename: string) {
   a.click()
 }
 
-export function Preview({ className }: PreviewProps) {
+export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
   const [resume, setResume] = useAtom(resumeAtom)
+  const [autoRender, setAutoRender] = useAtom(autoRenderAtom)
   const store = useStore()
   const formData = useAtomValue(formDataAtom)
   const isLoadingResume = useAtomValue(isLoadingResumeAtom)
@@ -332,6 +335,11 @@ export function Preview({ className }: PreviewProps) {
   const zoomIdx = ZOOM_STEPS.indexOf(zoom)
   const hasPdf = !!displayed
   const isBuilding = resume.isLoading || isLoadingResume
+  const indicator = useRenderIndicator(
+    resume.isLoading || !!candidate,
+    hasPdf,
+    resume.isError
+  )
   const isNarrow = containerWidth > 0 && containerWidth < 520
 
   const toolButton =
@@ -347,9 +355,29 @@ export function Preview({ className }: PreviewProps) {
       )}
     >
       {/* Toolbar */}
-      <div className="flex h-12 shrink-0 items-center gap-1 border-b border-app-border pl-4 pr-2">
+      <div className="flex min-h-12 shrink-0 flex-wrap items-center gap-1 border-b border-app-border py-2 pl-4 pr-2">
         <span className="text-sm font-medium text-white">Preview</span>
-        <PreviewStatus hasPdf={hasPdf} />
+        <button
+          type="button"
+          role="switch"
+          aria-checked={autoRender}
+          onClick={() => setAutoRender(!autoRender)}
+          className="ml-2 flex items-center gap-1.5 rounded text-xs text-slate-400 focus-visible:outline focus-visible:outline-2"
+        >
+          Auto render
+          <span
+            data-checked={autoRender}
+            className="h-3.5 w-6 rounded-full bg-app-control p-0.5 after:block after:h-2.5 after:w-2.5 after:rounded-full after:bg-white after:transition-transform data-[checked=true]:bg-slate-400 data-[checked=true]:after:translate-x-2.5"
+            aria-hidden="true"
+          />
+        </button>
+        {indicator === 'spinner' && (
+          <LoaderCircle
+            className="ml-1 h-3 w-3 animate-spin text-slate-400"
+            role="status"
+            aria-label="Rendering"
+          />
+        )}
         <div className="flex-1" />
 
         {numPages > 1 && (
@@ -450,14 +478,16 @@ export function Preview({ className }: PreviewProps) {
           overflowAnchor: 'none'
         }}
       >
-        {resume.isError && (
+        {indicator === 'error' && (
           <div
             role="alert"
             className="sticky top-0 z-10 flex justify-center px-4 pt-4"
           >
             <p className="rounded-app-button border border-red-400/30 bg-app-surface px-3 py-2 text-xs text-red-400 shadow-lg">
-              Couldn’t build the PDF. Showing the last version that worked.
-              Press MAKE to try again.
+              {"Couldn't render"}{' '}
+              <button type="submit" form={formId} className="ml-2 underline">
+                Retry
+              </button>
             </p>
           </div>
         )}
@@ -515,38 +545,19 @@ export function Preview({ className }: PreviewProps) {
           <div className="flex h-full flex-col items-center justify-center gap-1 px-8 text-center">
             <p className="text-sm font-medium text-white">No preview yet</p>
             <p className="max-w-xs text-xs text-slate-400">
-              Fill in your details, then press MAKE to build your resume.
+              Fill in your details, then press Render to build your resume.
             </p>
           </div>
         )}
-        {(isBuilding || candidate) && !hasPdf && (
-          <div className="flex h-full items-center justify-center gap-2 text-sm text-slate-400">
-            <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-            Building your resume…
+        {indicator === 'loading-engine' && (
+          <div
+            aria-live="polite"
+            className="flex h-full items-center justify-center text-sm text-slate-400"
+          >
+            Loading preview engine…
           </div>
         )}
       </article>
     </output>
   )
-}
-
-function PreviewStatus({ hasPdf }: { hasPdf: boolean }) {
-  const resume = useAtomValue(resumeAtom)
-  const isStale = useAtomValue(isPreviewStaleAtom)
-  const base = 'ml-2 flex items-center gap-1.5 text-xs'
-
-  if (resume.isLoading)
-    return (
-      <span className={clsx(base, 'text-slate-400')}>
-        <LoaderCircle className="h-3 w-3 animate-spin" aria-hidden="true" />
-        Building…
-      </span>
-    )
-  if (resume.isError)
-    return <span className={clsx(base, 'text-red-400')}>Build failed</span>
-  if (isStale)
-    return <span className={clsx(base, 'review-accent-text')}>Out of date</span>
-  if (hasPdf)
-    return <span className={clsx(base, 'text-slate-400')}>Up to date</span>
-  return null
 }
