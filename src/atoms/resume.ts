@@ -36,6 +36,26 @@ resumeAtom.debugLabel = 'resumeAtom'
 export const isLoadingResumeAtom = atom(false)
 isLoadingResumeAtom.debugLabel = 'isLoadingResumeAtom'
 
+const autoRenderPreferenceAtom = atom(true)
+autoRenderPreferenceAtom.onMount = (set) => {
+  try {
+    set(localStorage.getItem('autoRender') !== '0')
+  } catch {
+    // Storage may be unavailable; keep the default.
+  }
+}
+export const autoRenderAtom = atom(
+  (get) => get(autoRenderPreferenceAtom),
+  (_get, set, enabled: boolean) => {
+    set(autoRenderPreferenceAtom, enabled)
+    try {
+      localStorage.setItem('autoRender', enabled ? '1' : '0')
+    } catch {
+      // Keep the preference reactive even without storage.
+    }
+  }
+)
+
 // The form data the current PDF was built from, so the UI can tell when the
 // preview no longer matches the form.
 export const builtFormDataAtom = atom<string | null>(null)

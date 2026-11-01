@@ -16,6 +16,7 @@ import {
   resumeAtom,
   isLoadingResumeAtom,
   markBuiltAtom,
+  autoRenderAtom,
   resumeTitleAtom
 } from '../../../atoms/resume'
 import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
@@ -73,6 +74,7 @@ export function Form({
   const markBuilt = useSetAtom(markBuiltAtom)
   const setResumeTitle = useSetAtom(resumeTitleAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
+  const autoRender = useAtomValue(autoRenderAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
   const scheduler = useMemo(() => createRenderScheduler({ compile: latex }), [])
   const owner = useMemo(
@@ -216,7 +218,7 @@ export function Form({
       owner.ready &&
       !document.hidden &&
       !isLoadingResume &&
-      localStorage.getItem('autoRender') !== '0'
+      autoRender
     const changed = () => {
       const version = ++revision
       clearTimeout(timer)
@@ -256,6 +258,7 @@ export function Form({
   }, [
     formContext,
     pendingEdits,
+    autoRender,
     isLoadingResume,
     generateAndSetResume,
     resumeId,
