@@ -16,9 +16,8 @@ const generator: Generator = {
       .join(' | ')
 
     return stripIndent`
-      \\begin{tabular*}{7in}{l@{\\extracolsep{\\fill}}r}
-      \\textbf{\\Large ${name}} & \\textit{${info}}
-      \\end{tabular*}
+      \\noindent\\parbox[t]{0.30\\textwidth}{\\textbf{\\Large ${name || ''}}}\\hfill
+      \\parbox[t]{0.67\\textwidth}{\\raggedleft\\textit{${info}}}\\par
     `
   },
 
@@ -97,10 +96,11 @@ const generator: Generator = {
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       \\begin{itemize}[leftmargin=*]
       ${work.map((job) => {
-        const { company, position, location, startDate, endDate, highlights } = job
+        const { company, position, location, startDate, endDate, highlights } =
+          job
 
         let dateRange
-        let dutyLines
+        let dutyLines = ''
 
         if (startDate && endDate) {
           dateRange = `${startDate} | ${endDate}`
@@ -110,7 +110,7 @@ const generator: Generator = {
           dateRange = endDate
         }
 
-        if (highlights) {
+        if (highlights?.some(Boolean)) {
           dutyLines = source`
             \\begin{itemize}
               ${highlights.map((duty) => `\\item ${duty}`)}

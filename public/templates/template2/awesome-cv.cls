@@ -70,7 +70,7 @@
 \ifxetex
   \RequirePackage[quiet]{fontspec}
   % To support LaTeX quoting style
-  \defaultfontfeatures{Ligatures=TeX}
+  \defaultfontfeatures{Ligatures={TeX,NoCommon}}
 \else
   \RequirePackage[T1]{fontenc}
   % Replace by the encoding you are using
@@ -237,7 +237,7 @@
 \newcommand*{\entrydatestyle}[1]{{\fontsize{8pt}{1em}\bodyfontlight\slshape\color{graytext} #1}}
 \newcommand*{\entrylocationstyle}[1]{{\fontsize{9pt}{1em}\bodyfontlight\slshape\color{awesome} #1}}
 \newcommand*{\descriptionstyle}[1]{{\fontsize{9pt}{1em}\bodyfontlight\upshape\color{text} #1}}
-\newcommand*{\skill}[1]{{\fontsize{9pt}{1em}\bodyfontlight\upshape\color{text} \textnormal{#1}}}
+\newcommand*{\skill}[1]{{\fontsize{9pt}{1em}\bodyfontlight\upshape\color{text} #1}}
 
 % For elements of subentry
 \newcommand*{\subentrytitlestyle}[1]{{\fontsize{8pt}{1em}\bodyfont\mdseries\color{graytext} #1}}
@@ -554,6 +554,7 @@
       \entrypositionstyle{#1} & \entrydatestyle{#4} \\}
     \multicolumn{2}{L{17cm}}{\descriptionstyle{#5}} \\
   \end{tabular*}
+  \par\addvspace{2mm}
 }
 
 % Define an environment for cvsubentry
@@ -580,21 +581,23 @@
   \end{tabular*}
 }
 
-% Define an environment for cvhonor
-\newenvironment{cvhonors}{
-  \begin{center}
-    \setlength\tabcolsep{0pt}
-    \setlength{\extrarowheight}{0pt}
-    \begin{tabular*}{\textwidth}{@{\extracolsep{\fill}} C{1.5cm} L{13.0cm} R{2.5cm}}
-}{
-    \end{tabular*}
-  \end{center}
+% Full-width project lines keep long URLs out of the narrow date column.
+\newcommand*{\cvproject}[4]{
+  \par\noindent\begin{minipage}{\linewidth}\raggedright
+    \entrytitlestyle{#1}\hfill\entrylocationstyle{#2}\par
+    \ifempty{#3}{}{\noindent\entrydatestyle{#3}}\par
+    \ifempty{#4}{}{\noindent\entrypositionstyle{#4}}\par
+  \end{minipage}\par\smallskip
 }
-% Define a line of cv information(honor, award or something else)
-% Usage: \cvhonor{<position>}{<title>}{<location>}{<date>}
+
+% Keep each award together and its summary clear of dates and issuers.
+\newenvironment{cvhonors}{\par\addvspace{2mm}}{\par}
 \newcommand*{\cvhonor}[4]{
-  \honordatestyle{#4} & \honorpositionstyle{#1}, \honortitlestyle{#2} & \honorlocationstyle{#3}
-  \\
+  \noindent\begin{minipage}{\linewidth}
+    \honorpositionstyle{#1}\hfill\honordatestyle{#4}\par
+    \ifempty{#3}{}{\noindent\honorlocationstyle{#3}}\par
+    \ifempty{#2}{}{\noindent\honortitlestyle{#2}}\par
+  \end{minipage}\par\smallskip
 }
 
 % Define an environment for cvskill

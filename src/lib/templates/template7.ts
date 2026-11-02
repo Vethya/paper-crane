@@ -93,7 +93,7 @@ const generator: Generator = {
           dateRange = endDate
         }
 
-        if (highlights) {
+        if (highlights?.some(Boolean)) {
           highlightLines = source`
             \\begin{itemize}%
               ${highlights.map((highlight) => `\\item ${highlight}`)}
@@ -210,6 +210,13 @@ const generator: Generator = {
       \\usepackage{textcomp}
       % moderncv themes
       \\moderncvstyle{classic}                             % style options are 'casual' (default), 'classic', 'oldstyle' and 'banking'
+      \\renewcommand*{\\labelitemi}{\\textcolor{color1}{\\textbullet}}
+      \\renewcommand*{\\mobilephonesymbol}{Phone:~}
+      \\renewcommand*{\\emailsymbol}{Email:~}
+      \\renewcommand*{\\homepagesymbol}{Website:~}
+      \\hyphenpenalty=10000
+      \\exhyphenpenalty=10000
+      \\emergencystretch=2em
       \\moderncvcolor{blue}                               % color options 'blue' (default), 'orange', 'green', 'red', 'purple', 'grey' and 'black'
       %\\renewcommand{\\familydefault}{\\sfdefault}         % to set the default font; use '\\sfdefault' for the default sans serif font, '\\rmdefault' for the default roman one, or any tex font name
       %\\nopagenumbers{}                                  % uncomment to suppress automatic page numbering for CVs longer than one page
@@ -220,7 +227,7 @@ const generator: Generator = {
 
       % adjust the page margins
       \\usepackage[scale=0.75]{geometry}
-      %\\setlength{\\hintscolumnwidth}{3cm}                % if you want to change the width of the column with the dates
+      \\setlength{\\hintscolumnwidth}{3.6cm}                % if you want to change the width of the column with the dates
       %\\setlength{\\makecvtitlenamewidth}{10cm}           % for the 'classic' style, if you want to force the width allocated to your name and avoid line breaks. be careful though, the length is normally calculated to avoid any overlap with your personal info; use this at your own typographical risks...
     `
   }

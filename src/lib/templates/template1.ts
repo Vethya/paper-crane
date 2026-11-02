@@ -107,7 +107,8 @@ const generator: Generator = {
       \\vspace{1mm}
 
       ${work.map((job) => {
-        const { company, position, location, startDate, endDate, highlights } = job
+        const { company, position, location, startDate, endDate, highlights } =
+          job
 
         let line1 = ''
         let line2 = ''
@@ -117,12 +118,12 @@ const generator: Generator = {
           line1 += `\\textbf{${company}}`
         }
 
-        if (location) {
-          line1 += ` \\hfill ${location}`
-        }
-
         if (position) {
           line2 += `\\textit{${position}}`
+        }
+
+        if (location) {
+          line2 += `${line2 ? ', ' : ''}${location}`
         }
 
         if (startDate && endDate) {
@@ -136,7 +137,7 @@ const generator: Generator = {
         if (line1) line1 += '\\\\'
         if (line2) line2 += '\\\\'
 
-        if (highlights) {
+        if (highlights?.some(Boolean)) {
           highlightLines = source`
               \\vspace{-1mm}
               \\begin{itemize} \\itemsep 1pt
@@ -161,12 +162,10 @@ const generator: Generator = {
 
     return source`
       \\header{${heading || 'Skills'}}
-      \\begin{tabular}{ l l }
       ${skills.map((skill) => {
         const { name = 'Misc', keywords = [] } = skill
-        return `${name}: & ${keywords.join(', ')} \\\\`
+        return `${name}: ${keywords.join(', ')}\\par`
       })}
-      \\end{tabular}
       \\vspace{2mm}
     `
   },

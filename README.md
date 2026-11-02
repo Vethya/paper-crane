@@ -4,7 +4,7 @@ A resume builder for generating elegant LaTeX resumes without writing any TeX co
 
 ## Features
 
-- **Visual template picker** — choose from 6 LaTeX templates with live previews
+- **Visual template picker** — choose from 9 LaTeX templates with live previews
 - **Live PDF preview** — see your resume update in real time with zoom, pagination, and download controls
 - **Dynamic form sections** — add and remove entries for experience, education, projects, skills, and more
 - **LaTeX special character sanitization** — user input is automatically escaped before compilation
@@ -73,7 +73,7 @@ NEXT_PUBLIC_LATEX_API_URL=http://localhost:3027
 
 ## Templates
 
-6 templates are included, each compiled with either `pdflatex` or `xelatex` depending on the template's requirements.
+9 templates are included, each compiled with either `pdflatex` or `xelatex` depending on the template's requirements.
 
 ## Credits
 
