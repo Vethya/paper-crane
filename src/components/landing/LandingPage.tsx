@@ -17,7 +17,7 @@ import {
 } from './landingData'
 
 const lightLandingVars = {
-  '--app-foreground': '15 23 42'
+  '--app-foreground': '24 24 27'
 } as CSSProperties
 
 const resumeImportSchema = z
@@ -165,7 +165,7 @@ function LandingHeader({
     <header className="sticky top-0 z-30 border-b border-[#e4e4e0] bg-[#fafaf8]/95 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-8">
         <Link href="/" aria-label="Resume Manager home" className="flex-none">
-          <Logo className="[&>span:first-child]:text-[#18181b]" scale={0.85} />
+          <Logo scale={0.85} />
         </Link>
 
         <div className="hidden items-center gap-7 text-sm text-[#71717a] lg:flex">

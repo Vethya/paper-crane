@@ -1,7 +1,4 @@
-import { Oxanium } from 'next/font/google'
 import { twMerge } from 'tailwind-merge'
-
-const oxanium = Oxanium({ subsets: ['latin'], weight: ['600'] })
 
 interface Props {
   marginTop?: string | number
@@ -15,19 +12,19 @@ interface Props {
 export function Logo({ scale = 1, className, ...props }: Props) {
   return (
     <span
-      className={twMerge('select-none', className)}
+      className={twMerge(
+        'inline-block select-none whitespace-nowrap font-sans text-[rgb(var(--app-foreground))]',
+        className
+      )}
       style={{
-        fontFamily: oxanium.style.fontFamily,
         fontSize: `${24 * scale}px`,
         fontWeight: 600,
-        letterSpacing: '0.02em',
-        display: 'inline-block',
+        letterSpacing: '-0.03em',
         lineHeight: 1.2,
         ...props
       }}
     >
-      <span className="text-white">Resume </span>
-      <span style={{ color: '#2563EB' }}>Manager</span>
+      Paper Crane
     </span>
   )
 }
