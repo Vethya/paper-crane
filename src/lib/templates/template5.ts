@@ -160,13 +160,15 @@ const generator: Omit<Generator, 'resumeHeader'> = {
     }
 
     return source`
+      \\par
+      \\begingroup
+      \\setlength{\\parskip}{0pt}
       \\section{${heading || 'SKILLS'}}
-      \\begin{tabular}{@{}ll}
       ${skills.map((skill) => {
         const { name, keywords = [] } = skill
-        return `\\textbf{${name || ''}}: & ${keywords.join(', ') || ''}\\\\`
+        return `\\noindent \\textbf{${name || ''}}: ${keywords.join(', ') || ''}\\par`
       })}
-      \\end{tabular}
+      \\endgroup
     `
   },
 

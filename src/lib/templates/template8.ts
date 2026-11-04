@@ -269,6 +269,10 @@ function template8(values: FormValues) {
     ${generator.resumeHeader()}
     % The font could be set to Windows-specific Calibri by using the 'calibri' option
     \\documentclass[]{mcdowellcv}
+    \\defaultfontfeatures{Ligatures=NoCommon}
+    \\setmainfont{Latin Modern Roman}
+    \\usepackage[none]{hyphenat}
+    \\sloppy
 
     % For mathematical symbols
     \\usepackage{amsmath}

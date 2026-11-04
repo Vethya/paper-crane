@@ -42,7 +42,7 @@ const generator: Generator = {
         ${sectionHeader}
         \\centering{
           \\color{headings}
-          \\fontspec[Path = fonts/raleway/]{Raleway-Medium}
+          \\fontspec[Path = fonts/]{Raleway-Medium}
           \\fontsize{11pt}{14pt}
           \\selectfont ${info}
         }
@@ -209,12 +209,10 @@ const generator: Generator = {
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       \\section{${heading || 'Skills'}}
       \\raggedright
-      \\begin{tabular}{ l l }
       ${skills.map((skill) => {
         const { name = '', keywords = [] } = skill
-        return `\\descript{${name}} & {\\location{${keywords.join(', ')}}} \\\\`
+        return `\\noindent {\\descript{${name}:} \\location{${keywords.join(', ')}}}\\par`
       })}
-      \\end{tabular}
       \\sectionsep
     `
   },
@@ -238,6 +236,7 @@ const generator: Generator = {
         let line1 = ''
         let line2 = ''
         let line3 = ''
+        let urlLine = ''
 
         if (name) {
           line1 += `\\runsubsection{\\large{${name}}}`
@@ -248,11 +247,14 @@ const generator: Generator = {
         }
 
         if (url) {
-          line2 += `\\hfill \\location{${url}}`
+          urlLine = `\\noindent\\location{\\url{${url}}}\\par`
         }
 
-        if (line2) {
-          line2 += '\\\\'
+        if (line1 || line2) {
+          line2 += '\\par'
+          if (url) {
+            line2 += '\\nopagebreak[4]'
+          }
         }
 
         if (description) {
@@ -262,6 +264,7 @@ const generator: Generator = {
         return `
           ${line1}
           ${line2}
+          ${urlLine}
           ${line3}
           \\sectionsep
         `
@@ -354,6 +357,7 @@ function template4(values: FormValues) {
   return stripIndent`
     ${generator.resumeHeader()}
     \\documentclass[]{deedy-resume-openfont}
+    \\urlstyle{same}
 
     \\begin{document}
     ${values.sections
