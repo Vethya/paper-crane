@@ -4,23 +4,20 @@ import type { CSSProperties, ChangeEvent, MouseEvent, ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, FileCheck2, Upload } from 'lucide-react'
+import Image from 'next/image'
+import { ArrowRight, Star, Upload } from 'lucide-react'
 import { z } from 'zod'
 import { Logo } from '@/components/core/Logo'
+import { formatStarCount, GITHUB_REPO_URL } from '@/lib/github'
 import {
-  aiFeatures,
-  atsPoints,
+  atsExtractedText,
   navItems,
-  productFeatures,
-  templatePreviews,
-  trustItems,
-  workflowSteps
+  howItWorksSteps,
+  templatePreviews
 } from './landingData'
-import type { IconTextItem } from './landingData'
-import { EditorPreview, ProductMockup, TemplateCard } from './Mockups'
 
 const lightLandingVars = {
-  '--app-foreground': '15 23 42'
+  '--app-foreground': '24 24 27'
 } as CSSProperties
 
 const resumeImportSchema = z
@@ -80,7 +77,7 @@ function handleLandingNavClick(
   })
 }
 
-export function LandingPage() {
+export function LandingPage({ githubStars }: { githubStars: number | null }) {
   const router = useRouter()
   const [hasSession, setHasSession] = useState(false)
   const [importError, setImportError] = useState<string | null>(null)
@@ -127,10 +124,13 @@ export function LandingPage() {
 
   return (
     <div
-      className="min-h-screen bg-[#f8fafc] text-[#0f172a]"
+      className="min-h-screen bg-[#fafaf8] text-[#18181b]"
       style={lightLandingVars}
     >
-      <LandingHeader onStartNewSession={startNewSession} />
+      <LandingHeader
+        githubStars={githubStars}
+        onStartNewSession={startNewSession}
+      />
 
       <main>
         <HeroSection
@@ -139,10 +139,8 @@ export function LandingPage() {
           onFileUpload={handleFileUpload}
           onStartNewSession={startNewSession}
         />
-        <AiSection />
+        <HowItWorksSection />
         <AtsSection />
-        <WorkflowSection onStartNewSession={startNewSession} />
-        <ProductSection />
         <TemplatesSection />
         <FinalCtaSection
           importError={importError}
@@ -151,30 +149,32 @@ export function LandingPage() {
         />
       </main>
 
-      <LandingFooter onStartNewSession={startNewSession} />
+      <LandingFooter />
     </div>
   )
 }
 
 function LandingHeader({
+  githubStars,
   onStartNewSession
 }: {
+  githubStars: number | null
   onStartNewSession: () => void
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-[#e2e8f0] bg-[#ffffff]/95 backdrop-blur">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 sm:px-8">
+    <header className="sticky top-0 z-30 border-b border-[#e4e4e0] bg-[#fafaf8]/95 backdrop-blur">
+      <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-8">
         <Link href="/" aria-label="Resume Manager home" className="flex-none">
-          <Logo />
+          <Logo scale={0.85} />
         </Link>
 
-        <div className="hidden items-center gap-4 text-sm text-[#64748b] lg:flex xl:gap-7">
+        <div className="hidden items-center gap-7 text-sm text-[#71717a] lg:flex">
           {navItems.map((item) => (
             <a
               key={item.href}
               href={item.href}
               onClick={(event) => handleLandingNavClick(event, item.href)}
-              className="whitespace-nowrap transition hover:text-[#0f172a]"
+              className="whitespace-nowrap transition hover:text-[#18181b]"
             >
               {item.label}
             </a>
@@ -182,18 +182,56 @@ function LandingHeader({
         </div>
 
         <div className="flex items-center gap-2">
+          <GithubBadge stars={githubStars} />
           <Link
             href="/login"
-            className="hidden whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium text-[#475569] transition hover:bg-[#f1f5f9] hover:text-[#0f172a] lg:inline-flex"
+            className="hidden whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-[#52525b] transition hover:text-[#18181b] lg:inline-flex"
           >
             Sign in
           </Link>
           <LandingPrimaryButton onClick={onStartNewSession} compact>
-            Start a resume
+            Make my resume
           </LandingPrimaryButton>
         </div>
       </nav>
     </header>
+  )
+}
+
+function GithubBadge({ stars }: { stars: number | null }) {
+  const starLabel =
+    stars === null ? '' : `, ${stars} ${stars === 1 ? 'star' : 'stars'}`
+
+  return (
+    <a
+      href={GITHUB_REPO_URL}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={`Resume Manager on GitHub${starLabel}`}
+      className="inline-flex h-10 items-center gap-2 rounded-md border border-[#e4e4e0] px-3 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
+    >
+      <GithubMark />
+      {stars !== null && (
+        <span className="inline-flex items-center gap-1 tabular-nums">
+          <Star size={13} aria-hidden="true" />
+          {formatStarCount(stars)}
+        </span>
+      )}
+    </a>
+  )
+}
+
+function GithubMark() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z" />
+    </svg>
   )
 }
 
@@ -209,198 +247,139 @@ function HeroSection({
   onStartNewSession: () => void
 }) {
   return (
-    <section className="relative border-b border-[#e2e8f0] bg-[#f8fafc]">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(15,23,42,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.06)_1px,transparent_1px)] bg-[size:64px_64px]" />
-      <div className="relative mx-auto grid min-h-[calc(100svh-4rem)] max-w-[92rem] items-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[0.78fr_1.22fr] lg:gap-16 lg:py-20">
-        <div className="max-w-[46rem]">
-          <h1 className="text-5xl font-semibold leading-[1.02] tracking-normal text-[#0f172a] sm:text-6xl lg:text-7xl">
-            Build an ATS-ready resume with an AI assistant beside you
-          </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-[#475569]">
-            Resume Manager helps you write, tailor, and export polished resumes
-            that are structured for applicant tracking systems and sharpened
-            with AI feedback before you send them.
-          </p>
+    <section className="border-b border-[#e4e4e0]">
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-16 sm:px-8 lg:pt-24">
+        <h1 className="max-w-4xl [text-wrap:balance] text-5xl font-medium leading-[1.04] tracking-[-0.03em] text-[#18181b] sm:text-6xl lg:text-7xl">
+          Beautiful resumes that get past the hiring filters.
+        </h1>
+        <p className="mt-6 max-w-2xl text-lg leading-8 text-[#71717a]">
+          Fill in your details, pick a design, and download a polished PDF. No
+          design skills needed.
+        </p>
 
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <LandingPrimaryButton onClick={onStartNewSession}>
-              Start your resume
-            </LandingPrimaryButton>
-            <ImportButton inputId="import-json" />
-            {hasSession && (
-              <SecondaryLink href="/generator">Continue session</SecondaryLink>
-            )}
-          </div>
-
-          <FileInput id="import-json" onChange={onFileUpload} />
-          {importError && (
-            <ImportErrorMessage>{importError}</ImportErrorMessage>
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <LandingPrimaryButton onClick={onStartNewSession}>
+            Make my resume
+          </LandingPrimaryButton>
+          <ImportButton inputId="import-json" />
+          {hasSession && (
+            <SecondaryLink href="/generator">Continue session</SecondaryLink>
           )}
-
-          <div className="mt-9 grid max-w-2xl grid-cols-1 gap-3 text-sm text-[#334155] sm:grid-cols-3">
-            {trustItems.map((item) => (
-              <TrustItem key={item.label} item={item} />
-            ))}
-          </div>
         </div>
 
-        <ProductMockup />
+        <FileInput id="import-json" onChange={onFileUpload} />
+        {importError && <ImportErrorMessage>{importError}</ImportErrorMessage>}
+
+        <Screenshot
+          src="/landing/hero-builder.png"
+          alt="The Resume Manager builder with the form beside a rendered PDF preview"
+          width={1600}
+          height={1000}
+          className="mt-14"
+          priority
+        />
       </div>
     </section>
   )
 }
 
-function AiSection() {
+function HowItWorksSection() {
   return (
-    <LandingSection id="ai" background="white">
-      <SectionIntro
-        eyebrow="AI assistant"
-        title="An AI resume partner, not just a template picker"
-        description="Use AI where it helps most: finding weak claims, tailoring for the role, and turning experience into clear proof."
-      />
-
-      <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {aiFeatures.map((feature) => {
-          const Icon = feature.icon
-          return (
-            <article
-              key={feature.title}
-              className="rounded-lg border border-[#e2e8f0] bg-[#ffffff] p-5 shadow-sm shadow-slate-200/70 transition hover:border-[#93c5fd] hover:shadow-md"
-            >
-              <Icon className="h-5 w-5 text-[#2563eb]" />
-              <h3 className="mt-5 text-base font-semibold text-[#0f172a]">
-                {feature.title}
+    <section
+      id="how-it-works"
+      className="scroll-mt-16 border-b border-[#e4e4e0]"
+    >
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
+        <SectionTitle>How it works</SectionTitle>
+        <ol className="mt-10 grid gap-8 md:grid-cols-3">
+          {howItWorksSteps.map((step, index) => (
+            <li key={step.title} className="border-t border-[#18181b] pt-5">
+              <span className="text-sm font-medium tabular-nums text-[#71717a]">
+                {index + 1}
+              </span>
+              <h3 className="mt-3 text-xl font-medium text-[#18181b]">
+                {step.title}
               </h3>
-              <p className="mt-3 text-sm leading-6 text-[#64748b]">
-                {feature.description}
+              <p className="mt-2 text-sm leading-6 text-[#71717a]">
+                {step.description}
               </p>
-            </article>
-          )
-        })}
+            </li>
+          ))}
+        </ol>
       </div>
-    </LandingSection>
+    </section>
   )
 }
 
 function AtsSection() {
   return (
-    <section
-      id="ats"
-      className="scroll-mt-16 border-b border-[#e2e8f0] bg-[#f8fafc]"
-    >
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-20 sm:px-8 lg:grid-cols-[0.8fr_1fr] lg:items-center">
-        <SectionIntro
-          eyebrow="ATS-ready resumes"
-          title="Built for clean parsing and real human review"
-          description="Resume Manager is built to produce ATS-friendly resumes with clean structure, readable templates, and role-relevant keyword coverage guided by AI."
-          accent="green"
-        />
+    <section id="ats" className="scroll-mt-16 border-b border-[#e4e4e0]">
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
+        <SectionTitle>
+          Designed for recruiters. Readable by software.
+        </SectionTitle>
+        <p className="mt-4 max-w-2xl text-base leading-7 text-[#71717a]">
+          Many companies use software to scan resumes before a person sees them.
+          Here&apos;s your resume as a recruiter sees it, and as that software
+          reads it.
+        </p>
 
-        <div className="grid gap-3">
-          {atsPoints.map((point) => {
-            const Icon = point.icon
-            return (
-              <div
-                key={point.label}
-                className="flex gap-3 rounded-lg border border-[#dbeafe] bg-[#ffffff] p-4 shadow-sm shadow-slate-200/70"
-              >
-                <span className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-md bg-[#ecfdf5] text-[#059669]">
-                  <Icon size={15} />
-                </span>
-                <p className="text-sm leading-6 text-[#334155]">
-                  {point.label}
-                </p>
-              </div>
-            )
-          })}
+        <div className="mt-10 grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
+          <figure className="min-w-0">
+            <figcaption className="mb-3 text-sm font-medium text-[#18181b]">
+              What a recruiter sees
+            </figcaption>
+            <Image
+              src="/landing/ats-resume.png"
+              alt="A one-page resume for a fictional software engineer"
+              width={1241}
+              height={1754}
+              sizes="(min-width: 1024px) 408px, 100vw"
+              className="h-auto w-full border border-[#e4e4e0] bg-[#ffffff]"
+            />
+          </figure>
+          <figure className="min-w-0">
+            <figcaption className="mb-3 text-sm font-medium text-[#18181b]">
+              What the software reads
+            </figcaption>
+            <pre className="overflow-x-auto border border-[#e4e4e0] bg-[#f4f4f1] p-5 font-mono text-[11px] leading-5 text-[#27272a]">
+              {atsExtractedText}
+            </pre>
+            <p className="mt-4 text-sm leading-6 text-[#71717a]">
+              A real example from this resume. Every company&apos;s software is
+              different, so results can vary.
+            </p>
+          </figure>
         </div>
       </div>
     </section>
   )
 }
 
-function WorkflowSection({
-  onStartNewSession
-}: {
-  onStartNewSession: () => void
-}) {
-  return (
-    <LandingSection id="workflow" background="white">
-      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-        <SectionIntro
-          eyebrow="Workflow"
-          title="From draft to tailored PDF in one focused flow"
-        />
-        <button
-          onClick={onStartNewSession}
-          className="inline-flex h-11 w-fit flex-none items-center gap-2 whitespace-nowrap rounded-lg border border-[#bfdbfe] bg-[#eff6ff] px-5 text-sm font-semibold text-[#1d4ed8] transition hover:border-[#93c5fd] hover:bg-[#dbeafe]"
-        >
-          Try the workflow
-          <ArrowRight size={16} />
-        </button>
-      </div>
-
-      <div className="mt-10 grid gap-4 lg:grid-cols-3">
-        {workflowSteps.map((step) => (
-          <article
-            key={step.step}
-            className="rounded-lg border border-[#e2e8f0] bg-[#ffffff] p-6 shadow-sm shadow-slate-200/70"
-          >
-            <span className="text-sm font-semibold text-[#2563eb]">
-              {step.step}
-            </span>
-            <h3 className="mt-5 text-xl font-semibold text-[#0f172a]">
-              {step.title}
-            </h3>
-            <p className="mt-3 text-sm leading-6 text-[#64748b]">
-              {step.description}
-            </p>
-          </article>
-        ))}
-      </div>
-    </LandingSection>
-  )
-}
-
-function ProductSection() {
-  return (
-    <LandingSection background="muted">
-      <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-        <div>
-          <SectionIntro
-            eyebrow="Product"
-            title="Edit, preview, and improve without losing context"
-            description="The workspace keeps the form, rendered resume, and AI assistant close together, so feedback turns into practical edits instead of another disconnected checklist."
-          />
-
-          <div className="mt-8 grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {productFeatures.map((feature) => (
-              <FeatureRow key={feature.label} item={feature} />
-            ))}
-          </div>
-        </div>
-
-        <EditorPreview />
-      </div>
-    </LandingSection>
-  )
-}
-
 function TemplatesSection() {
   return (
-    <LandingSection id="templates" background="white">
-      <SectionIntro
-        eyebrow="Templates"
-        title="Readable layouts. Clean hierarchy. No design gimmicks."
-        accent="green"
-      />
+    <section id="templates" className="scroll-mt-16 border-b border-[#e4e4e0]">
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
+        <SectionTitle>Nine professional designs</SectionTitle>
+        <p className="mt-4 max-w-2xl text-base leading-7 text-[#71717a]">
+          Pick one you like. You can switch anytime without retyping anything.
+        </p>
 
-      <div className="mt-10 grid gap-5 md:grid-cols-3">
-        {templatePreviews.map((template) => (
-          <TemplateCard key={template} name={template} />
-        ))}
+        <div className="mt-10 grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
+          {templatePreviews.map((template) => (
+            <Image
+              key={template.id}
+              src={template.src}
+              alt={`Resume design ${template.id}`}
+              width={1700}
+              height={2200}
+              sizes="(min-width: 1024px) 350px, 50vw"
+              className="h-auto w-full border border-[#e4e4e0] bg-[#ffffff]"
+            />
+          ))}
+        </div>
       </div>
-    </LandingSection>
+    </section>
   )
 }
 
@@ -414,19 +393,14 @@ function FinalCtaSection({
   onStartNewSession: () => void
 }) {
   return (
-    <section className="bg-[#f8fafc]">
-      <div className="mx-auto max-w-4xl px-5 py-20 text-center sm:px-8">
-        <FileCheck2 className="mx-auto h-9 w-9 text-[#2563eb]" />
-        <h2 className="mt-5 text-3xl font-semibold tracking-normal text-[#0f172a] sm:text-4xl">
-          Make a resume that reads well to recruiters and parses cleanly for ATS
+    <section>
+      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-8">
+        <h2 className="max-w-3xl text-4xl font-medium leading-[1.1] tracking-[-0.03em] text-[#18181b] sm:text-5xl">
+          Ready to make yours? It&apos;s free.
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#64748b]">
-          Start from scratch, import your JSON Resume, or use AI to sharpen what
-          you already have.
-        </p>
-        <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <LandingPrimaryButton onClick={onStartNewSession}>
-            Start a resume
+            Make my resume
           </LandingPrimaryButton>
           <ImportButton inputId="import-json-bottom" />
           <FileInput id="import-json-bottom" onChange={onFileUpload} />
@@ -437,138 +411,60 @@ function FinalCtaSection({
   )
 }
 
-function LandingFooter({
-  onStartNewSession
-}: {
-  onStartNewSession: () => void
-}) {
+function LandingFooter() {
   return (
-    <footer className="border-t border-[#e2e8f0] bg-[#ffffff]">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[1.3fr_0.7fr_0.7fr]">
-        <div className="max-w-md">
-          <Link
-            href="/"
-            aria-label="Resume Manager home"
-            className="inline-flex text-xl font-semibold tracking-normal"
-          >
-            <span className="text-[#0f172a]">Resume&nbsp;</span>
-            <span className="text-[#2563eb]">Manager</span>
+    <footer className="border-t border-[#e4e4e0]">
+      <div className="mx-auto flex max-w-6xl flex-col justify-between gap-4 px-4 py-8 text-sm text-[#71717a] sm:flex-row sm:px-8">
+        <span>© {new Date().getFullYear()} Resume Manager</span>
+        <div className="flex flex-wrap gap-5">
+          <Link href="/generator" className="transition hover:text-[#18181b]">
+            Resume builder
           </Link>
-          <p className="mt-4 text-sm leading-6 text-[#64748b]">
-            Build ATS-ready resumes, tailor them with AI feedback, and export
-            polished PDFs from one focused workspace.
-          </p>
-          <button
-            onClick={onStartNewSession}
-            className="mt-6 inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#2563eb] px-4 text-sm font-semibold text-[#ffffff] shadow-lg shadow-blue-700/20 transition hover:bg-[#1d4ed8] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa]"
-          >
-            Start a resume
-            <ArrowRight size={16} />
-          </button>
-        </div>
-
-        <FooterLinkGroup title="Explore">
-          {navItems.map((item) => (
-            <FooterAnchor key={item.href} href={item.href}>
-              {item.label}
-            </FooterAnchor>
-          ))}
-        </FooterLinkGroup>
-
-        <FooterLinkGroup title="Product">
-          <FooterAnchor href="/login">Sign in</FooterAnchor>
-          <FooterAnchor href="/resumes">Resume library</FooterAnchor>
-          <FooterAnchor href="/generator">Resume builder</FooterAnchor>
-        </FooterLinkGroup>
-
-        <div className="flex flex-col justify-between gap-3 border-t border-[#e2e8f0] pt-5 text-sm text-[#64748b] sm:flex-row lg:col-span-3">
-          <span>© {new Date().getFullYear()} Resume Manager</span>
-          <span>ATS-ready resumes with AI-assisted tailoring</span>
+          <Link href="/resumes" className="transition hover:text-[#18181b]">
+            Resume library
+          </Link>
+          <Link href="/login" className="transition hover:text-[#18181b]">
+            Sign in
+          </Link>
         </div>
       </div>
     </footer>
   )
 }
 
-function LandingSection({
-  children,
-  background,
-  id
-}: {
-  children: ReactNode
-  background: 'muted' | 'white'
-  id?: string
-}) {
+function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <section
-      id={id}
-      className={`scroll-mt-16 border-b border-[#e2e8f0] ${
-        background === 'white' ? 'bg-[#ffffff]' : 'bg-[#f8fafc]'
-      }`}
-    >
-      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">{children}</div>
-    </section>
-  )
-}
-
-function FooterLinkGroup({
-  children,
-  title
-}: {
-  children: ReactNode
-  title: string
-}) {
-  return (
-    <div>
-      <h2 className="text-sm font-semibold text-[#0f172a]">{title}</h2>
-      <div className="mt-4 flex flex-col items-start gap-3 text-sm text-[#64748b]">
-        {children}
-      </div>
-    </div>
-  )
-}
-
-function FooterAnchor({
-  children,
-  href
-}: {
-  children: ReactNode
-  href: string
-}) {
-  return (
-    <Link href={href} className="transition hover:text-[#0f172a]">
+    <h2 className="max-w-2xl text-3xl font-medium leading-[1.15] tracking-[-0.02em] text-[#18181b] sm:text-4xl">
       {children}
-    </Link>
+    </h2>
   )
 }
 
-function SectionIntro({
-  accent = 'blue',
-  description,
-  eyebrow,
-  title
+function Screenshot({
+  alt,
+  className = '',
+  height,
+  priority = false,
+  src,
+  width
 }: {
-  accent?: 'blue' | 'green'
-  description?: string
-  eyebrow: string
-  title: string
+  alt: string
+  className?: string
+  height: number
+  priority?: boolean
+  src: string
+  width: number
 }) {
   return (
-    <div className="max-w-2xl">
-      <p
-        className={`text-sm font-semibold uppercase tracking-[0.16em] ${
-          accent === 'green' ? 'text-[#059669]' : 'text-[#2563eb]'
-        }`}
-      >
-        {eyebrow}
-      </p>
-      <h2 className="mt-3 text-3xl font-semibold tracking-normal text-[#0f172a] sm:text-4xl">
-        {title}
-      </h2>
-      {description && (
-        <p className="mt-4 text-base leading-7 text-[#64748b]">{description}</p>
-      )}
-    </div>
+    <Image
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      priority={priority}
+      sizes="(min-width: 1152px) 1088px, 100vw"
+      className={`h-auto w-full rounded-lg border border-[#e4e4e0] bg-[#ffffff] ${className}`}
+    />
   )
 }
 
@@ -584,12 +480,12 @@ function LandingPrimaryButton({
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg bg-[#2563eb] text-sm font-semibold text-[#ffffff] shadow-lg shadow-blue-700/20 transition hover:bg-[#1d4ed8] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#60a5fa] ${
-        compact ? 'h-10 px-3 lg:px-4' : 'h-12 px-6'
+      className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-[#18181b] text-sm font-medium text-[#fafaf8] transition hover:bg-[#3f3f46] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#a1a1aa] ${
+        compact ? 'h-10 px-3' : 'h-12 px-6'
       }`}
     >
       {children}
-      <ArrowRight size={compact ? 16 : 17} />
+      {!compact && <ArrowRight size={17} aria-hidden="true" />}
     </button>
   )
 }
@@ -598,9 +494,9 @@ function ImportButton({ inputId }: { inputId: string }) {
   return (
     <label
       htmlFor={inputId}
-      className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-lg border border-[#cbd5e1] bg-[#ffffff] px-6 text-sm font-semibold text-[#0f172a] shadow-sm transition hover:border-[#94a3b8] hover:bg-[#f8fafc]"
+      className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-md border border-[#d4d4d0] px-6 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
     >
-      <Upload size={17} />
+      <Upload size={17} aria-hidden="true" />
       Import JSON
     </label>
   )
@@ -616,7 +512,7 @@ function SecondaryLink({
   return (
     <Link
       href={href}
-      className="inline-flex h-12 items-center justify-center rounded-lg border border-[#cbd5e1] bg-[#ffffff] px-6 text-sm font-semibold text-[#0f172a] shadow-sm transition hover:border-[#94a3b8] hover:bg-[#f8fafc]"
+      className="inline-flex h-12 items-center justify-center rounded-md border border-[#d4d4d0] px-6 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
     >
       {children}
     </Link>
@@ -643,35 +539,8 @@ function FileInput({
 
 function ImportErrorMessage({ children }: { children: ReactNode }) {
   return (
-    <p
-      role="alert"
-      className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-red-600"
-    >
+    <p role="alert" className="mt-3 max-w-2xl text-sm leading-6 text-red-600">
       {children}
     </p>
-  )
-}
-
-function TrustItem({ item }: { item: IconTextItem }) {
-  const Icon = item.icon
-
-  return (
-    <div className="flex min-w-0 items-center justify-center gap-2 rounded-lg border border-[#dbeafe] bg-[#ffffff]/85 px-4 py-3 shadow-sm shadow-slate-200/60">
-      <Icon size={16} className="flex-none text-[#059669]" />
-      <span className="whitespace-nowrap">{item.label}</span>
-    </div>
-  )
-}
-
-function FeatureRow({ item }: { item: IconTextItem }) {
-  const Icon = item.icon
-
-  return (
-    <div className="flex items-center gap-3 text-sm text-[#334155]">
-      <span className="flex h-6 w-6 flex-none items-center justify-center rounded-md bg-[#eff6ff] text-[#2563eb]">
-        <Icon size={14} />
-      </span>
-      {item.label}
-    </div>
   )
 }

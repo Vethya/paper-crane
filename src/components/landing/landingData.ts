@@ -1,127 +1,50 @@
-import {
-  Bot,
-  ClipboardCheck,
-  Download,
-  Eye,
-  LayoutTemplate,
-  ListTree,
-  MessageSquareText,
-  Rows3,
-  SearchCheck,
-  ScanText,
-  Tags,
-  Target,
-  Upload,
-  WandSparkles
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-
-export type IconTextItem = {
-  icon: LucideIcon
-  label: string
-}
-
-export type LandingCard = {
-  icon: LucideIcon
-  title: string
-  description: string
-}
-
-export type WorkflowStep = {
-  step: string
-  title: string
-  description: string
-}
+import { TEMPLATES } from '@/lib/templates/constants'
 
 export const navItems = [
-  { href: '#ai', label: 'AI Assistant' },
-  { href: '#ats', label: 'ATS' },
-  { href: '#workflow', label: 'Workflow' },
-  { href: '#templates', label: 'Templates' }
+  { href: '#how-it-works', label: 'How it works' },
+  { href: '#ats', label: 'Hiring filters' },
+  { href: '#templates', label: 'Designs' }
 ]
 
-export const aiFeatures: LandingCard[] = [
+export const howItWorksSteps = [
   {
-    icon: MessageSquareText,
-    title: 'Chat with your resume',
-    description:
-      'Ask what to improve, rewrite weak bullets, or turn scattered notes into crisp experience statements.'
+    title: 'Fill in your details',
+    description: 'Add your work history, education, skills, and more.'
   },
   {
-    icon: SearchCheck,
-    title: 'Get direct feedback',
-    description:
-      'Surface vague impact, missing keywords, formatting risks, and sections that need stronger evidence.'
+    title: 'See it as you go',
+    description: 'Your resume updates on screen while you type.'
   },
   {
-    icon: WandSparkles,
-    title: 'Tailor for each role',
-    description:
-      'Use job descriptions to sharpen positioning, keyword coverage, and the skills that should lead.'
-  },
-  {
-    icon: ClipboardCheck,
-    title: 'Approve every change',
-    description:
-      'Review AI suggestions before they land, so the final resume still sounds like you.'
+    title: 'Download it',
+    description: 'Get a PDF that’s ready to send.'
   }
 ]
 
-export const workflowSteps: WorkflowStep[] = [
-  {
-    step: '01',
-    title: 'Add or import your resume',
-    description:
-      'Start with structured fields or bring in JSON Resume data without rebuilding everything manually.'
-  },
-  {
-    step: '02',
-    title: 'Use AI to improve and tailor it',
-    description:
-      'Chat through revisions, tighten bullets, and tune the resume against a specific job description.'
-  },
-  {
-    step: '03',
-    title: 'Export a polished PDF',
-    description:
-      'Choose an ATS-friendly template and export a clean, recruiter-ready document.'
-  }
-]
+// Unedited `pdftotext -layout` output from the PDF shown beside it, cut off
+// after the Skills section.
+export const atsExtractedText = `                                      Elena García
+             Portland, OR · elena.garcia@example.com · +1 202-555-0147 · https://elena.example.com
 
-export const trustItems: IconTextItem[] = [
-  { icon: ScanText, label: 'ATS-friendly format' },
-  { icon: Bot, label: 'AI tailoring chat' },
-  { icon: Download, label: 'Live PDF export' }
-]
+Experience
+  Cedar & Finch Labs
+  Senior Software Engineer, Portland, OR                                                      Jan 2022 - Present
+     • Built an efficient workflow for office approvals, reducing processing time by 35%.
+     • Led API & platform delivery for 12 teams with 99.9% availability.
 
-export const productFeatures: IconTextItem[] = [
-  { icon: Eye, label: 'Live PDF preview' },
-  { icon: LayoutTemplate, label: 'ATS-friendly templates' },
-  { icon: Bot, label: 'AI resume chat' },
-  { icon: Target, label: 'Job-specific tailoring' },
-  { icon: MessageSquareText, label: 'Feedback before export' },
-  { icon: Upload, label: 'JSON Resume import' },
-  { icon: Tags, label: 'Resume library and tags' },
-  { icon: Download, label: 'PDF and source export' }
-]
+  Harbor Analytics
+  Software Engineer, Seattle, WA                                                            Jun 2018 - Dec 2021
+     • Automated financial reporting and improved data accuracy by 20%.
+     • Shipped a self-service dashboard used by 400 analysts.
 
-export const atsPoints: IconTextItem[] = [
-  {
-    icon: Rows3,
-    label: 'Structured resume fields instead of fragile freeform formatting'
-  },
-  {
-    icon: ListTree,
-    label: 'Clean section hierarchy and predictable naming'
-  },
-  {
-    icon: LayoutTemplate,
-    label: 'Readable templates built for parsing and recruiter review'
-  },
-  {
-    icon: SearchCheck,
-    label: 'AI guidance for relevant keywords and stronger evidence'
-  }
-]
+Education
+  Cascadia University                                                                               Seattle, WA
+  BSc Computer Science GPA: 3.8/4.0                                                         Sep 2014 - May 2018
+Skills
+  Engineering: TypeScript, Python, SQL, Testing & CI
+  Delivery: API design, workflow automation, office systems`
 
-export const templatePreviews = ['Classic', 'Technical', 'Compact'] as const
+export const templatePreviews = TEMPLATES.map((id) => ({
+  id,
+  src: `/templates/previews/template${id}.png`
+}))

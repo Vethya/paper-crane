@@ -4,6 +4,7 @@ import { LandingPage } from './LandingPage'
 
 const meta = {
   component: LandingPage,
+  args: { githubStars: 128 },
   tags: ['autodocs'],
   globals: { theme: 'light' },
   parameters: { layout: 'fullscreen', a11y: { test: 'todo' } },
