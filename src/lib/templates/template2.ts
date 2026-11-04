@@ -27,14 +27,10 @@ const generator: Generator = {
       nameLine = `\\headerfirstnamestyle{${nameStart}} \\headerlastnamestyle{${nameEnd}} \\\\`
     }
 
-    const emailLine = email ? `{\\faEnvelope\\ ${email}}` : ''
-    const phoneLine = phone ? `{\\faMobile\\ ${phone}}` : ''
-    const addressLine = location.address
-      ? `{\\faMapMarker\\ ${location.address}}`
-      : ''
-    const websiteLine = website
-      ? `{\\faLink\\ \\href{${website}}{${website}}}`
-      : ''
+    const emailLine = email || ''
+    const phoneLine = phone || ''
+    const addressLine = location.address || ''
+    const websiteLine = website ? `\\href{${website}}{${website}}` : ''
     const info = [emailLine, phoneLine, addressLine, websiteLine]
       .filter(Boolean)
       .join(' | ')
@@ -122,7 +118,7 @@ const generator: Generator = {
           job
 
         let dateRange
-        let dutyLines
+        let dutyLines = ''
 
         if (startDate && endDate) {
           dateRange = `${startDate} – ${endDate}`
@@ -132,7 +128,7 @@ const generator: Generator = {
           dateRange = endDate
         }
 
-        if (highlights) {
+        if (highlights?.some(Boolean)) {
           dutyLines = source`
             \\begin{cvitems}
               ${highlights.map((duty) => `\\item {${duty}}`)}
@@ -160,24 +156,13 @@ const generator: Generator = {
 
     return source`
       \\cvsection{${heading || 'Skills'}}
-      \\begin{cventries}
-      \\cventry
-      {}
-      {\\def\\arraystretch{1.15}{\\begin{tabular}{ l l }
+      \\begingroup\\raggedright
       ${skills.map((skill) => {
         const { name, keywords = [] } = skill
-        const nameLine = name ? `${name}: ` : ''
-        const detailsLine = `{\\skill{ ${keywords.join(', ') || ''}}}`
-
-        return `${nameLine} & ${detailsLine} \\\\`
+        const nameLine = name ? `\\entrytitlestyle{${name}:} ` : ''
+        return `${nameLine}\\skill{${keywords.join(', ')}}\\par`
       })}
-      \\end{tabular}}}
-      {}
-      {}
-      {}
-      \\end{cventries}
-
-      \\vspace{-7mm}
+      \\endgroup
     `
   },
 
@@ -194,14 +179,11 @@ const generator: Generator = {
         const urlLine = url ? `\\href{${url}}{${url}}` : ''
 
         return stripIndent`
-          \\cventry
-            {${description || ''}}
+          \\cvproject
             {${name || ''}}
-            {${keywords.join(', ') || ''}}
+            {${keywords.join(', ')}}
             {${urlLine}}
-            {}
-
-          \\vspace{-5mm}
+            {${description || ''}}
         `
       })}
       \\end{cventries}

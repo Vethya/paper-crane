@@ -60,7 +60,7 @@
   \vspace{\sizefive}
   \begin{addmargin}[\sizefive]{\sizefive}{
   {
-  \fontsize{\sizefour}{\sizefour}\fontspec[Path = fonts/,LetterSpace=10]{Montserrat-Bold}
+  \fontsize{\sizefour}{\sizefour}\fontspec[Path = fonts/,LetterSpace=2]{Montserrat-Bold}
   \textbf{#1}
   }
   \vspace{\sizefour}
@@ -86,17 +86,18 @@
 
 \newcommand{\job}[5]{
   \vspace{\sizefive}
-  {\fontsize{\sizetwo}{\sizetwo}\fontspec[Path = fonts/]{CrimsonText-SemiBold} #1} \hfill {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #2}
+  {\fontsize{\sizetwo}{\sizetwo}\fontspec[Path = fonts/]{CrimsonText-SemiBold} #1} \hfill {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #4}
 
-  {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #3} \hfill {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #4}
+  {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #3} \hfill {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #2}
   {#5}
   \vspace{\sizefive}
 }
 
 \newcommand{\project}[4]{
   \vspace{\sizefive}
-  {\fontsize{\sizetwo}{\sizetwo}\fontspec[Path = fonts/]{CrimsonText-SemiBold} #1} {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #2} \hfill {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #3}
-  \\#4
+  {\fontsize{\sizetwo}{\sizetwo}\fontspec[Path = fonts/]{CrimsonText-SemiBold} #1} {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #2}\par
+  {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #3}
+  \par #4
   \vspace{\sizefive}
 }
 
@@ -104,6 +105,6 @@
   \vspace{\sizefive}
   {\fontsize{\sizetwo}{\sizetwo}\fontspec[Path = fonts/]{CrimsonText-SemiBold} #1} \hfill {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #2}
 
-  {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #3} \hfill {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #4}
+  {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #3} \hfill {\fontsize{\sizethree}{\sizethree}\fontspec[Path = fonts/]{CrimsonText-Regular} #4}\par
   \vspace{\sizefive}
 }
