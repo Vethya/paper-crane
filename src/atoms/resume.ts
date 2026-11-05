@@ -36,6 +36,11 @@ resumeAtom.debugLabel = 'resumeAtom'
 export const isLoadingResumeAtom = atom(false)
 isLoadingResumeAtom.debugLabel = 'isLoadingResumeAtom'
 
+// The resume whose server copy is in formDataAtom. Until it matches the open
+// resume, formDataAtom may still hold an earlier visit's form.
+export const loadedResumeIdAtom = atom<string | null>(null)
+loadedResumeIdAtom.debugLabel = 'loadedResumeIdAtom'
+
 const autoRenderPreferenceAtom = atom(true)
 autoRenderPreferenceAtom.onMount = (set) => {
   try {
