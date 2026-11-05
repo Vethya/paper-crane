@@ -242,3 +242,54 @@ test('cancel drops a debounced edit', async (t) => {
   await saver.flush()
   assert.deepEqual(saved, [])
 })
+
+test('a retry keeps the revision of the snapshot it retries', async (t) => {
+  const calls = []
+  let fail = true
+  const { saver } = setup(t, (snapshot, revision) => {
+    calls.push({ snapshot, revision })
+    return fail ? Promise.reject(new Error('offline')) : Promise.resolve()
+  })
+  saver.update('edited')
+  t.mock.timers.tick(2000)
+  await settle()
+  fail = false
+  t.mock.timers.tick(2000)
+  await settle()
+  assert.equal(calls.length, 2)
+  assert.equal(calls[1].revision, calls[0].revision)
+})
+
+test('sendPending sends a newer revision than the running save', async (t) => {
+  const calls = []
+  const { saver } = setup(t, (snapshot, revision) => {
+    calls.push({ snapshot, revision })
+    return new Promise(() => {})
+  })
+  saver.update('first')
+  t.mock.timers.tick(2000)
+  saver.update('second')
+  saver.sendPending()
+  assert.deepEqual(
+    calls.map((call) => call.snapshot),
+    ['first', 'second']
+  )
+  assert.ok(calls[1].revision > calls[0].revision)
+})
+
+test('a later saver in the page outranks an earlier one', async (t) => {
+  const revisions = []
+  const record = (_snapshot, revision) => {
+    revisions.push(revision)
+    return Promise.resolve()
+  }
+  const old = setup(t, record).saver
+  old.update('old edit')
+  const replacement = createAutoSaver({ save: record, onStatus: () => {} })
+  replacement.update('loaded')
+  replacement.update('new edit')
+  await replacement.flush()
+  await old.flush()
+  assert.equal(revisions.length, 2)
+  assert.ok(revisions[0] > revisions[1])
+})

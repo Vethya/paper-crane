@@ -6,6 +6,8 @@ export interface IResume extends Document {
   title: string
   tags: string[]
   content: FormValues
+  // The page and revision of the last accepted content save.
+  contentWriter?: { id: string; revision: number }
   templateId: string
   createdAt: Date
   updatedAt: Date
@@ -110,6 +112,9 @@ const ResumeSchema = new Schema<IResume>(
     title: { type: String, required: true },
     tags: { type: [String], default: [] },
     content: { type: ContentSchema, required: true },
+    contentWriter: {
+      type: new Schema({ id: String, revision: Number }, { _id: false })
+    },
     templateId: { type: String, required: true }
   },
   { timestamps: true }
