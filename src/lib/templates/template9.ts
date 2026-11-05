@@ -209,6 +209,10 @@ const generator: Generator = {
 
   resumeHeader() {
     return stripIndent`
+      % Your new CV
+      % Author: Frits Wenneker
+      % Source: http://www.howtotex.com/
+      % Feel free to distribute this template, but please keep the referral to HowToTeX.com.
       \\usepackage[english]{babel}
       \\usepackage[utf8]{inputenc}
       \\usepackage[T1]{fontenc}

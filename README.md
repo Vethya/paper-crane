@@ -46,7 +46,18 @@ pnpm dev
 
 **Environment**
 
-Create a `.env.local` in the project root with the app's existing authentication, database, and AI settings. No LaTeX API URL is required.
+Copy `.env.local.example` to `.env.local` and fill in the authentication and database settings. No LaTeX API URL is required.
+
+**AI features**
+
+The Resume Agent is off by default, and the hosted site runs with it off. To turn it on when you self-host, set:
+
+```bash
+AI_FEATURES_ENABLED=true
+GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-key
+```
+
+The server reads the flag at runtime, so with `next start` changing it takes a restart, not a rebuild. On Vercel, env changes apply only to new deployments, so redeploy after changing it. If the flag is on and the key is missing, the server fails at startup. When the flag is off, the agent UI is hidden and the agent API routes return 404. `/api/agent/status` reports whether the flag is on.
 
 The generator route sends the headers required by WebAssembly threading (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`).
 
@@ -65,4 +76,15 @@ Thanks to the creators of the LaTeX templates used in this project.
 - [Xavier Danaux](https://github.com/xdanaux)
 - [Ratul Saha](https://github.com/RatulSaha)
 - [Daniil Belyakov](https://github.com/dnl-blkv)
-- [Frits Wenneker](https://www.overleaf.com/latex/templates/your-new-cv/xqzhcmqkqrtw)
+- [Frits Wenneker](https://www.overleaf.com/latex/templates/your-new-cv/xqzhcmqkqrtw), via [HowToTeX.com](http://www.howtotex.com/)
+
+## Licenses
+
+The app code is MIT. It is based on [Resumake](https://github.com/saadq/resumake.io) by Saad Quadri, whose copyright notice is kept in [LICENSE](LICENSE).
+
+The templates, LaTeX classes, fonts and bundled TeX packages keep their own licenses. Two templates are exceptions to MIT:
+
+- Template 3 is CC BY-NC-SA 2.5 (no commercial use).
+- Template 5 uses `res.cls`, which may not be sold.
+
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) lists the author, license and source of each one.

@@ -229,6 +229,9 @@ const generator: Generator = {
     % Template license:
     % CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
     %
+    % Class license (awesome-cv.cls):
+    % LPPL v1.3c (http://www.latex-project.org/lppl)
+    %
 
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
