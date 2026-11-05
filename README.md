@@ -65,4 +65,15 @@ Thanks to the creators of the LaTeX templates used in this project.
 - [Xavier Danaux](https://github.com/xdanaux)
 - [Ratul Saha](https://github.com/RatulSaha)
 - [Daniil Belyakov](https://github.com/dnl-blkv)
-- [Frits Wenneker](https://www.overleaf.com/latex/templates/your-new-cv/xqzhcmqkqrtw)
+- [Frits Wenneker](https://www.overleaf.com/latex/templates/your-new-cv/xqzhcmqkqrtw), via [HowToTeX.com](http://www.howtotex.com/)
+
+## Licenses
+
+The app code is MIT. It is based on [Resumake](https://github.com/saadq/resumake.io) by Saad Quadri, whose copyright notice is kept in [LICENSE](LICENSE).
+
+The templates, LaTeX classes, fonts and bundled TeX packages keep their own licenses. Two templates are exceptions to MIT:
+
+- Template 3 is CC BY-NC-SA 2.5 (no commercial use).
+- Template 5 uses `res.cls`, which may not be sold.
+
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) lists the author, license and source of each one.
