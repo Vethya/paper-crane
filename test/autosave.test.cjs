@@ -217,6 +217,23 @@ test('sendPending saves right away when nothing is running', async (t) => {
   assert.deepEqual(saved, ['edited'])
 })
 
+test('a given baseline makes the first update a real edit', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout'] })
+  const saved = []
+  const saver = createAutoSaver({
+    save: (snapshot) => {
+      saved.push(snapshot)
+      return Promise.resolve()
+    },
+    onStatus: () => {},
+    baseline: ''
+  })
+  saver.update('["Frontend"]')
+  t.mock.timers.tick(2000)
+  await settle()
+  assert.deepEqual(saved, ['["Frontend"]'])
+})
+
 test('cancel drops a debounced edit', async (t) => {
   const { saver, saved } = setup(t)
   saver.update('agent edit')

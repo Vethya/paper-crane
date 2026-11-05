@@ -2,13 +2,16 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useAtom, useSetAtom } from 'jotai'
+import { useAtom } from 'jotai'
 import { FiCheck, FiEdit2, FiPlus, FiTag } from 'react-icons/fi'
 import { resumeTagsAtom } from '@/atoms/resumeTags'
-import { saveStateAtom } from '@/atoms/saveState'
 import { TagDialog, type TagItem } from './TagDialog'
 import { tagColorMap } from '@/lib/tagColors'
 import { useOnClickOutside } from '@/hooks/useOnClickOutside'
+import { patchResume, useResumeSaver } from '@/hooks/useResumeSaver'
+
+const saveTags = (resumeId: string, snapshot: string) =>
+  patchResume(resumeId, `{"tags":${snapshot}}`)
 
 export function TagPicker() {
   const searchParams = useSearchParams()
@@ -21,42 +24,24 @@ export function TagPicker() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingTag, setEditingTag] = useState<TagItem | undefined>()
   const [initialName, setInitialName] = useState('')
-  const setSaveState = useSetAtom(saveStateAtom)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const closeHandler = useCallback(() => setOpen(false), [])
   useOnClickOutside(containerRef, closeHandler)
 
-  const pendingTagsRef = useRef<string[] | null>(null)
-  const tagSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Tags change only through this picker, so every update is a real change.
+  // The empty baseline never matches a serialized tag list.
+  const saverRef = useResumeSaver(resumeId, saveTags, '')
 
   function scheduleSaveTags(tags: string[]) {
-    pendingTagsRef.current = tags
-    if (tagSaveTimerRef.current) clearTimeout(tagSaveTimerRef.current)
-    tagSaveTimerRef.current = setTimeout(async () => {
-      if (!resumeId || pendingTagsRef.current === null) return
-      setSaveState('saving')
-      try {
-        const res = await fetch(`/api/resumes/${resumeId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tags: pendingTagsRef.current })
-        })
-        if (!res.ok) throw new Error()
-        setSaveState('saved')
-        setTimeout(() => setSaveState('idle'), 2000)
-      } catch {
-        setSaveState('error')
-        setTimeout(() => setSaveState('idle'), 2000)
-      }
-      pendingTagsRef.current = null
-    }, 2000)
+    saverRef.current?.update(JSON.stringify(tags))
   }
 
   useEffect(() => {
     fetch('/api/tags')
       .then((res) => res.json())
-      .then(setAllTags)
+      // Signed-out requests return an error object, not a list.
+      .then((tags) => setAllTags(Array.isArray(tags) ? tags : []))
       .catch(() => {})
   }, [])
 
