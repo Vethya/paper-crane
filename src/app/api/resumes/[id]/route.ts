@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectDB } from '@/db'
 import { Resume } from '@/db/models/resume'
+import { invalidId, parseBody } from '@/lib/apiValidation'
+import { UpdateResumeSchema } from '@/lib/apiSchemas'
 
 export async function GET(
   request: NextRequest,
@@ -13,6 +15,9 @@ export async function GET(
   }
 
   const { id } = await params
+  const badId = invalidId(id)
+  if (badId) return badId
+
   await connectDB()
 
   const resume = await Resume.findOne({
@@ -36,7 +41,11 @@ export async function PATCH(
   }
 
   const { id } = await params
-  const body = await request.json()
+  const badId = invalidId(id)
+  if (badId) return badId
+
+  const { data: body, error } = await parseBody(request, UpdateResumeSchema)
+  if (error) return error
 
   await connectDB()
 
@@ -46,7 +55,7 @@ export async function PATCH(
       $set: {
         ...(body.content && { content: body.content }),
         ...(body.title && { title: body.title }),
-        ...(Array.isArray(body.tags) && { tags: body.tags })
+        ...(body.tags && { tags: body.tags })
       }
     },
     { new: true, select: { content: 0 } }
@@ -69,6 +78,9 @@ export async function DELETE(
   }
 
   const { id } = await params
+  const badId = invalidId(id)
+  if (badId) return badId
+
   await connectDB()
 
   const resume = await Resume.findOneAndDelete({

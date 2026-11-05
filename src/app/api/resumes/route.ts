@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { connectDB } from '@/db'
 import { Resume } from '@/db/models/resume'
+import { parseBody } from '@/lib/apiValidation'
+import { CreateResumeSchema } from '@/lib/apiSchemas'
 
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers })
@@ -24,16 +26,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { title, content } = await request.json()
-  if (!title?.trim()) {
-    return NextResponse.json({ error: 'Title is required' }, { status: 400 })
-  }
+  const { data, error } = await parseBody(request, CreateResumeSchema)
+  if (error) return error
+  const { title, content } = data
 
   await connectDB()
 
   const resume = await Resume.create({
     userId: session.user.id,
-    title: title.trim(),
+    title,
     templateId: '1',
     content: content ?? {
       headings: {},
