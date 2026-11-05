@@ -17,7 +17,8 @@ import {
   isLoadingResumeAtom,
   markBuiltAtom,
   autoRenderAtom,
-  resumeTitleAtom
+  resumeTitleAtom,
+  loadedResumeIdAtom
 } from '../../../atoms/resume'
 import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
 import { AgentFieldFocuser } from '../../agent/AgentFieldFocuser'
@@ -81,6 +82,7 @@ export function Form({
   const setFormSetValue = useSetAtom(formSetValueAtom)
   const markBuilt = useSetAtom(markBuiltAtom)
   const setResumeTitle = useSetAtom(resumeTitleAtom)
+  const setLoadedResumeId = useSetAtom(loadedResumeIdAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const autoRender = useAtomValue(autoRenderAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
@@ -185,6 +187,7 @@ export function Form({
           else clearDraft(localStorage, resumeId)
           formContext.reset(content)
           setFormData(content)
+          setLoadedResumeId(resumeId)
           setResumeTags(data.tags ?? [])
           setResumeTitle(data.title ?? '')
           owner.ready = true
@@ -218,6 +221,7 @@ export function Form({
 
     return () => {
       cancelled = true
+      setLoadedResumeId(null)
       subscription.unsubscribe()
       document.removeEventListener('visibilitychange', renderLoaded)
     }
@@ -225,6 +229,7 @@ export function Form({
     resumeId,
     formContext,
     setFormData,
+    setLoadedResumeId,
     setResumeTags,
     setResumeTitle,
     setIsLoadingResume,

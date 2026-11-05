@@ -5,6 +5,7 @@ import { useAtomValue } from 'jotai'
 import { FormValues } from '@/types'
 import { saveStateAtom } from '@/atoms/saveState'
 import { agentPendingEditsAtom } from '@/atoms/agentEdits'
+import { loadedResumeIdAtom } from '@/atoms/resume'
 import { clearDraft, writeDraft } from '@/lib/draftRecovery'
 import type { AutoSaver } from '@/lib/autoSaver'
 import { patchResume, useResumeSaver } from './useResumeSaver'
@@ -25,21 +26,18 @@ export function useAutoSave(
   const paused = useAtomValue(agentPendingEditsAtom).some(
     (e) => e.status === 'pending'
   )
+  const loadedResumeId = useAtomValue(loadedResumeIdAtom)
   const saverRef = useResumeSaver(resumeId, saveContent)
   // The saver whose baseline was set. The baseline is the loaded resume, so
   // it must not replace a backup that the generator may still offer back.
   const startedRef = useRef<AutoSaver | null>(null)
-  // Read through a ref: a resume switch alone must not send the previous
-  // resume's form data, which is still in formData until the new one loads.
-  const resumeIdRef = useRef(resumeId)
-  useEffect(() => {
-    resumeIdRef.current = resumeId
-  }, [resumeId])
 
   useEffect(() => {
     const saver = saverRef.current
-    const resumeId = resumeIdRef.current
-    if (!saver || !resumeId || !formData) return
+    // Wait for this resume's server copy. Until then formData can hold an
+    // earlier visit's form, which must not become the baseline.
+    if (!saver || !resumeId || !formData || loadedResumeId !== resumeId)
+      return
     const snapshot = JSON.stringify(formData)
     const started = startedRef.current === saver
     startedRef.current = saver
@@ -58,7 +56,7 @@ export function useAutoSave(
     if (!started) return
     if (saver.hasUnsavedChanges()) writeDraft(localStorage, resumeId, snapshot)
     else clearDraft(localStorage, resumeId)
-  }, [saverRef, formData, paused])
+  }, [saverRef, resumeId, loadedResumeId, formData, paused])
 
   return saveState
 }
