@@ -57,7 +57,7 @@ AI_FEATURES_ENABLED=true
 GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-key
 ```
 
-The server reads the flag at runtime, so changing it takes a restart, not a rebuild. If the flag is on and the key is missing, the server fails at startup. When the flag is off, the agent UI is hidden and every `/api/agent/*` route returns 404.
+The server reads the flag at runtime, so with `next start` changing it takes a restart, not a rebuild. On Vercel, env changes apply only to new deployments, so redeploy after changing it. If the flag is on and the key is missing, the server fails at startup. When the flag is off, the agent UI is hidden and the agent API routes return 404. `/api/agent/status` reports whether the flag is on.
 
 The generator route sends the headers required by WebAssembly threading (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`).
 
