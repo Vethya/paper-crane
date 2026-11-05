@@ -46,7 +46,18 @@ pnpm dev
 
 **Environment**
 
-Create a `.env.local` in the project root with the app's existing authentication, database, and AI settings. No LaTeX API URL is required.
+Copy `.env.local.example` to `.env.local` and fill in the authentication and database settings. No LaTeX API URL is required.
+
+**AI features**
+
+The Resume Agent is off by default, and the hosted site runs with it off. To turn it on when you self-host, set:
+
+```bash
+AI_FEATURES_ENABLED=true
+GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-key
+```
+
+The server reads the flag at runtime, so changing it takes a restart, not a rebuild. If the flag is on and the key is missing, the server fails at startup. When the flag is off, the agent UI is hidden and every `/api/agent/*` route returns 404.
 
 The generator route sends the headers required by WebAssembly threading (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`).
 

@@ -18,6 +18,7 @@ import { ComponentsPanel } from '../../components/generator/ComponentsPanel'
 import { AgentTriggerButton } from '../../components/agent/AgentTriggerButton'
 import { AgentOverlay } from '../../components/agent/AgentOverlay/index'
 import { AgentEditReviewBar } from '../../components/agent/AgentEditReviewBar'
+import { useAiFeaturesEnabled } from '../../components/agent/AiFeaturesProvider'
 import { authClient } from '../../db/auth-client'
 import { agentResumeIdAtom } from '../../atoms/agentAtom'
 import { activeSectionSetterAtom } from '../../atoms/activeSection'
@@ -70,6 +71,7 @@ function GeneratorContent() {
   const { data: session, isPending } = authClient.useSession()
   const showRedirectDialog = !isPending && !!session && !resumeId
   const setAgentResumeId = useSetAtom(agentResumeIdAtom)
+  const aiEnabled = useAiFeaturesEnabled()
   const setActiveSectionSetter = useSetAtom(activeSectionSetterAtom)
   const setResume = useSetAtom(resumeAtom)
   const mounted = useRef(false)
@@ -246,9 +248,13 @@ function GeneratorContent() {
       )}
 
       <ResumesRedirectDialog open={showRedirectDialog} />
-      <AgentTriggerButton />
-      <AgentOverlay />
-      <AgentEditReviewBar />
+      {aiEnabled && (
+        <>
+          <AgentTriggerButton />
+          <AgentOverlay />
+          <AgentEditReviewBar />
+        </>
+      )}
     </main>
   )
 }
