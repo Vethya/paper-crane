@@ -35,12 +35,13 @@ function deferred() {
 async function flush() {
   await new Promise(setImmediate)
 }
-async function waitFor(predicate) {
-  for (let i = 0; i < 100; i++) {
-    if (predicate()) return
+// Real Web Crypto digests finish off the event loop, so wait by time, not by tick count.
+async function waitFor(predicate, timeoutMs = 2000) {
+  const deadline = Date.now() + timeoutMs
+  while (!predicate()) {
+    if (Date.now() > deadline) assert.fail('Expected scheduler progress')
     await flush()
   }
-  assert.fail('Expected scheduler progress')
 }
 function harness(hash = (value) => value) {
   const exports = {},
