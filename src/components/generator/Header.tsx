@@ -247,6 +247,8 @@ function SaveStatus({
     )
   if (state === 'error')
     return <span className="text-xs text-red-400">Couldn’t save</span>
+  if (state === 'pending')
+    return <span className="text-xs text-slate-400">Unsaved changes</span>
   if (state === 'saving')
     return <span className="text-xs text-slate-400">Saving…</span>
   if (state === 'saved')
