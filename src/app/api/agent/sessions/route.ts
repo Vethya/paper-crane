@@ -4,8 +4,12 @@ import { connectDB } from '@/db'
 import { AgentSession } from '@/db/models/agentSession'
 import { Resume } from '@/db/models/resume'
 import type { AgentMode, AgentMessage } from '@/atoms/agentAtom'
+import { aiDisabledResponse } from '@/lib/aiFeatures'
 
 export async function GET(request: NextRequest) {
+  const disabled = aiDisabledResponse()
+  if (disabled) return disabled
+
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -42,6 +46,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const disabled = aiDisabledResponse()
+  if (disabled) return disabled
+
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

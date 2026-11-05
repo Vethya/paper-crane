@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { auth } from '../../../../lib/auth'
 import { TAILORING_SYSTEM_PROMPT } from '../../../../constants/prompts.constants'
+import { aiDisabledResponse } from '@/lib/aiFeatures'
 
 // Ensure the env var is validated at startup via src/env.ts
 import '../../../../env'
@@ -122,6 +123,9 @@ const AgentEditResponseSchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
+  const disabled = aiDisabledResponse()
+  if (disabled) return disabled
+
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
