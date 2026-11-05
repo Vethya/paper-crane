@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai'
@@ -25,6 +25,14 @@ import { AgentFieldFocuser } from '../../agent/AgentFieldFocuser'
 import { agentPendingEditsAtom } from '../../../atoms/agentEdits'
 import { resumeTagsAtom } from '../../../atoms/resumeTags'
 import { FormValues } from '../../../types'
+import {
+  browserStorage,
+  clearDraft,
+  findRecovery,
+  readDraft,
+  type Recovery
+} from '../../../lib/draftRecovery'
+import { RecoveryBanner } from '../RecoveryBanner'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
@@ -79,6 +87,7 @@ export function Form({
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const autoRender = useAtomValue(autoRenderAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
+  const [recovery, setRecovery] = useState<Recovery | null>(null)
   const scheduler = useMemo(() => createRenderScheduler({ compile: latex }), [])
   const owner = useMemo(
     () => ({ resumeId, active: true, ready: !resumeId, renders: 0 }),
@@ -160,6 +169,7 @@ export function Form({
     document.addEventListener('visibilitychange', renderLoaded)
 
     async function loadData() {
+      setRecovery(null)
       if (resumeId) {
         setIsLoadingResume(true)
         try {
@@ -168,6 +178,14 @@ export function Form({
           const data = await res.json()
           if (cancelled) return
           const content = data.content as FormValues
+          // Offer back edits the server never confirmed, else drop the backup.
+          const found = findRecovery(
+            readDraft(browserStorage, resumeId),
+            content,
+            data.updatedAt
+          )
+          if (found) setRecovery(found)
+          else clearDraft(browserStorage, resumeId)
           formContext.reset(content)
           setFormData(content)
           setLoadedResumeId(resumeId)
@@ -294,6 +312,20 @@ export function Form({
     await generateAndSetResume(formValues, undefined, true)
   }, [formContext, generateAndSetResume, onMake, pendingEdits, owner])
 
+  // Restoring changes the form, so autosave saves the restored content.
+  function restoreDraft() {
+    if (!recovery) return
+    const content = JSON.parse(recovery.content) as FormValues
+    formContext.reset(content)
+    setFormData(content)
+    setRecovery(null)
+  }
+
+  function discardDraft() {
+    if (resumeId) clearDraft(browserStorage, resumeId)
+    setRecovery(null)
+  }
+
   return (
     <FormProvider {...formContext}>
       <form
@@ -311,6 +343,13 @@ export function Form({
           </div>
         ) : (
           <>
+            {recovery && (
+              <RecoveryBanner
+                recovery={recovery}
+                onRestore={restoreDraft}
+                onDiscard={discardDraft}
+              />
+            )}
             <AgentFieldFocuser />
             {currSection === 'templates' && <TemplatesSection />}
             {currSection === 'basics' && <ProfileSection />}
