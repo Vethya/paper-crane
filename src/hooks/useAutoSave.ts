@@ -5,6 +5,7 @@ import { useAtomValue, useSetAtom } from 'jotai'
 import { FormValues } from '@/types'
 import { saveStateAtom } from '@/atoms/saveState'
 import { agentPendingEditsAtom } from '@/atoms/agentEdits'
+import { loadedResumeIdAtom } from '@/atoms/resume'
 import { createAutoSaver, type AutoSaver } from '@/lib/autoSaver'
 
 export type { SaveState } from '@/atoms/saveState'
@@ -33,6 +34,7 @@ export function useAutoSave(
   const paused = useAtomValue(agentPendingEditsAtom).some(
     (e) => e.status === 'pending'
   )
+  const loadedResumeId = useAtomValue(loadedResumeIdAtom)
   const saverRef = useRef<AutoSaver | null>(null)
 
   // One saver per resume. Leaving the page or switching resumes flushes it
@@ -74,7 +76,9 @@ export function useAutoSave(
 
   useEffect(() => {
     const saver = saverRef.current
-    if (!saver || !formData) return
+    // Wait for this resume's server copy. Until then formData can hold an
+    // earlier visit's form, which must not become the baseline.
+    if (!saver || !formData || loadedResumeId !== resumeId) return
 
     // Pause auto-save while agent edits are pending review.
     // Any form changes (agent-applied or manual) will save together once resolved.
@@ -82,7 +86,7 @@ export function useAutoSave(
 
     // The first snapshot is the loaded resume, which needs no save.
     saver.update(JSON.stringify(formData))
-  }, [formData, paused])
+  }, [resumeId, loadedResumeId, formData, paused])
 
   return saveState
 }
