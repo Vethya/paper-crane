@@ -7,6 +7,8 @@ interface AutoSaverOptions {
   delay?: number
   retryDelays?: number[]
   statusResetDelay?: number
+  // The value the server already holds. Without it, the first update is used.
+  baseline?: string
 }
 
 // Debounces snapshot saves, runs one save at a time, and keeps unsaved work
@@ -17,10 +19,11 @@ export function createAutoSaver({
   onStatus,
   delay = 2000,
   retryDelays = [2000, 5000, 15000],
-  statusResetDelay = 2000
+  statusResetDelay = 2000,
+  baseline: initial
 }: AutoSaverOptions) {
-  let baseline: string | null = null
-  let lastSaved: string | null = null
+  let baseline: string | null = initial ?? null
+  let lastSaved: string | null = initial ?? null
   let pending: string | null = null
   let saving: { snapshot: string; promise: Promise<void> } | null = null
   let timer: ReturnType<typeof setTimeout> | undefined
