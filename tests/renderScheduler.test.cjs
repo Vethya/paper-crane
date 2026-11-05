@@ -363,6 +363,7 @@ function formHarness() {
     'src/components/generator/Form/index.tsx',
     {
       react: {
+        useState: (initial) => [initial, () => {}],
         useEffect: (effect) => effects.push(effect),
         useCallback(callback) {
           callbacks.push(callback)
