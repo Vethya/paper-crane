@@ -23,7 +23,7 @@ export async function patchResume(resumeId: string, body: string) {
 // resumes flushes it instead of dropping the debounced edit.
 export function useResumeSaver(
   resumeId: string | null,
-  save: (resumeId: string, snapshot: string) => Promise<void>,
+  save: (resumeId: string, snapshot: string, revision: number) => Promise<void>,
   baseline?: string
 ) {
   const setSaveState = useSetAtom(saveStateAtom)
@@ -33,7 +33,7 @@ export function useResumeSaver(
     if (!resumeId) return
     let attached = true
     const saver = createAutoSaver({
-      save: (snapshot) => save(resumeId, snapshot),
+      save: (snapshot, revision) => save(resumeId, snapshot, revision),
       onStatus: (status) => {
         if (attached) setSaveState(status)
       },

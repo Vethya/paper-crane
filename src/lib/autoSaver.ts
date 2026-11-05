@@ -1,8 +1,10 @@
 export type AutoSaveStatus = 'idle' | 'pending' | 'saving' | 'saved' | 'error'
 
 interface AutoSaverOptions {
-  // Sends one serialized snapshot. Rejects when the save failed.
-  save: (snapshot: string) => Promise<void>
+  // Sends one serialized snapshot. Rejects when the save failed. `revision`
+  // grows with each new snapshot in this page, so the server can ignore a
+  // request that arrives after a newer one.
+  save: (snapshot: string, revision: number) => Promise<void>
   onStatus: (status: AutoSaveStatus) => void
   delay?: number
   retryDelays?: number[]
@@ -10,6 +12,10 @@ interface AutoSaverOptions {
   // The value the server already holds. Without it, the first update is used.
   baseline?: string
 }
+
+// Shared by every saver in the page, so a retry from a saver that was left
+// behind never outranks a newer snapshot from the saver that replaced it.
+let lastRevision = 0
 
 // Debounces snapshot saves, runs one save at a time, and keeps unsaved work
 // until it is saved. It outlives the component that created it, so a flush on
@@ -25,6 +31,7 @@ export function createAutoSaver({
   let baseline: string | null = initial ?? null
   let lastSaved: string | null = initial ?? null
   let pending: string | null = null
+  let pendingRevision = 0
   let saving: { snapshot: string; promise: Promise<void> } | null = null
   let timer: ReturnType<typeof setTimeout> | undefined
   let resetTimer: ReturnType<typeof setTimeout> | undefined
@@ -51,16 +58,20 @@ export function createAutoSaver({
     timer = undefined
 
     const snapshot = pending
+    const revision = pendingRevision
     pending = null
     setStatus('saving')
-    saving = { snapshot, promise: save(snapshot) }
+    saving = { snapshot, promise: save(snapshot, revision) }
     try {
       await saving.promise
       lastSaved = snapshot
       failures = 0
     } catch {
       // Keep the failed snapshot unless a newer edit replaced it.
-      if (pending === null) pending = snapshot
+      if (pending === null) {
+        pending = snapshot
+        pendingRevision = revision
+      }
       failures++
     } finally {
       saving = null
@@ -90,6 +101,7 @@ export function createAutoSaver({
         return setStatus(saving ? 'saving' : 'idle')
       }
       pending = snapshot
+      pendingRevision = ++lastRevision
       setStatus('pending')
       schedule(delay)
     },
@@ -118,7 +130,7 @@ export function createAutoSaver({
       clearTimeout(timer)
       timer = undefined
       if (!saving) return void run()
-      void save(pending).catch(() => {})
+      void save(pending, pendingRevision).catch(() => {})
     },
 
     hasUnsavedChanges() {

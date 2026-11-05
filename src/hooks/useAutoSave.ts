@@ -12,8 +12,16 @@ import { patchResume, useResumeSaver } from './useResumeSaver'
 
 export type { SaveState } from '@/atoms/saveState'
 
-async function saveContent(resumeId: string, snapshot: string) {
-  await patchResume(resumeId, `{"content":${snapshot}}`)
+// Identifies this page load, so the server can order its content saves.
+const WRITER_ID = Math.random().toString(36).slice(2)
+
+async function saveContent(
+  resumeId: string,
+  snapshot: string,
+  revision: number
+) {
+  const writer = JSON.stringify({ id: WRITER_ID, revision })
+  await patchResume(resumeId, `{"content":${snapshot},"writer":${writer}}`)
   // The server has this content now, so its local backup is not needed.
   clearDraft(browserStorage, resumeId, snapshot)
 }
