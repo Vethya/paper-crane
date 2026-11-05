@@ -3,7 +3,6 @@
 # dependencies
 /node_modules
 /.pnpm-store
-/latex-api/node_modules
 /.pnp
 .pnp.js
 
