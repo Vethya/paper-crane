@@ -10,7 +10,9 @@ export function GET() {
     { enabled: isAiEnabled() },
     {
       headers: {
-        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=60'
+        // Browsers must re-check (max-age=0); only the CDN caches (s-maxage).
+        'Cache-Control':
+          'public, max-age=0, must-revalidate, s-maxage=86400, stale-while-revalidate=60'
       }
     }
   )
