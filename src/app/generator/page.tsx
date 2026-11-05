@@ -15,20 +15,37 @@ import {
 import { PrimaryButton } from '../../components/core/Button'
 import { ResumesRedirectDialog } from '../../components/generator/ResumesRedirectDialog'
 import { ComponentsPanel } from '../../components/generator/ComponentsPanel'
-import { AgentTriggerButton } from '../../components/agent/AgentTriggerButton'
-import { AgentOverlay } from '../../components/agent/AgentOverlay/index'
-import { AgentEditReviewBar } from '../../components/agent/AgentEditReviewBar'
 import { authClient } from '../../db/auth-client'
 import { agentResumeIdAtom } from '../../atoms/agentAtom'
 import { activeSectionSetterAtom } from '../../atoms/activeSection'
 import { Blocks } from 'lucide-react'
 import type { ResumeComponentType } from '@/lib/resumeComponents'
 import { useIsHydrated } from '@/hooks/useIsHydrated'
+import { useAiFeaturesEnabled } from '@/hooks/useAiFeaturesEnabled'
 import { resumeAtom } from '../../atoms/resume'
 import { hasPdfUrlViewers } from '../../lib/pdfBuffer'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
+  { ssr: false }
+)
+
+// Loaded only when AI is on, so the hosted bundle skips the agent code.
+const AgentTriggerButton = dynamic(
+  async () =>
+    (await import('../../components/agent/AgentTriggerButton'))
+      .AgentTriggerButton,
+  { ssr: false }
+)
+const AgentOverlay = dynamic(
+  async () =>
+    (await import('../../components/agent/AgentOverlay/index')).AgentOverlay,
+  { ssr: false }
+)
+const AgentEditReviewBar = dynamic(
+  async () =>
+    (await import('../../components/agent/AgentEditReviewBar'))
+      .AgentEditReviewBar,
   { ssr: false }
 )
 
@@ -70,6 +87,7 @@ function GeneratorContent() {
   const { data: session, isPending } = authClient.useSession()
   const showRedirectDialog = !isPending && !!session && !resumeId
   const setAgentResumeId = useSetAtom(agentResumeIdAtom)
+  const aiEnabled = useAiFeaturesEnabled()
   const setActiveSectionSetter = useSetAtom(activeSectionSetterAtom)
   const setResume = useSetAtom(resumeAtom)
   const mounted = useRef(false)
@@ -246,9 +264,13 @@ function GeneratorContent() {
       )}
 
       <ResumesRedirectDialog open={showRedirectDialog} />
-      <AgentTriggerButton />
-      <AgentOverlay />
-      <AgentEditReviewBar />
+      {aiEnabled && (
+        <>
+          <AgentTriggerButton />
+          <AgentOverlay />
+          <AgentEditReviewBar />
+        </>
+      )}
     </main>
   )
 }
