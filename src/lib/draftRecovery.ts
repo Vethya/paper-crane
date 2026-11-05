@@ -2,6 +2,11 @@
 // generator offer the edits back after a failed save, a crash, or a closed tab.
 
 type DraftStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
+// Returns the storage to use. Reading `window.localStorage` itself can throw
+// when the browser blocks site data, so it is read inside each guard.
+type GetStorage = () => DraftStorage
+
+export const browserStorage: GetStorage = () => window.localStorage
 
 export interface LocalDraft {
   content: string
@@ -30,9 +35,9 @@ export function stableStringify(value: unknown): string {
 }
 
 // Storage can be missing or throw (private mode, quota), so every access is guarded.
-export function readDraft(storage: DraftStorage, resumeId: string) {
+export function readDraft(storage: GetStorage, resumeId: string) {
   try {
-    const draft = JSON.parse(storage.getItem(key(resumeId)) ?? 'null')
+    const draft = JSON.parse(storage().getItem(key(resumeId)) ?? 'null')
     if (typeof draft?.content === 'string' && typeof draft.savedAt === 'number')
       return draft as LocalDraft
   } catch {}
@@ -40,20 +45,20 @@ export function readDraft(storage: DraftStorage, resumeId: string) {
 }
 
 export function writeDraft(
-  storage: DraftStorage,
+  storage: GetStorage,
   resumeId: string,
   content: string,
   now = Date.now()
 ) {
   try {
-    storage.setItem(key(resumeId), JSON.stringify({ content, savedAt: now }))
+    storage().setItem(key(resumeId), JSON.stringify({ content, savedAt: now }))
   } catch {}
 }
 
 // Removes the draft. With `content`, removes it only if it still holds that
 // content, so a save of older content keeps a newer draft.
 export function clearDraft(
-  storage: DraftStorage,
+  storage: GetStorage,
   resumeId: string,
   content?: string
 ) {
@@ -62,7 +67,7 @@ export function clearDraft(
       content === undefined ||
       readDraft(storage, resumeId)?.content === content
     )
-      storage.removeItem(key(resumeId))
+      storage().removeItem(key(resumeId))
   } catch {}
 }
 

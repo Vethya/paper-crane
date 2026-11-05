@@ -19,17 +19,19 @@ new Function('module', 'exports', outputText)(draftModule, draftModule.exports)
 const { stableStringify, readDraft, writeDraft, clearDraft, findRecovery } =
   draftModule.exports
 
+// Returns a storage getter, as the helpers take, with the storage's methods
+// also on it so tests can write raw values.
 function memoryStorage() {
   const items = new Map()
-  return {
+  const storage = {
     getItem: (k) => (items.has(k) ? items.get(k) : null),
     setItem: (k, v) => items.set(k, String(v)),
-    removeItem: (k) => items.delete(k),
-    items
+    removeItem: (k) => items.delete(k)
   }
+  return Object.assign(() => storage, storage)
 }
 
-const throwingStorage = {
+const throwingMethods = () => ({
   getItem() {
     throw new Error('blocked')
   },
@@ -39,6 +41,11 @@ const throwingStorage = {
   removeItem() {
     throw new Error('blocked')
   }
+})
+
+// Like `window.localStorage` when the browser blocks site data.
+const throwingAccess = () => {
+  throw new Error('SecurityError')
 }
 
 test('stableStringify ignores key order and undefined values', () => {
@@ -67,9 +74,12 @@ test('a malformed draft reads as no draft', () => {
 })
 
 test('blocked storage never throws', () => {
-  assert.equal(readDraft(throwingStorage, 'a'), null)
-  assert.doesNotThrow(() => writeDraft(throwingStorage, 'a', '{}'))
-  assert.doesNotThrow(() => clearDraft(throwingStorage, 'a'))
+  for (const storage of [throwingMethods, throwingAccess]) {
+    assert.equal(readDraft(storage, 'a'), null)
+    assert.doesNotThrow(() => writeDraft(storage, 'a', '{}'))
+    assert.doesNotThrow(() => clearDraft(storage, 'a'))
+    assert.doesNotThrow(() => clearDraft(storage, 'a', '{}'))
+  }
 })
 
 test('clearDraft with content keeps a newer draft', () => {

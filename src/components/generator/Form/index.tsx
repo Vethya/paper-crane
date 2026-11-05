@@ -26,6 +26,7 @@ import { agentPendingEditsAtom } from '../../../atoms/agentEdits'
 import { resumeTagsAtom } from '../../../atoms/resumeTags'
 import { FormValues } from '../../../types'
 import {
+  browserStorage,
   clearDraft,
   findRecovery,
   readDraft,
@@ -179,12 +180,12 @@ export function Form({
           const content = data.content as FormValues
           // Offer back edits the server never confirmed, else drop the backup.
           const found = findRecovery(
-            readDraft(localStorage, resumeId),
+            readDraft(browserStorage, resumeId),
             content,
             data.updatedAt
           )
           if (found) setRecovery(found)
-          else clearDraft(localStorage, resumeId)
+          else clearDraft(browserStorage, resumeId)
           formContext.reset(content)
           setFormData(content)
           setLoadedResumeId(resumeId)
@@ -321,7 +322,7 @@ export function Form({
   }
 
   function discardDraft() {
-    if (resumeId) clearDraft(localStorage, resumeId)
+    if (resumeId) clearDraft(browserStorage, resumeId)
     setRecovery(null)
   }
 
