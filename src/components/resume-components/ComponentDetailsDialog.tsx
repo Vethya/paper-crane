@@ -98,7 +98,7 @@ function ComponentReadOnlyFields({
       {rows.map((row) => (
         <div
           key={row.label}
-          className="rounded-lg border border-app-controlBorder bg-app-control/45 px-4 py-3"
+          className="rounded-app-button border border-app-controlBorder bg-app-control/45 px-4 py-3"
         >
           <div className="text-xs font-medium uppercase tracking-wide text-slate-500">
             {row.label}
@@ -108,7 +108,7 @@ function ComponentReadOnlyFields({
               {row.value.map((value, index) => (
                 <span
                   key={`${value}-${index}`}
-                  className="rounded-md border border-app-controlBorder bg-app-surface px-2.5 py-1 text-xs text-slate-200"
+                  className="rounded-app-button border border-app-controlBorder bg-app-surface px-2.5 py-1 text-xs text-slate-200"
                 >
                   {value}
                 </span>
