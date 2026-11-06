@@ -1,6 +1,7 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { esc, href } from './escape'
 
 const generator: Generator = {
   profileSection(profile) {
@@ -25,7 +26,7 @@ const generator: Generator = {
       }
     }
 
-    const info = [email, phone, location.address, website]
+    const info = [email, phone, location.address, esc(website)]
       .filter(Boolean)
       .join(' | ')
 
@@ -247,7 +248,7 @@ const generator: Generator = {
         }
 
         if (url) {
-          urlLine = `\\noindent\\location{\\url{${url}}}\\par`
+          urlLine = `\\noindent\\location{${href(url)}}\\par`
         }
 
         if (line1 || line2) {

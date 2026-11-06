@@ -1,6 +1,7 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { esc, href } from './escape'
 
 const generator: Generator = {
   profileSection(basics = {}) {
@@ -12,7 +13,7 @@ const generator: Generator = {
     \\address{${location.address || ''}}
     ${phone ? `\\phone[mobile]{${phone}}` : ''}
     ${email ? `\\email{${email || ''}}` : ''}
-    ${website ? `\\homepage{${website || ''}}` : ''}
+    ${website ? `\\homepage{${esc(website)}}` : ''}
   `
   },
 
@@ -145,7 +146,7 @@ const generator: Generator = {
         }
 
         if (url) {
-          detailsLine += url
+          detailsLine += href(url)
         }
 
         return stripIndent`
