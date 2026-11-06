@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
   const system = `${TAILORING_SYSTEM_PROMPT}\n\n## User's current resume\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`
 
   try {
-    const { output, finishReason } = await generateText({
+    const result = await generateText({
       model,
       maxOutputTokens: 8192,
       output: Output.object({ schema: AgentEditResponseSchema }),
@@ -150,8 +150,9 @@ export async function POST(request: NextRequest) {
       messages: messages.map(({ role, content }) => ({ role, content }))
     })
 
-    if (finishReason === 'length')
+    if (result.finishReason === 'length')
       return NextResponse.json({ error: editLimitMessage }, { status: 422 })
+    const { output } = result
     console.log('[agent/edit] Generated edits:', {
       editCount: output.edits.length
     })
@@ -168,7 +169,7 @@ export async function POST(request: NextRequest) {
         '[agent/edit] Schema validation failed, attempting repair...'
       )
       try {
-        const { output: repaired, finishReason } = await generateText({
+        const repair = await generateText({
           model,
           maxOutputTokens: 8192,
           output: Output.object({ schema: AgentEditResponseSchema }),
@@ -181,8 +182,9 @@ export async function POST(request: NextRequest) {
           ].join('\n\n')
         })
 
-        if (finishReason === 'length')
+        if (repair.finishReason === 'length')
           return NextResponse.json({ error: editLimitMessage }, { status: 422 })
+        const { output: repaired } = repair
         console.log('[agent/edit] Repair successful:', {
           editCount: repaired.edits.length
         })

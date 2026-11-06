@@ -38,10 +38,24 @@ export const MessageLimits: Story = {
   }
 }
 export const ResumeNearLimit: Story = {
-  parameters: { state: { form: { basics: { name: 'x'.repeat(52_000) } } } }
+  parameters: { state: { form: { basics: { name: 'x'.repeat(52_000) } } } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('status')).toHaveTextContent(
+      "Your current resume is included in this chat for context. It's close to the size limit: 52,022 / 64,000 characters. 11,978 characters remaining."
+    )
+  }
 }
 export const ResumeOverLimit: Story = {
-  parameters: { state: { form: { basics: { name: 'x'.repeat(64_000) } } } }
+  parameters: { state: { form: { basics: { name: 'x'.repeat(64_000) } } } },
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getByRole('status')).toHaveTextContent(
+      'Return to the resume editor and shorten some descriptions.'
+    )
+    await userEvent.type(canvas.getByRole('textbox'), 'Review my resume')
+    await expect(
+      canvas.getByRole('button', { name: 'Send message' })
+    ).toBeDisabled()
+  }
 }
 export const ContextNearLimit: Story = {
   parameters: {

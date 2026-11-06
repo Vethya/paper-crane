@@ -10,7 +10,7 @@ function route(kind, ai) {
     const module = { exports: {} }
     const native = createRequire(filename)
     const requireMock = (name) => {
-      if (name === 'ai') return { ...ai, Output: { object: () => ({}) }, NoObjectGeneratedError: { isInstance: (e) => e?.kind === 'schema' } }
+      if (name === 'ai') return { Output: { object: () => ({}) }, NoObjectGeneratedError: { isInstance: (e) => e?.kind === 'schema' }, ...ai }
       if (name === '@ai-sdk/google') return { google: () => ({}) }
       if (name.endsWith('/auth')) return { auth: { api: { getSession: async () => ({ user: { id: 'test-user' } }) } } }
       if (name.endsWith('/env')) return {}
@@ -78,3 +78,24 @@ test('edit caps repair output and rejects a truncated repair', async () => {
   assert.equal((await api.POST(request())).status, 422)
   assert.equal(calls, 2)
 })
+
+for (const repair of [false, true]) {
+  test(`real SDK token cap returns 422 before accessing ${repair ? 'repair' : 'primary'} output`, async () => {
+    const sdk = require('ai')
+    const { MockLanguageModelV3 } = require('ai/test')
+    let calls = 0
+    const api = route('edit', { ...sdk, generateText: (options) => {
+      calls++
+      const text = repair && calls === 1 ? '{invalid json' : ''
+      return sdk.generateText({ ...options, model: new MockLanguageModelV3({ doGenerate: {
+        content: text ? [{ type: 'text', text }] : [],
+        finishReason: { unified: text ? 'stop' : 'length', raw: text ? 'STOP' : 'MAX_TOKENS' },
+        usage: { inputTokens: { total: 10 }, outputTokens: { total: 8192 } }, warnings: []
+      } }) })
+    } })
+    const response = await api.POST(request())
+    assert.equal(response.status, 422)
+    assert.match((await response.json()).error, /No changes applied/)
+    assert.equal(calls, repair ? 2 : 1)
+  })
+}

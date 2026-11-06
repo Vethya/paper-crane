@@ -301,3 +301,27 @@ test('warnings stay hidden below 80%, allow exact limits, and block overflow', (
   assert.equal(agentWarnings(resumeAt(64_001), [], '').blocked, true)
   assert.match(agentWarnings(resumeAt(64_000), [user('x'.repeat(32_000)), assistant('y'.repeat(10_000))], '').warnings.at(-1), /getting long/)
 })
+
+test('long history trimming visits characters at most linearly', () => {
+  const history = Array.from({ length: 200 }, (_, i) =>
+    i % 2 ? assistant('b'.repeat(4000)) : user('a'.repeat(4000)))
+  const iterate = String.prototype[Symbol.iterator]
+  let visited = 0
+  String.prototype[Symbol.iterator] = function* () {
+    for (const ch of iterate.call(this)) { visited++; yield ch }
+  }
+  let result
+  try { result = prepareAgentMessages({}, history) }
+  finally { String.prototype[Symbol.iterator] = iterate }
+  assert.ok(visited < 1_600_000, `rescanned ${visited} characters`)
+  assert.equal(result.context, 800_002)
+  assert.equal(result.trimmed, true)
+  assert.deepEqual(result.messages, history.slice(-30))
+})
+
+test('resume warnings explain context and where to shorten content', () => {
+  assert.equal(agentWarnings(resumeAt(52_022), [], '').warnings[0],
+    "Your current resume is included in this chat for context. It's close to the size limit: 52,022 / 64,000 characters. 11,978 characters remaining.")
+  assert.match(agentWarnings(resumeAt(64_022), [], '').warnings[0], /Return to the resume editor and shorten some descriptions/)
+  assert.match(agentWarnings({}, [], 'x'.repeat(32_001)).warnings[0], /Shorten your question or pasted job description/)
+})

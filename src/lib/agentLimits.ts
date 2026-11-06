@@ -21,23 +21,30 @@ export const editLimitMessage =
 
 export function prepareAgentMessages(resume: object, history: Message[]) {
   const turns: Message[][] = []
+  const sizes: number[] = []
+  let total = resumeSize(resume)
+  let lastOversized = -1
   for (const message of history) {
     if (message.error || !message.content) continue
-    if (message.role === 'user') turns.push([])
-    turns.at(-1)?.push({ role: message.role, content: message.content })
+    if (message.role === 'user') {
+      turns.push([])
+      sizes.push(0)
+    }
+    if (!turns.length) continue
+    const count = characterCount(message.content)
+    total += count
+    sizes[sizes.length - 1] += count
+    if (count > AGENT_LIMITS.message) lastOversized = turns.length - 1
+    turns.at(-1)!.push({ role: message.role, content: message.content })
   }
-  let trimmed = false
+  const context = total
+  let start = 0
   while (
-    turns.length > 1 &&
-    (contextSize(resume, turns.flat()) > AGENT_LIMITS.context ||
-      turns
-        .flat()
-        .some((m) => characterCount(m.content) > AGENT_LIMITS.message))
-  ) {
-    turns.shift()
-    trimmed = true
-  }
-  return { messages: turns.flat(), trimmed }
+    start < turns.length - 1 &&
+    (total > AGENT_LIMITS.context || start <= lastOversized)
+  )
+    total -= sizes[start++]
+  return { messages: turns.slice(start).flat(), trimmed: start > 0, context }
 }
 
 export function agentWarnings(
@@ -51,7 +58,7 @@ export function agentWarnings(
     ...history,
     { role: 'user', content: draft.trim() }
   ])
-  const context = contextSize(resume, history) + current
+  const context = prepared.context
   const warnings: string[] = []
   const format = (n: number) => n.toLocaleString('en-US')
   const blocked = size > AGENT_LIMITS.resume || current > AGENT_LIMITS.message
@@ -61,9 +68,18 @@ export function agentWarnings(
   ] as const) {
     if (count >= limit * 0.8)
       warnings.push(
-        `${label}: ${format(count)} / ${format(limit)} characters. ` +
+        (label === 'Resume'
+          ? 'Your current resume is included in this chat for context. ' +
+            (count > limit
+              ? 'It exceeds the size limit: '
+              : "It's close to the size limit: ")
+          : `${label}: `) +
+          `${format(count)} / ${format(limit)} characters. ` +
           (count > limit
-            ? `Remove ${format(count - limit)} characters to send.`
+            ? (label === 'Resume'
+                ? 'Return to the resume editor and shorten some descriptions. '
+                : 'Shorten your question or pasted job description. ') +
+              `Remove ${format(count - limit)} characters to send.`
             : `${format(limit - count)} characters remaining.`)
       )
   }

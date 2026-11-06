@@ -125,7 +125,7 @@ const AgentRequestSchema = z.object({
           .string()
           .refine(
             (s) => characterCount(s) <= AGENT_LIMITS.message,
-            'Message exceeds 32,000 characters'
+            'This message exceeds 32,000 characters. Shorten your question or pasted job description.'
           )
       })
     )
@@ -134,7 +134,7 @@ const AgentRequestSchema = z.object({
     .record(z.string(), z.unknown())
     .refine(
       (r) => resumeSize(r) <= AGENT_LIMITS.resume,
-      'Resume exceeds 64,000 characters'
+      'Your current resume is included in this chat for context. Shorten some descriptions in the resume editor to fit within 64,000 characters.'
     )
 })
 const contextFits = (data: z.infer<typeof AgentRequestSchema>) =>
