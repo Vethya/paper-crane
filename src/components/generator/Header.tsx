@@ -98,7 +98,7 @@ export function Header({ className, showTags = true }: HeaderProps) {
     <header
       className={twMerge(
         clsx(
-          'relative flex h-14 w-full items-center justify-between gap-4 border-b px-6',
+          'relative flex h-14 w-full items-center justify-between gap-4 border-b px-3 sm:px-6',
           className
         )
       )}
