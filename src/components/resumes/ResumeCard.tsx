@@ -1,5 +1,10 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { queryKeys, type ResumeListItem } from '@/lib/queries'
+import { toast } from '@/components/ui/sonner'
+
 import { useState } from 'react'
 import Link from 'next/link'
 import { FiFileText, FiMoreVertical, FiTrash2 } from 'react-icons/fi'
@@ -54,13 +59,32 @@ export function ResumeCard({
   updatedAt,
   onDelete
 }: ResumeCardProps) {
+  const client = useQueryClient()
+  const account = useQueryAccount()
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
   async function handleDelete() {
     setDeleting(true)
-    await fetch(`/api/resumes/${id}`, { method: 'DELETE' })
-    onDelete?.(id)
+    try {
+      const response = await fetch(`/api/resumes/${id}`, { method: 'DELETE' })
+      if (!response.ok) throw new Error('Unable to delete resume')
+      await client.cancelQueries({ queryKey: queryKeys.resumes(account) })
+      client.setQueryData<ResumeListItem[]>(
+        queryKeys.resumes(account),
+        (items) => items?.filter((item) => item._id !== id)
+      )
+      client.removeQueries({
+        queryKey: queryKeys.resume(account, id),
+        exact: true
+      })
+      onDelete?.(id)
+      setConfirmOpen(false)
+    } catch {
+      toast.error('Unable to delete resume. Please try again.')
+    } finally {
+      setDeleting(false)
+    }
   }
 
   return (
