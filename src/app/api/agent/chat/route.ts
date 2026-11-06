@@ -1,15 +1,23 @@
 import { google } from '@ai-sdk/google'
 import { streamText, type ModelMessage } from 'ai'
-import { NextResponse, type NextRequest } from 'next/server'
+import { after, NextResponse, type NextRequest } from 'next/server'
 import type { AgentMode } from '../../../../atoms/agentAtom'
 import { auth } from '../../../../lib/auth'
 import { SYSTEM_PROMPTS } from '../../../../constants/prompts.constants'
 import { aiDisabledResponse } from '@/lib/aiFeatures'
 import { parseBody } from '@/lib/apiValidation'
 import { AgentChatSchema } from '@/lib/apiSchemas'
+import { failedReplyMessage } from '@/lib/agentLimits'
+import { finishReply, startReply } from '@/lib/agentReplies'
 
 // Ensure the env var is validated at startup via src/env.ts
 import '../../../../env'
+
+// Leaves time to finish and save a reply after the browser disconnects.
+export const maxDuration = 60
+
+const lengthNotice =
+  'Reply reached its length limit. Ask a narrower question for more detail.'
 
 export async function POST(request: NextRequest) {
   const disabled = aiDisabledResponse()
@@ -22,16 +30,21 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await parseBody(request, AgentChatSchema, 768_000)
   if (error) return error
-  const { messages, mode, resumeData } = data
+  const { messages, mode, resumeData, sessionId, replyId } = data
+  const target =
+    sessionId && replyId
+      ? { userId: session.user.id, sessionId, replyId }
+      : null
+  if (target && !(await startReply(target)))
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const modelMessages: ModelMessage[] = messages.map(({ role, content }) => ({
     role,
     content
   }))
 
-  const upstream = new AbortController()
+  // No abort signal: generation continues if the browser disconnects.
   const result = streamText({
-    abortSignal: AbortSignal.any([request.signal, upstream.signal]),
     model: google('gemini-3.1-flash-lite-preview'),
     system:
       SYSTEM_PROMPTS[mode as Exclude<AgentMode, 'Tailoring'>] ??
@@ -62,9 +75,7 @@ export async function POST(request: NextRequest) {
         throw part.error
       }
       if (part.type === 'finish' && part.finishReason === 'length')
-        firstChunks.push(
-          'Reply reached its length limit. Ask a narrower question for more detail.'
-        )
+        firstChunks.push(lengthNotice)
       if (part.type === 'text-delta') {
         firstChunks.push(part.text)
         break
@@ -72,51 +83,58 @@ export async function POST(request: NextRequest) {
       next = await iterator.next()
     }
   } catch (err) {
-    if (request.signal.aborted) return new Response(null, { status: 499 })
     console.error('[agent/chat] Error:', err)
+    if (target) await finishReply(target, failedReplyMessage, true)
     return NextResponse.json(
       { error: 'Failed to generate response' },
       { status: 502 }
     )
   }
 
-  // Stream remaining content with first chunks prepended
+  // Stream to the browser while it stays connected, and save the full reply.
   const encoder = new TextEncoder()
-  let cancelled = false
-  const stream = new ReadableStream({
-    cancel() {
-      cancelled = true
-      upstream.abort()
-      void iterator.return?.().catch(() => {})
+  let client: ReadableStreamDefaultController<Uint8Array> | null = null
+  const send = (chunk: string) => {
+    try {
+      client?.enqueue(encoder.encode(chunk))
+    } catch {
+      client = null
+    }
+  }
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      client = controller
+      firstChunks.forEach(send)
     },
-    async start(controller) {
-      for (const chunk of firstChunks) {
-        controller.enqueue(encoder.encode(chunk))
-      }
-      try {
-        for await (const part of { [Symbol.asyncIterator]: () => iterator }) {
-          if (cancelled) return
-          if (part.type === 'text-delta') {
-            controller.enqueue(encoder.encode(part.text))
-          } else if (part.type === 'finish' && part.finishReason === 'length') {
-            controller.enqueue(
-              encoder.encode(
-                '\n\nReply reached its length limit. Ask a narrower question for more detail.'
-              )
-            )
-          } else if (part.type === 'error') {
-            console.error('[agent/chat] Stream error:', part.error)
-            break
-          }
-        }
-      } catch (err) {
-        if (!cancelled && !request.signal.aborted)
-          console.error('[agent/chat] Stream error:', err)
-      } finally {
-        if (!cancelled) controller.close()
-      }
+    cancel() {
+      client = null
     }
   })
+  let reply = firstChunks.join('')
+  const generate = async () => {
+    try {
+      for await (const part of { [Symbol.asyncIterator]: () => iterator }) {
+        let chunk = ''
+        if (part.type === 'text-delta') chunk = part.text
+        else if (part.type === 'finish' && part.finishReason === 'length')
+          chunk = `\n\n${lengthNotice}`
+        else if (part.type === 'error') {
+          console.error('[agent/chat] Stream error:', part.error)
+          break
+        }
+        reply += chunk
+        send(chunk)
+      }
+    } catch (err) {
+      console.error('[agent/chat] Stream error:', err)
+    }
+    // Save before closing, so a follow-up message always sees this reply.
+    if (target) await finishReply(target, reply || failedReplyMessage, !reply)
+    try {
+      client?.close()
+    } catch {}
+  }
+  after(generate())
 
   return new Response(stream, {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' }

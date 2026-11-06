@@ -29,7 +29,11 @@ import {
   type PendingEdit
 } from '../../../atoms/agentEdits'
 import { authClient } from '../../../db/auth-client'
-import { prepareAgentMessages } from '../../../lib/agentLimits'
+import {
+  failedReplyMessage,
+  isGenerating,
+  prepareAgentMessages
+} from '../../../lib/agentLimits'
 import { MOCK_EDIT_RESPONSE } from '../../../lib/agentMock'
 import { AgentOverlayHeader } from './AgentOverlayHeader'
 import { AgentMessageList } from './AgentMessageList'
@@ -60,6 +64,26 @@ function getValueAtPath(
   if (Array.isArray(current) && current.every((v) => typeof v === 'string'))
     return current as string[]
   return undefined
+}
+
+const pendingReply: AgentMessage = {
+  id: 'pending-reply',
+  role: 'assistant',
+  content: ''
+}
+
+/** A question with no saved reply means the server failed to finish it. */
+function withFailedReply(messages: AgentMessage[]): AgentMessage[] {
+  if (messages.at(-1)?.role !== 'user') return messages
+  return [
+    ...messages,
+    {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: failedReplyMessage,
+      error: true
+    }
+  ]
 }
 
 async function saveSession({
@@ -113,8 +137,8 @@ export function AgentOverlay() {
   )
   const restoredChatId = useRef<string | null>(null)
   const requests = useRef(new AgentRequest())
-  const cancelRequest = useCallback(() => {
-    requests.current.cancel()
+  const detachRequest = useCallback(() => {
+    requests.current.detach()
     setMessages((prev) =>
       prev.filter(
         (message) => message.role !== 'assistant' || message.content.trim()
@@ -125,14 +149,14 @@ export function AgentOverlay() {
   }, [setIsStreaming, setMessages])
   useEffect(
     () => () => {
-      cancelRequest()
+      detachRequest()
       restoredChatId.current = null
     },
-    [cancelRequest, resumeId]
+    [detachRequest, resumeId]
   )
   useEffect(() => {
     if (conversationResumeId === resumeId) return
-    cancelRequest()
+    detachRequest()
     setMessages([])
     setSessionId(null)
     setDraft('')
@@ -147,7 +171,7 @@ export function AgentOverlay() {
   }, [
     conversationResumeId,
     resumeId,
-    cancelRequest,
+    detachRequest,
     setMessages,
     setSessionId,
     setDraft,
@@ -165,7 +189,7 @@ export function AgentOverlay() {
   }, [setOpen, setHistoryOpen])
 
   const handleNewChat = useCallback(() => {
-    cancelRequest()
+    detachRequest()
     restoredChatId.current = chatIdParam
     setDraft('')
     setMessages([])
@@ -175,7 +199,7 @@ export function AgentOverlay() {
     params.delete('chatId')
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }, [
-    cancelRequest,
+    detachRequest,
     chatIdParam,
     setDraft,
     setMessages,
@@ -188,35 +212,51 @@ export function AgentOverlay() {
 
   const handleSelectSession = useCallback(
     async (id: string) => {
-      cancelRequest()
+      detachRequest()
       restoredChatId.current = id
       setDraft('')
-      const signal = requests.current.begin()
+      const token = requests.current.begin()
       setHistoryOpen(false)
       setIsLoadingSession(true)
-      try {
-        const res = await fetch(`/api/agent/sessions/${id}`, { signal })
+      const load = async () => {
+        const res = await fetch(`/api/agent/sessions/${id}`)
         if (!res.ok) throw new Error('Failed to load session')
-        const data = (await res.json()) as {
+        return (await res.json()) as {
           mode: AgentMode
           messages: AgentMessage[]
+          generatingSince?: string
         }
-        if (!requests.current.isCurrent(signal)) return
-        setMessages(data.messages)
+      }
+      try {
+        let data = await load()
+        if (!requests.current.isCurrent(token)) return
         setSessionId(id)
         setMode(data.mode)
+        // The server is still finishing a reply from earlier: wait for it.
+        while (isGenerating(data.generatingSince)) {
+          setMessages([...data.messages, pendingReply])
+          setIsStreaming(true)
+          setIsLoadingSession(false)
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+          if (!requests.current.isCurrent(token)) return
+          data = await load()
+          if (!requests.current.isCurrent(token)) return
+        }
+        setIsStreaming(false)
+        setMessages(withFailedReply(data.messages))
       } catch (err) {
-        if (requests.current.isCurrent(signal))
+        if (requests.current.isCurrent(token))
           console.error('[AgentOverlay] Load session error:', err)
       } finally {
-        if (requests.current.isCurrent(signal)) setIsLoadingSession(false)
+        if (requests.current.isCurrent(token)) setIsLoadingSession(false)
       }
     },
     [
-      cancelRequest,
+      detachRequest,
       setDraft,
       setHistoryOpen,
       setMessages,
+      setIsStreaming,
       setSessionId,
       setMode
     ]
@@ -267,7 +307,7 @@ export function AgentOverlay() {
 
   const handleChatSend = useCallback(
     async (text: string, baseMessages?: AgentMessage[]) => {
-      const signal = requests.current.begin()
+      const token = requests.current.begin()
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -290,14 +330,28 @@ export function AgentOverlay() {
       let finalContent = ''
 
       try {
+        // Save the question first. The server then saves the reply itself,
+        // so it survives switching chats, switching resumes or leaving.
+        const savedId = resumeId
+          ? await saveSession({
+              resumeId,
+              sessionId,
+              mode,
+              messages: nextMessages
+            })
+          : null
+        if (savedId && requests.current.isCurrent(token)) setSessionId(savedId)
         const res = await fetch('/api/agent/chat', {
-          signal,
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: apiMessages,
             mode,
-            resumeData: formData ?? {}
+            resumeData: formData ?? {},
+            ...(savedId && {
+              sessionId: savedId,
+              replyId: assistantMessage.id
+            })
           })
         })
 
@@ -313,7 +367,8 @@ export function AgentOverlay() {
 
         while (true) {
           const { done, value } = await reader.read()
-          if (!requests.current.isCurrent(signal)) return
+          // Stop reading only. The server keeps generating and saves the reply.
+          if (!requests.current.isCurrent(token)) return void reader.cancel()
           if (done) break
           finalContent += decoder.decode(value, { stream: true })
           setMessages((prev) => {
@@ -326,7 +381,7 @@ export function AgentOverlay() {
           })
         }
       } catch (err) {
-        if (!requests.current.isCurrent(signal)) return
+        if (!requests.current.isCurrent(token)) return
         console.error('[AgentOverlay] Stream error:', err)
         finalContent =
           err instanceof Error
@@ -342,27 +397,7 @@ export function AgentOverlay() {
           return updated
         })
       } finally {
-        if (requests.current.isCurrent(signal)) {
-          setIsStreaming(false)
-          if (resumeId && finalContent) {
-            const finalMessages = [
-              ...nextMessages,
-              { ...assistantMessage, content: finalContent }
-            ]
-            try {
-              const savedId = await saveSession({
-                resumeId,
-                sessionId,
-                mode,
-                messages: finalMessages
-              })
-              if (!requests.current.isCurrent(signal)) return
-              setSessionId(savedId)
-            } catch (err) {
-              console.error('[AgentOverlay] Session save error:', err)
-            }
-          }
-        }
+        if (requests.current.isCurrent(token)) setIsStreaming(false)
       }
     },
     [
@@ -383,7 +418,7 @@ export function AgentOverlay() {
 
   const handleEditSend = useCallback(
     async (text: string, baseMessages?: AgentMessage[]) => {
-      const signal = requests.current.begin()
+      const token = requests.current.begin()
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -440,7 +475,6 @@ export function AgentOverlay() {
           data = MOCK_EDIT_RESPONSE
         } else {
           const res = await fetch('/api/agent/edit', {
-            signal,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -456,7 +490,7 @@ export function AgentOverlay() {
           data = (await res.json()) as typeof data
         }
 
-        if (!requests.current.isCurrent(signal)) return
+        if (!requests.current.isCurrent(token)) return
         const pendingEdits: PendingEdit[] = []
 
         // Track the in-progress arrays so successive appends to the same path stack correctly
@@ -572,7 +606,7 @@ export function AgentOverlay() {
               mode,
               messages: [...nextMessages, doneMessage]
             })
-            if (!requests.current.isCurrent(signal)) return
+            if (!requests.current.isCurrent(token)) return
             setSessionId(savedId)
             // Keep the completed tailoring conversation linked while reviewing edits.
             const params = new URLSearchParams(searchParams.toString())
@@ -586,9 +620,9 @@ export function AgentOverlay() {
         }
 
         // Close only the operation that applied these edits.
-        if (requests.current.isCurrent(signal)) handleClose()
+        if (requests.current.isCurrent(token)) handleClose()
       } catch (err) {
-        if (!requests.current.isCurrent(signal)) return
+        if (!requests.current.isCurrent(token)) return
         console.error('[AgentOverlay] Edit error:', err)
         const errorMessage: AgentMessage = {
           ...thinkingMessage,
@@ -600,7 +634,7 @@ export function AgentOverlay() {
         }
         setMessages([...nextMessages, errorMessage])
       } finally {
-        if (requests.current.isCurrent(signal)) setIsStreaming(false)
+        if (requests.current.isCurrent(token)) setIsStreaming(false)
       }
     },
     [

@@ -1,16 +1,17 @@
-/** Owns one operation, including response processing after fetch resolves. */
+/**
+ * Tracks which operation the overlay is showing. Detaching never stops the
+ * request: the server finishes and saves it, and late results are ignored here.
+ */
 export class AgentRequest {
-  private controller: AbortController | null = null
+  private current: object | null = null
   begin() {
-    this.cancel()
-    this.controller = new AbortController()
-    return this.controller.signal
+    this.current = {}
+    return this.current
   }
-  isCurrent(signal: AbortSignal) {
-    return this.controller?.signal === signal && !signal.aborted
+  isCurrent(token: object) {
+    return this.current === token
   }
-  cancel() {
-    this.controller?.abort()
-    this.controller = null
+  detach() {
+    this.current = null
   }
 }

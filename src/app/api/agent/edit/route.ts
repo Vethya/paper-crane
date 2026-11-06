@@ -147,7 +147,6 @@ export async function POST(request: NextRequest) {
       maxOutputTokens: 8192,
       output: Output.object({ schema: AgentEditResponseSchema }),
       system,
-      abortSignal: request.signal,
       messages: messages.map(({ role, content }) => ({ role, content }))
     })
 
@@ -166,7 +165,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: editLimitMessage }, { status: 422 })
     }
     if (NoObjectGeneratedError.isInstance(err)) {
-      if (request.signal.aborted) return new Response(null, { status: 499 })
       console.warn(
         '[agent/edit] Schema validation failed, attempting repair...'
       )
@@ -181,8 +179,7 @@ export async function POST(request: NextRequest) {
             'Validation errors:',
             JSON.stringify(err.cause, null, 2),
             'Fix the JSON so it matches the schema exactly. The most common mistake is using a field name other than "newValue" on "set" edits (e.g. writing "keywords" instead of "newValue"). Return only the corrected JSON.'
-          ].join('\n\n'),
-          abortSignal: request.signal
+          ].join('\n\n')
         })
 
         if (repair.finishReason === 'length')
@@ -203,7 +200,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (request.signal.aborted) return new Response(null, { status: 499 })
     console.error('[agent/edit] generateText error:', err)
     return NextResponse.json(
       { error: 'Failed to generate edits' },
