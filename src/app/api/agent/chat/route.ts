@@ -29,7 +29,9 @@ export async function POST(request: NextRequest) {
     content
   }))
 
+  const upstream = new AbortController()
   const result = streamText({
+    abortSignal: AbortSignal.any([request.signal, upstream.signal]),
     model: google('gemini-3.1-flash-lite-preview'),
     system:
       SYSTEM_PROMPTS[mode as Exclude<AgentMode, 'Tailoring'>] ??
@@ -58,6 +60,7 @@ export async function POST(request: NextRequest) {
       next = await iterator.next()
     }
   } catch (err) {
+    if (request.signal.aborted) return new Response(null, { status: 499 })
     console.error('[agent/chat] Error:', err)
     return NextResponse.json(
       { error: 'Failed to generate response' },
@@ -67,13 +70,20 @@ export async function POST(request: NextRequest) {
 
   // Stream remaining content with first chunks prepended
   const encoder = new TextEncoder()
+  let cancelled = false
   const stream = new ReadableStream({
+    cancel() {
+      cancelled = true
+      upstream.abort()
+      void iterator.return?.().catch(() => {})
+    },
     async start(controller) {
       for (const chunk of firstChunks) {
         controller.enqueue(encoder.encode(chunk))
       }
       try {
         for await (const part of { [Symbol.asyncIterator]: () => iterator }) {
+          if (cancelled) return
           if (part.type === 'text-delta') {
             controller.enqueue(encoder.encode(part.text))
           } else if (part.type === 'error') {
@@ -82,9 +92,10 @@ export async function POST(request: NextRequest) {
           }
         }
       } catch (err) {
-        console.error('[agent/chat] Stream error:', err)
+        if (!cancelled && !request.signal.aborted)
+          console.error('[agent/chat] Stream error:', err)
       } finally {
-        controller.close()
+        if (!cancelled) controller.close()
       }
     }
   })

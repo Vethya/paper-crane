@@ -142,6 +142,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const { output } = await generateText({
+      abortSignal: request.signal,
       model,
       output: Output.object({ schema: AgentEditResponseSchema }),
       system,
@@ -154,12 +155,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(output)
   } catch (err) {
     if (NoObjectGeneratedError.isInstance(err)) {
+      if (request.signal.aborted) return new Response(null, { status: 499 })
       console.warn(
         '[agent/edit] Schema validation failed, attempting repair...'
       )
       try {
         const { output: repaired } = await generateText({
           model,
+          abortSignal: request.signal,
           output: Output.object({ schema: AgentEditResponseSchema }),
           prompt: [
             'The following JSON was generated but failed schema validation:',
@@ -175,10 +178,12 @@ export async function POST(request: NextRequest) {
         })
         return NextResponse.json(repaired)
       } catch (repairErr) {
-        console.error('[agent/edit] Repair failed:', repairErr)
+        if (!request.signal.aborted)
+          console.error('[agent/edit] Repair failed:', repairErr)
       }
     }
 
+    if (request.signal.aborted) return new Response(null, { status: 499 })
     console.error('[agent/edit] generateText error:', err)
     return NextResponse.json(
       { error: 'Failed to generate edits' },

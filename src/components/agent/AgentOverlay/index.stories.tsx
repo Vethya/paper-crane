@@ -62,3 +62,85 @@ export const History: Story = {
     )
   }
 }
+
+export const CancelChat: Story = {
+  play: async ({ canvas, userEvent }) => {
+    const original = globalThis.fetch
+    let pending: AbortSignal | undefined
+    let finish: (response: Response) => void = () => {}
+    globalThis.fetch = async (input, init) => {
+      if (String(input) !== '/api/agent/chat') return original(input, init)
+      pending = init?.signal ?? undefined
+      return new Promise<Response>((resolve) => {
+        finish = resolve
+      })
+    }
+    try {
+      await userEvent.type(canvas.getByRole('textbox'), 'Old question{enter}')
+      await waitFor(() => expect(pending).toBeDefined())
+      await userEvent.click(canvas.getByRole('button', { name: 'New chat' }))
+      await expect(pending?.aborted).toBe(true)
+      finish(new Response('Late reply from old chat'))
+      globalThis.fetch = async (input, init) =>
+        String(input) === '/api/agent/chat'
+          ? new Response('Reply in new chat')
+          : original(input, init)
+      await userEvent.type(canvas.getByRole('textbox'), 'New question{enter}')
+      await expect(
+        canvas.findByText('Reply in new chat')
+      ).resolves.toBeVisible()
+      await expect(
+        canvas.queryByText('Late reply from old chat')
+      ).not.toBeInTheDocument()
+      await expect(
+        canvas.queryByText('Something went wrong. Please try again.')
+      ).not.toBeInTheDocument()
+    } finally {
+      globalThis.fetch = original
+    }
+  }
+}
+
+export const CancelTailoring: Story = {
+  parameters: { state: { open: true, mode: 'Tailoring' } },
+  play: async ({ canvas, userEvent }) => {
+    const original = globalThis.fetch
+    let pending: AbortSignal | undefined
+    let finish: (response: Response) => void = () => {}
+    globalThis.fetch = async (input, init) => {
+      if (String(input) !== '/api/agent/edit') return original(input, init)
+      pending = init?.signal ?? undefined
+      return new Promise<Response>((resolve) => {
+        finish = resolve
+      })
+    }
+    try {
+      await userEvent.type(
+        canvas.getByRole('textbox'),
+        'Tailor the resume{enter}'
+      )
+      await waitFor(() => expect(pending).toBeDefined())
+      await userEvent.click(canvas.getByRole('button', { name: 'New chat' }))
+      await expect(pending?.aborted).toBe(true)
+      finish(
+        Response.json({
+          summary: 'Old tailoring',
+          edits: [
+            {
+              type: 'set',
+              fieldPath: 'basics.name',
+              newValue: 'Stale edit',
+              reason: 'late'
+            }
+          ]
+        })
+      )
+      // A stale result must not close the replacement overlay or show its summary.
+      await userEvent.type(canvas.getByRole('textbox'), 'A fresh question')
+      await expect(canvas.getByRole('textbox')).toHaveValue('A fresh question')
+      await expect(canvas.queryByText(/Old tailoring/)).not.toBeInTheDocument()
+    } finally {
+      globalThis.fetch = original
+    }
+  }
+}

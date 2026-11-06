@@ -32,6 +32,7 @@ import { AgentOverlayHeader } from './AgentOverlayHeader'
 import { AgentMessageList } from './AgentMessageList'
 import { AgentComposer } from './AgentComposer'
 import { AgentHistoryDialog } from '../AgentHistory/AgentHistoryDialog'
+import { AgentRequest } from '../../../lib/agentRequest'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -119,15 +120,27 @@ export function AgentOverlay() {
   const searchParams = useSearchParams()
   const chatIdParam = searchParams.get('chatId')
   const prevOpenRef = useRef(false)
+  const requests = useRef(new AgentRequest())
+  const cancelRequest = useCallback(() => {
+    requests.current.cancel()
+    setIsStreaming(false)
+    setIsLoadingSession(false)
+  }, [setIsStreaming])
+  useEffect(() => cancelRequest, [cancelRequest, resumeId, mode])
+  useEffect(() => {
+    if (!open) cancelRequest()
+  }, [open, cancelRequest])
 
   const handleClose = useCallback(() => {
+    cancelRequest()
     setOpen(false)
     setMessages([])
     setSessionId(null)
     setHistoryOpen(false)
-  }, [setOpen, setMessages, setSessionId, setHistoryOpen])
+  }, [cancelRequest, setOpen, setMessages, setSessionId, setHistoryOpen])
 
   const handleNewChat = useCallback(() => {
+    cancelRequest()
     setMessages([])
     setSessionId(null)
     setHistoryOpen(false)
@@ -135,6 +148,7 @@ export function AgentOverlay() {
     params.delete('chatId')
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }, [
+    cancelRequest,
     setMessages,
     setSessionId,
     setHistoryOpen,
@@ -145,25 +159,29 @@ export function AgentOverlay() {
 
   const handleSelectSession = useCallback(
     async (id: string) => {
+      cancelRequest()
+      const signal = requests.current.begin()
       setHistoryOpen(false)
       setIsLoadingSession(true)
       try {
-        const res = await fetch(`/api/agent/sessions/${id}`)
+        const res = await fetch(`/api/agent/sessions/${id}`, { signal })
         if (!res.ok) throw new Error('Failed to load session')
         const data = (await res.json()) as {
           mode: AgentMode
           messages: AgentMessage[]
         }
+        if (!requests.current.isCurrent(signal)) return
         setMessages(data.messages)
         setSessionId(id)
         setMode(data.mode)
       } catch (err) {
-        console.error('[AgentOverlay] Load session error:', err)
+        if (requests.current.isCurrent(signal))
+          console.error('[AgentOverlay] Load session error:', err)
       } finally {
-        setIsLoadingSession(false)
+        if (requests.current.isCurrent(signal)) setIsLoadingSession(false)
       }
     },
-    [setHistoryOpen, setMessages, setSessionId, setMode]
+    [cancelRequest, setHistoryOpen, setMessages, setSessionId, setMode]
   )
 
   // Auto-open overlay on mount if chatId is present in URL
@@ -195,6 +213,7 @@ export function AgentOverlay() {
 
   const handleChatSend = useCallback(
     async (text: string, baseMessages?: AgentMessage[]) => {
+      const signal = requests.current.begin()
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -218,6 +237,7 @@ export function AgentOverlay() {
 
       try {
         const res = await fetch('/api/agent/chat', {
+          signal,
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ messages: apiMessages, mode })
@@ -230,6 +250,7 @@ export function AgentOverlay() {
 
         while (true) {
           const { done, value } = await reader.read()
+          if (!requests.current.isCurrent(signal)) return
           if (done) break
           finalContent += decoder.decode(value, { stream: true })
           setMessages((prev) => {
@@ -242,6 +263,7 @@ export function AgentOverlay() {
           })
         }
       } catch (err) {
+        if (!requests.current.isCurrent(signal)) return
         console.error('[AgentOverlay] Stream error:', err)
         finalContent = 'Something went wrong. Please try again.'
         setMessages((prev) => {
@@ -254,22 +276,25 @@ export function AgentOverlay() {
           return updated
         })
       } finally {
-        setIsStreaming(false)
-        if (resumeId && finalContent) {
-          const finalMessages = [
-            ...nextMessages,
-            { ...assistantMessage, content: finalContent }
-          ]
-          try {
-            const savedId = await saveSession({
-              resumeId,
-              sessionId,
-              mode,
-              messages: finalMessages
-            })
-            setSessionId(savedId)
-          } catch (err) {
-            console.error('[AgentOverlay] Session save error:', err)
+        if (requests.current.isCurrent(signal)) {
+          setIsStreaming(false)
+          if (resumeId && finalContent) {
+            const finalMessages = [
+              ...nextMessages,
+              { ...assistantMessage, content: finalContent }
+            ]
+            try {
+              const savedId = await saveSession({
+                resumeId,
+                sessionId,
+                mode,
+                messages: finalMessages
+              })
+              if (!requests.current.isCurrent(signal)) return
+              setSessionId(savedId)
+            } catch (err) {
+              console.error('[AgentOverlay] Session save error:', err)
+            }
           }
         }
       }
@@ -292,6 +317,7 @@ export function AgentOverlay() {
 
   const handleEditSend = useCallback(
     async (text: string, baseMessages?: AgentMessage[]) => {
+      const signal = requests.current.begin()
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -348,6 +374,7 @@ export function AgentOverlay() {
           data = MOCK_EDIT_RESPONSE
         } else {
           const res = await fetch('/api/agent/edit', {
+            signal,
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -362,6 +389,7 @@ export function AgentOverlay() {
           data = (await res.json()) as typeof data
         }
 
+        if (!requests.current.isCurrent(signal)) return
         const pendingEdits: PendingEdit[] = []
 
         // Track the in-progress arrays so successive appends to the same path stack correctly
@@ -477,6 +505,7 @@ export function AgentOverlay() {
               mode,
               messages: [...nextMessages, doneMessage]
             })
+            if (!requests.current.isCurrent(signal)) return
             setSessionId(savedId)
             // Sync chatId to URL immediately — handleClose() will clear sessionId,
             // so the useEffect-based sync would never fire for Tailoring mode.
@@ -490,9 +519,10 @@ export function AgentOverlay() {
           }
         }
 
-        // Close overlay so the user can see the highlighted form
-        handleClose()
+        // Close only the operation that applied these edits.
+        if (requests.current.isCurrent(signal)) handleClose()
       } catch (err) {
+        if (!requests.current.isCurrent(signal)) return
         console.error('[AgentOverlay] Edit error:', err)
         const errorMessage: AgentMessage = {
           ...thinkingMessage,
@@ -502,7 +532,7 @@ export function AgentOverlay() {
         }
         setMessages([...nextMessages, errorMessage])
       } finally {
-        setIsStreaming(false)
+        if (requests.current.isCurrent(signal)) setIsStreaming(false)
       }
     },
     [
