@@ -59,6 +59,7 @@ export function TagDialog({
     setSaving(true)
     setError(null)
     try {
+      let update: (tags: TagItem[]) => TagItem[]
       if (editTag) {
         const res = await fetch(`/api/tags/${editTag._id}`, {
           method: 'PATCH',
@@ -68,6 +69,8 @@ export function TagDialog({
         if (!res.ok) throw new Error()
         const updated = await res.json()
         onUpdated?.(updated)
+        update = (tags) =>
+          tags.map((t) => (t._id === updated._id ? updated : t))
       } else {
         const res = await fetch('/api/tags', {
           method: 'POST',
@@ -77,8 +80,9 @@ export function TagDialog({
         if (!res.ok) throw new Error()
         const created = await res.json()
         onCreated?.(created)
+        update = (tags) => [...tags, created]
       }
-      await refreshTags(client, account, !!editTag)
+      await refreshTags(client, account, !!editTag, update)
       onOpenChange(false)
     } catch {
       setError('Unable to save tag. Please try again.')
@@ -95,7 +99,10 @@ export function TagDialog({
       const res = await fetch(`/api/tags/${editTag._id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
       onDeleted?.(editTag._id)
-      await refreshTags(client, account, true)
+      const id = editTag._id
+      await refreshTags(client, account, true, (tags) =>
+        tags.filter((t) => t._id !== id)
+      )
       onOpenChange(false)
     } catch {
       setError('Unable to delete tag. Please try again.')
