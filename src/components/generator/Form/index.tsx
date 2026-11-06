@@ -209,11 +209,8 @@ export function Form({
           owner.ready = true
           loaded = content
           renderLoaded()
-        } catch (error) {
-          if (!cancelled)
-            setLoadError(
-              error instanceof Error ? error.message : 'Unable to load resume'
-            )
+        } catch {
+          if (!cancelled) setLoadError('Unable to load resume.')
         } finally {
           if (!cancelled) setIsLoadingResume(false)
         }
