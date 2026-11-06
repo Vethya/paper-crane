@@ -17,7 +17,8 @@ export async function startReply({ userId, sessionId }: ReplyTarget) {
 export async function finishReply(
   { userId, sessionId, replyId }: ReplyTarget,
   content: string,
-  error = false
+  error = false,
+  extra?: Record<string, unknown>
 ) {
   try {
     await connectDB()
@@ -32,7 +33,8 @@ export async function finishReply(
             ...(error && { error })
           }
         },
-        $unset: { generatingSince: 1 }
+        $unset: { generatingSince: 1 },
+        ...(extra && { $set: extra })
       }
     )
   } catch (err) {

@@ -3,7 +3,8 @@ import { auth } from '@/lib/auth'
 import { connectDB } from '@/db'
 import { AgentSession } from '@/db/models/agentSession'
 import { aiDisabledResponse } from '@/lib/aiFeatures'
-import { invalidId } from '@/lib/apiValidation'
+import { invalidId, parseBody } from '@/lib/apiValidation'
+import { UpdateAgentSessionSchema } from '@/lib/apiSchemas'
 
 export async function GET(
   request: NextRequest,
@@ -54,6 +55,36 @@ export async function DELETE(
   await connectDB()
 
   await AgentSession.deleteOne({ _id: id, userId: session.user.id })
+
+  return new NextResponse(null, { status: 204 })
+}
+
+/** Marks saved tailoring results as reviewed or dismissed. */
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const disabled = aiDisabledResponse()
+  if (disabled) return disabled
+
+  const session = await auth.api.getSession({ headers: request.headers })
+  if (!session) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { id } = await params
+  const badId = invalidId(id)
+  if (badId) return badId
+
+  const { data, error } = await parseBody(request, UpdateAgentSessionSchema)
+  if (error) return error
+
+  await connectDB()
+
+  await AgentSession.updateOne(
+    { _id: id, userId: session.user.id, 'pendingEdits.status': 'ready' },
+    { $set: { 'pendingEdits.status': data.pendingEdits } }
+  )
 
   return new NextResponse(null, { status: 204 })
 }

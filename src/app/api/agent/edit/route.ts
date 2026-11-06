@@ -1,6 +1,6 @@
 import { google } from '@ai-sdk/google'
 import { generateText, Output, NoObjectGeneratedError } from 'ai'
-import { NextResponse, type NextRequest } from 'next/server'
+import { after, NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 import { auth } from '../../../../lib/auth'
 import { TAILORING_SYSTEM_PROMPT } from '../../../../constants/prompts.constants'
@@ -8,9 +8,18 @@ import { aiDisabledResponse } from '@/lib/aiFeatures'
 import { parseBody } from '@/lib/apiValidation'
 import { AgentEditSchema } from '@/lib/apiSchemas'
 import { editLimitMessage } from '@/lib/agentLimits'
+import { finishReply, startReply, type ReplyTarget } from '@/lib/agentReplies'
+import {
+  tailoringDoneMessage,
+  toStoredEdits,
+  type ModelEdit
+} from '@/lib/agentTailoring'
 
 // Ensure the env var is validated at startup via src/env.ts
 import '../../../../env'
+
+// Leaves time to finish and save edits after the browser disconnects.
+export const maxDuration = 60
 
 const FieldEditSchema = z.object({
   type: z.literal('set'),
@@ -136,8 +145,43 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await parseBody(request, AgentEditSchema, 768_000)
   if (error) return error
-  const { messages, resumeData } = data
+  const { messages, resumeData, sessionId, replyId } = data
+  const target =
+    sessionId && replyId
+      ? { userId: session.user.id, sessionId, replyId }
+      : null
+  if (target && !(await startReply(target)))
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
+  // Generation never stops for a disconnect; the result is saved for review.
+  const work = generateEdits(messages, resumeData).then(async (response) => {
+    if (target) await saveTailoring(target, response.clone(), resumeData)
+    return response
+  })
+  after(work)
+  return work
+}
+
+async function saveTailoring(
+  target: ReplyTarget,
+  response: Response,
+  resume: Record<string, unknown>
+) {
+  const body = await response.json()
+  if (!response.ok) return finishReply(target, body.error, true)
+  await finishReply(target, tailoringDoneMessage(body.summary), false, {
+    pendingEdits: {
+      summary: body.summary,
+      edits: toStoredEdits(resume, body.edits as ModelEdit[]),
+      status: 'ready'
+    }
+  })
+}
+
+async function generateEdits(
+  messages: Array<{ role: 'user' | 'assistant'; content: string }>,
+  resumeData: Record<string, unknown>
+) {
   const model = google('gemini-3.1-flash-lite-preview')
   const system = `${TAILORING_SYSTEM_PROMPT}\n\n## User's current resume\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`
 
