@@ -23,7 +23,6 @@ const NextConfig = {
   outputFileTracingIncludes: {
     '/api/generate-source': ['./public/templates/**/*']
   },
-  swcMinify: true,
   compiler: {
     styledComponents: true
   },

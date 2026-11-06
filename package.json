@@ -11,7 +11,7 @@
     "dev": "next dev -p 3026",
     "start": "next start -p 3026",
     "build": "next build",
-    "lint": "next lint",
+    "lint": "eslint src",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test-storybook": "vitest run --project storybook",
@@ -52,6 +52,7 @@
     "zod": "^4.6.6"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "15.5.29",
     "@storybook/addon-a11y": "10.6.3",
     "@storybook/addon-docs": "10.6.3",
     "@storybook/addon-vitest": "10.6.3",
@@ -86,48 +87,5 @@
     "semi": false,
     "singleQuote": true,
     "trailingComma": "none"
-  },
-  "eslintConfig": {
-    "root": true,
-    "ignorePatterns": ["storybook-static"],
-    "extends": [
-      "plugin:react/recommended",
-      "plugin:@typescript-eslint/recommended",
-      "plugin:@next/next/recommended"
-    ],
-    "plugins": [
-      "@typescript-eslint",
-      "react-hooks"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaVersion": 2018,
-      "sourceType": "module"
-    },
-    "settings": {
-      "react": {
-        "pragma": "React",
-        "version": "detect"
-      }
-    },
-    "rules": {
-      "no-console": "warn",
-      "react-hooks/rules-of-hooks": "error",
-      "react-hooks/exhaustive-deps": "error",
-      "react/prop-types": "off",
-      "react/react-in-jsx-scope": "off",
-      "react/display-name": "off",
-      "@typescript-eslint/no-empty-function": "off",
-      "@typescript-eslint/explicit-module-boundary-types": "off",
-      "@typescript-eslint/no-empty-interface": "off",
-      "@typescript-eslint/ban-types": "off",
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        {
-          "args": "none"
-        }
-      ],
-      "@typescript-eslint/no-inferrable-types": "off"
-    }
   }
 }
