@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { useQueryClient } from '@tanstack/react-query'
+import { isCancelledError, useQueryClient } from '@tanstack/react-query'
 import { useQueryAccount } from '@/components/providers/QueryProvider'
 import { authClient } from '@/db/auth-client'
 import { loadResume } from '@/lib/resumeCache'
@@ -185,7 +185,7 @@ export function Form({
         setIsLoadingResume(true)
         if (sessionPending) return
         try {
-          if (!account) throw new Error('Sign in to open this resume.')
+          if (!account) return setLoadError('Sign in to open this resume.')
           const data = await loadResume(
             client,
             account,
@@ -210,8 +210,11 @@ export function Form({
           owner.ready = true
           loaded = content
           renderLoaded()
-        } catch {
-          if (!cancelled) setLoadError('Unable to load resume.')
+        } catch (error) {
+          if (cancelled) return
+          // A save or tag change cancels this read, so start it again.
+          if (isCancelledError(error)) setLoadAttempt((attempt) => attempt + 1)
+          else setLoadError('Unable to load resume.')
         } finally {
           if (!cancelled) setIsLoadingResume(false)
         }

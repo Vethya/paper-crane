@@ -34,7 +34,7 @@ test('tag creation invalidates tags without invalidating existing resumes', asyn
     client.setQueryData(queryKeys.resume('alice', 'r'), {
       content: { basics: { name: 'Editing' } }
     })
-    await refreshTags(client, 'alice', false)
+    await refreshTags(client, 'alice', false, (tags) => tags)
     assert.equal(
       client.getQueryState(queryKeys.tags('alice')).isInvalidated,
       true
@@ -77,7 +77,7 @@ test('tag rename/delete refresh active lists and invalidate detail snapshots wit
     }
     client.setQueryData(detail, snapshot)
     client.setQueryData(other, ['Bob private data'])
-    await refreshTags(client, 'alice', true)
+    await refreshTags(client, 'alice', true, (tags) => tags)
     assert.equal(calls, 2)
     assert.deepEqual(client.getQueryData(queryKeys.tags('alice')), [
       'Renamed tag'
@@ -90,6 +90,29 @@ test('tag rename/delete refresh active lists and invalidate detail snapshots wit
     assert.equal(client.getQueryState(other).isInvalidated, false)
   } finally {
     stops.forEach((stop) => stop())
+    client.clear()
+  }
+})
+
+test('a confirmed tag deletion stays applied when the refetch fails', async () => {
+  const client = createQueryClient()
+  const tags = queryKeys.tags('alice')
+  const stop = new QueryObserver(client, {
+    queryKey: tags,
+    queryFn: async () => {
+      throw new Error('offline')
+    },
+    retry: false
+  }).subscribe(() => {})
+  try {
+    client.setQueryData(tags, [{ _id: 'keep' }, { _id: 'gone' }])
+    await refreshTags(client, 'alice', true, (list) =>
+      list.filter((tag) => tag._id !== 'gone')
+    )
+    assert.equal(client.getQueryState(tags).status, 'error')
+    assert.deepEqual(client.getQueryData(tags), [{ _id: 'keep' }])
+  } finally {
+    stop()
     client.clear()
   }
 })
