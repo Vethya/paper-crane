@@ -10,7 +10,8 @@ import {
   resumeAtom,
   loadedResumeIdAtom,
   builtFormDataAtom,
-  resumeTitleAtom
+  resumeTitleAtom,
+  resumeLoadErrorAtom
 } from '@/atoms/resume'
 import { resumeTagsAtom } from '@/atoms/resumeTags'
 
@@ -28,6 +29,7 @@ function AccountCache({ children }: { children: React.ReactNode }) {
       store.set(loadedResumeIdAtom, null)
       store.set(builtFormDataAtom, null)
       store.set(resumeTitleAtom, '')
+      store.set(resumeLoadErrorAtom, null)
       store.set(resumeTagsAtom, [])
       store.set(resumeAtom, { url: '', isLoading: false, isError: false })
     },

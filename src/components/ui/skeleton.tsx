@@ -31,3 +31,18 @@ export function FormSkeleton() {
     </div>
   )
 }
+
+export function PreviewSkeleton() {
+  return (
+    <div
+      role="status"
+      aria-label="Loading preview"
+      aria-busy="true"
+      className="flex w-full flex-col items-center gap-6 p-6"
+    >
+      <Skeleton className="h-5 w-24 self-start" />
+      <Skeleton className="aspect-[210/297] w-full max-w-sm" />
+      <span className="sr-only">Loading preview</span>
+    </div>
+  )
+}
