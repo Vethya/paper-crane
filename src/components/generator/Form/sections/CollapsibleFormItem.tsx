@@ -71,7 +71,7 @@ export function CollapsibleFormItem({
               onDragStart?.(event)
             }}
             aria-label="Drag to reorder"
-            className="flex h-7 w-6 shrink-0 cursor-grab items-center justify-center rounded-md text-slate-500 transition hover:bg-app-control hover:text-white active:cursor-grabbing"
+            className="flex h-7 w-6 shrink-0 cursor-grab items-center justify-center rounded-app-button text-slate-500 transition hover:bg-app-control hover:text-white active:cursor-grabbing"
           >
             <GripVertical className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -91,7 +91,7 @@ export function CollapsibleFormItem({
             type="button"
             onClick={onMoveUp}
             aria-label="Move item up"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 opacity-0 transition hover:bg-app-control hover:text-white focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/item:opacity-100"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-app-button text-slate-500 opacity-0 transition hover:bg-app-control hover:text-white focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/item:opacity-100"
           >
             <MoveUp className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -101,7 +101,7 @@ export function CollapsibleFormItem({
             type="button"
             onClick={onMoveDown}
             aria-label="Move item down"
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 opacity-0 transition hover:bg-app-control hover:text-white focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/item:opacity-100"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-app-button text-slate-500 opacity-0 transition hover:bg-app-control hover:text-white focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-ring group-hover/item:opacity-100"
           >
             <MoveDown className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -112,7 +112,7 @@ export function CollapsibleFormItem({
             onClick={onRemove}
             disabled={removeDisabled}
             aria-label={removeLabel}
-            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-500 opacity-0 transition hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-400/60 group-hover/item:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
+            className="flex h-7 w-7 shrink-0 items-center justify-center rounded-app-button text-slate-500 opacity-0 transition hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-red-400/60 group-hover/item:opacity-100 disabled:cursor-not-allowed disabled:opacity-30"
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -122,7 +122,7 @@ export function CollapsibleFormItem({
           onClick={onToggle}
           aria-label={isExpanded ? 'Collapse item' : 'Expand item'}
           aria-expanded={isExpanded}
-          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 transition hover:bg-app-control hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-app-button text-slate-400 transition hover:bg-app-control hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Icon className="h-4 w-4" aria-hidden="true" />
         </button>
