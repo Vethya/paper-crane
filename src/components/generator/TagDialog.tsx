@@ -1,6 +1,9 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { refreshTags } from '@/lib/tagCache'
 import { FiTrash2 } from 'react-icons/fi'
 import {
   Dialog,
@@ -35,6 +38,9 @@ export function TagDialog({
   onUpdated,
   onDeleted
 }: TagDialogProps) {
+  const client = useQueryClient()
+  const account = useQueryAccount()
+  const [error, setError] = useState<string | null>(null)
   const [name, setName] = useState('')
   const [color, setColor] = useState<TagColor>('gray')
   const [saving, setSaving] = useState(false)
@@ -42,6 +48,7 @@ export function TagDialog({
 
   useEffect(() => {
     if (open) {
+      setError(null)
       setName(editTag?.name ?? initialName ?? '')
       setColor(editTag?.color ?? 'gray')
     }
@@ -50,6 +57,7 @@ export function TagDialog({
   async function handleSave() {
     if (!name.trim()) return
     setSaving(true)
+    setError(null)
     try {
       if (editTag) {
         const res = await fetch(`/api/tags/${editTag._id}`, {
@@ -70,7 +78,10 @@ export function TagDialog({
         const created = await res.json()
         onCreated?.(created)
       }
+      await refreshTags(client, account, !!editTag)
       onOpenChange(false)
+    } catch {
+      setError('Unable to save tag. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -79,11 +90,15 @@ export function TagDialog({
   async function handleDelete() {
     if (!editTag) return
     setDeleting(true)
+    setError(null)
     try {
       const res = await fetch(`/api/tags/${editTag._id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error()
       onDeleted?.(editTag._id)
+      await refreshTags(client, account, true)
       onOpenChange(false)
+    } catch {
+      setError('Unable to delete tag. Please try again.')
     } finally {
       setDeleting(false)
     }
@@ -100,6 +115,11 @@ export function TagDialog({
             {editTag ? 'Edit tag' : 'Create tag'}
           </DialogTitle>
         </DialogHeader>
+        {error && (
+          <p role="alert" className="text-xs text-red-400">
+            {error}
+          </p>
+        )}
 
         <div className="flex flex-col gap-4">
           <input

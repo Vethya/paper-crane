@@ -1,6 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { tagsQuery } from '@/lib/queries'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useSearchParams } from 'next/navigation'
 import { useAtom } from 'jotai'
 import { FiCheck, FiEdit2, FiPlus, FiTag } from 'react-icons/fi'
@@ -22,7 +26,9 @@ export function TagPicker() {
   const resumeId = searchParams.get('id')
 
   const [resumeTags, setResumeTags] = useAtom(resumeTagsAtom)
-  const [allTags, setAllTags] = useState<TagItem[]>([])
+  const account = useQueryAccount()
+  const tagRequest = useQuery(tagsQuery(account))
+  const allTags = tagRequest.data ?? []
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -41,21 +47,13 @@ export function TagPicker() {
     saverRef.current?.update(JSON.stringify(tags))
   }
 
-  useEffect(() => {
-    fetch('/api/tags')
-      .then((res) => res.json())
-      // Signed-out requests return an error object, not a list.
-      .then((tags) => setAllTags(Array.isArray(tags) ? tags : []))
-      .catch(() => {})
-  }, [])
-
   const filtered = allTags.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase())
   )
   const exactMatch = allTags.some(
     (t) => t.name.toLowerCase() === search.trim().toLowerCase()
   )
-  const showCreate = search.trim() !== '' && !exactMatch
+  const showCreate = tagRequest.isSuccess && search.trim() !== '' && !exactMatch
 
   function toggleTag(tagName: string) {
     if (!resumeId) return
@@ -82,7 +80,6 @@ export function TagPicker() {
   }
 
   function handleTagCreated(tag: TagItem) {
-    setAllTags((prev) => [...prev, tag])
     // Auto-attach the newly created tag
     if (resumeId) {
       const newTags = [...resumeTags, tag.name]
@@ -94,7 +91,6 @@ export function TagPicker() {
 
   function handleTagUpdated(tag: TagItem) {
     const old = allTags.find((t) => t._id === tag._id)
-    setAllTags((prev) => prev.map((t) => (t._id === tag._id ? tag : t)))
     if (old && old.name !== tag.name) {
       setResumeTags((prev) => prev.map((n) => (n === old.name ? tag.name : n)))
     }
@@ -102,7 +98,6 @@ export function TagPicker() {
 
   function handleTagDeleted(tagId: string) {
     const deleted = allTags.find((t) => t._id === tagId)
-    setAllTags((prev) => prev.filter((t) => t._id !== tagId))
     if (deleted) {
       setResumeTags((prev) => prev.filter((n) => n !== deleted.name))
     }
@@ -113,6 +108,8 @@ export function TagPicker() {
   return (
     <div ref={containerRef} className="relative">
       <button
+        disabled={!account}
+        aria-label="Tags"
         onClick={() => {
           setOpen((o) => !o)
           setSearch('')
@@ -151,6 +148,29 @@ export function TagPicker() {
           </div>
 
           <div className="max-h-52 overflow-y-auto py-1">
+            {tagRequest.isPending && (
+              <div
+                role="status"
+                aria-label="Loading tags"
+                aria-busy="true"
+                className="space-y-2 p-3"
+              >
+                {[0, 1, 2].map((index) => (
+                  <Skeleton key={index} className="h-6 w-full" />
+                ))}
+              </div>
+            )}
+            {tagRequest.isError && (
+              <p role="alert" className="px-3 py-2 text-xs text-red-400">
+                Unable to refresh tags.{' '}
+                <button
+                  className="underline"
+                  onClick={() => void tagRequest.refetch()}
+                >
+                  Retry
+                </button>
+              </p>
+            )}
             {filtered.map((tag) => {
               const attached = resumeTags.includes(tag.name)
               const { badgeBg, badgeText } = tagColorMap[tag.color]
@@ -185,7 +205,7 @@ export function TagPicker() {
               )
             })}
 
-            {filtered.length === 0 && !showCreate && (
+            {tagRequest.isSuccess && filtered.length === 0 && !showCreate && (
               <p className="px-3 py-3 text-center text-xs text-slate-500">
                 No tags yet
               </p>
