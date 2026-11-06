@@ -24,6 +24,7 @@ import {
   autoRenderAtom
 } from '../../atoms/resume'
 import { useRenderIndicator } from '@/hooks/useRenderIndicator'
+import { toast } from '@/components/ui/sonner'
 import { formDataAtom } from '../../atoms/formData'
 import { clampPdfPage, retainPdfUrl, releasePdfUrl } from '../../lib/pdfBuffer'
 
@@ -293,6 +294,7 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
       URL.revokeObjectURL(url)
     } catch (err) {
       console.error('[Preview] LaTeX download failed:', err)
+      toast.error('Unable to download the LaTeX source.')
     }
   }, [formData])
 
