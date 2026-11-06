@@ -100,12 +100,12 @@ export function AgentMessageList({
                         </h3>
                       ),
                       code: ({ children }) => (
-                        <code className="rounded bg-app-controlHover px-1 font-mono text-xs">
+                        <code className="rounded-app-small bg-app-controlHover px-1 font-mono text-xs">
                           {children}
                         </code>
                       ),
                       pre: ({ children }) => (
-                        <pre className="mb-2 overflow-x-auto rounded bg-app-controlHover p-2 font-mono text-xs">
+                        <pre className="mb-2 overflow-x-auto rounded-app-small bg-app-controlHover p-2 font-mono text-xs">
                           {children}
                         </pre>
                       )

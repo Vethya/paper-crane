@@ -1,6 +1,12 @@
 import mongoose from 'mongoose'
 import { z } from 'zod'
 import { TAG_COLORS } from './tagColors'
+import {
+  AGENT_LIMITS,
+  characterCount,
+  resumeSize,
+  contextSize
+} from './agentLimits'
 
 const nonEmpty = z.string().trim().min(1, 'must not be empty')
 const objectId = z
@@ -111,15 +117,35 @@ const ChatMessageSchema = z.object({
   content: z.string()
 })
 
-export const AgentChatSchema = z.object({
-  messages: z.array(ChatMessageSchema),
+const AgentRequestSchema = z.object({
+  messages: z
+    .array(
+      ChatMessageSchema.extend({
+        content: z
+          .string()
+          .refine(
+            (s) => characterCount(s) <= AGENT_LIMITS.message,
+            'This message exceeds 32,000 characters. Shorten your question or pasted job description.'
+          )
+      })
+    )
+    .min(1),
+  resumeData: z
+    .record(z.string(), z.unknown())
+    .refine(
+      (r) => resumeSize(r) <= AGENT_LIMITS.resume,
+      'Your current resume is included in this chat for context. Shorten some descriptions in the resume editor to fit within 64,000 characters.'
+    )
+})
+const contextFits = (data: z.infer<typeof AgentRequestSchema>) =>
+  contextSize(data.resumeData, data.messages) <= AGENT_LIMITS.context
+export const AgentChatSchema = AgentRequestSchema.extend({
   mode: AgentModeSchema
-})
-
-export const AgentEditSchema = z.object({
-  messages: z.array(ChatMessageSchema),
-  resumeData: z.record(z.string(), z.unknown())
-})
+}).refine(contextFits, 'Conversation exceeds 128,000 characters')
+export const AgentEditSchema = AgentRequestSchema.refine(
+  contextFits,
+  'Conversation exceeds 128,000 characters'
+)
 
 export const SaveAgentSessionSchema = z.object({
   resumeId: objectId,

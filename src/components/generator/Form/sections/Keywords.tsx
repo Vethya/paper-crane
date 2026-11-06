@@ -86,7 +86,7 @@ export default function Keywords({
         <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-1.5 overflow-hidden">
           {fields.map((field, i) => (
             <Fragment key={field.id}>
-              <div className="inline-flex max-w-full min-w-0 items-center gap-0.5 rounded-md bg-app-control py-0.5 pl-2.5 pr-1 text-sm">
+              <div className="inline-flex max-w-full min-w-0 items-center gap-0.5 rounded-app-button bg-app-control py-0.5 pl-2.5 pr-1 text-sm">
                 <span className="block min-w-0 max-w-full truncate">
                   {getValues(`${name}.${i}`)}
                 </span>

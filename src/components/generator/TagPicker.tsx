@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useAtom } from 'jotai'
 import { FiCheck, FiEdit2, FiPlus, FiTag } from 'react-icons/fi'
@@ -25,6 +25,10 @@ export function TagPicker() {
   const [editingTag, setEditingTag] = useState<TagItem | undefined>()
   const [initialName, setInitialName] = useState('')
 
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const rowRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const [activeTagId, setActiveTagId] = useState<string | null>(null)
+  const dropdownId = useId()
   const containerRef = useRef<HTMLDivElement>(null)
   const closeHandler = useCallback(() => setOpen(false), [])
   useOnClickOutside(containerRef, closeHandler)
@@ -53,6 +57,17 @@ export function TagPicker() {
   )
   const showCreate = search.trim() !== '' && !exactMatch
 
+  const activeIndex = Math.max(
+    0,
+    filtered.findIndex((tag) => tag._id === activeTagId)
+  )
+
+  function focusRow(index: number) {
+    if (!filtered[index]) return
+    setActiveTagId(filtered[index]._id)
+    rowRefs.current[index]?.focus()
+  }
+
   function toggleTag(tagName: string) {
     if (!resumeId) return
     const newTags = resumeTags.includes(tagName)
@@ -69,8 +84,7 @@ export function TagPicker() {
     setOpen(false)
   }
 
-  function openEdit(tag: TagItem, e: React.MouseEvent) {
-    e.stopPropagation()
+  function openEdit(tag: TagItem) {
     setEditingTag(tag)
     setInitialName('')
     setDialogOpen(true)
@@ -107,73 +121,137 @@ export function TagPicker() {
   const attachedTags = allTags.filter((t) => resumeTags.includes(t.name))
 
   return (
-    <div ref={containerRef} className="relative">
+    <div ref={containerRef} className="relative min-w-0">
       <button
+        ref={triggerRef}
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls={open ? dropdownId : undefined}
+        aria-label={
+          attachedTags.length
+            ? `Tags: ${attachedTags.map((tag) => tag.name).join(', ')}`
+            : 'Tags'
+        }
         onClick={() => {
           setOpen((o) => !o)
           setSearch('')
+          setActiveTagId(null)
         }}
-        className="flex items-center gap-1.5 rounded-app-button border border-app-controlBorder bg-app-control px-3 py-1.5 text-sm text-white transition-colors hover:bg-app-controlHover"
+        className="flex max-w-[min(12rem,24vw)] sm:max-w-[12rem] items-center gap-1.5 rounded-app-button border border-app-controlBorder bg-app-control px-3 py-1.5 text-sm text-white transition-colors hover:bg-app-controlHover focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
-        <FiTag size={13} />
+        <FiTag size={13} className="shrink-0" aria-hidden="true" />
         {attachedTags.length > 0 ? (
-          <div className="flex items-center gap-1">
-            {attachedTags.slice(0, 3).map((t) => (
-              <span
-                key={t._id}
-                style={{ backgroundColor: tagColorMap[t.color].hex }}
-                className="h-2 w-2 rounded-full"
-              />
+          <span
+            className="flex min-w-0 items-center gap-1 text-xs"
+            aria-hidden="true"
+          >
+            {attachedTags.slice(0, 2).map((tag) => (
+              <span key={tag._id} className="min-w-0 truncate" title={tag.name}>
+                {tag.name}
+              </span>
             ))}
-            {attachedTags.length > 3 && (
-              <span className="text-xs">+{attachedTags.length - 3}</span>
+            {attachedTags.length > 2 && (
+              <span className="shrink-0">+{attachedTags.length - 2}</span>
             )}
-          </div>
+          </span>
         ) : (
           <span className="text-xs">Tags</span>
         )}
       </button>
 
       {open && (
-        <div className="absolute right-0 top-10 z-50 w-64 rounded-app-card border border-app-controlBorder bg-app-surface shadow-xl">
+        <div
+          id={dropdownId}
+          role="dialog"
+          aria-label="Resume tags"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault()
+              event.stopPropagation()
+              setOpen(false)
+              triggerRef.current?.focus()
+            }
+          }}
+          className="absolute right-0 top-10 z-50 w-64 max-w-[calc(100vw-2rem)] rounded-app-card border border-app-controlBorder bg-app-surface shadow-xl"
+        >
           <div className="border-b border-white/5 p-2">
             <input
               autoFocus
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search or create tags"
+              onChange={(e) => {
+                setSearch(e.target.value)
+                setActiveTagId(null)
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'ArrowDown' && filtered.length) {
+                  event.preventDefault()
+                  focusRow(0)
+                }
+              }}
               placeholder="Search or create…"
-              className="w-full rounded-app-button border border-app-controlBorder bg-app-control px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none"
+              className="w-full rounded-app-button border border-app-controlBorder bg-app-control px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 outline-none focus-visible:ring-2 focus-visible:ring-white"
             />
           </div>
 
           <div className="max-h-52 overflow-y-auto py-1">
-            {filtered.map((tag) => {
+            {filtered.map((tag, index) => {
               const attached = resumeTags.includes(tag.name)
               const { badgeBg, badgeText } = tagColorMap[tag.color]
               return (
                 <div
                   key={tag._id}
-                  onClick={() => toggleTag(tag.name)}
-                  className="group mx-1 flex cursor-pointer items-center justify-between rounded-app-button px-2 py-1.5 hover:bg-app-control"
+                  className="group mx-1 flex items-center rounded-app-button hover:bg-app-control"
                 >
-                  <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    role="checkbox"
+                    aria-checked={attached}
+                    ref={(node) => {
+                      rowRefs.current[index] = node
+                    }}
+                    tabIndex={index === activeIndex ? 0 : -1}
+                    onFocus={() => setActiveTagId(tag._id)}
+                    onClick={() => toggleTag(tag.name)}
+                    onKeyDown={(event) => {
+                      const target =
+                        event.key === 'ArrowDown'
+                          ? (index + 1) % filtered.length
+                          : event.key === 'ArrowUp'
+                            ? (index - 1 + filtered.length) % filtered.length
+                            : event.key === 'Home'
+                              ? 0
+                              : event.key === 'End'
+                                ? filtered.length - 1
+                                : null
+                      if (target !== null) {
+                        event.preventDefault()
+                        focusRow(target)
+                      }
+                    }}
+                    className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 rounded-app-button px-2 py-1.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                  >
                     <span
-                      className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-sm border transition-colors ${attached ? 'border-white bg-white' : 'border-white/20'}`}
+                      className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-app-small border transition-colors ${attached ? 'border-white bg-white' : 'border-white/20'}`}
                     >
                       {attached && (
                         <FiCheck size={10} className="text-app-background" />
                       )}
                     </span>
                     <span
-                      className="rounded-full px-2 py-0.5 text-xs"
+                      className="truncate rounded-full px-2 py-0.5 text-xs"
                       style={{ backgroundColor: badgeBg, color: badgeText }}
                     >
                       {tag.name}
                     </span>
-                  </div>
+                  </button>
                   <button
-                    onClick={(e) => openEdit(tag, e)}
-                    className="rounded p-1 text-slate-500 opacity-0 transition group-hover:opacity-100 hover:text-slate-300"
+                    type="button"
+                    aria-label={`Edit tag ${tag.name}`}
+                    tabIndex={index === activeIndex ? 0 : -1}
+                    onClick={() => openEdit(tag)}
+                    className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-app-button text-slate-400 transition hover:text-slate-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white [@media(hover:hover)_and_(pointer:fine)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
                   >
                     <FiEdit2 size={12} />
                   </button>
@@ -182,7 +260,7 @@ export function TagPicker() {
             })}
 
             {filtered.length === 0 && !showCreate && (
-              <p className="px-3 py-3 text-center text-xs text-slate-500">
+              <p className="px-3 py-3 text-center text-xs text-slate-400">
                 No tags yet
               </p>
             )}
@@ -192,17 +270,17 @@ export function TagPicker() {
             {showCreate ? (
               <button
                 onClick={() => openCreate(search.trim())}
-                className="flex w-full items-center gap-2 rounded-app-button px-3 py-2 text-sm text-white transition hover:bg-app-control"
+                className="flex min-h-[44px] w-full items-center gap-2 break-all rounded-app-button px-3 py-2 text-left text-sm text-white transition hover:bg-app-control focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
               >
-                <FiPlus size={14} />
+                <FiPlus size={14} className="shrink-0" aria-hidden="true" />
                 Create &ldquo;{search.trim()}&rdquo;
               </button>
             ) : (
               <button
                 onClick={() => openCreate()}
-                className="flex w-full items-center gap-2 rounded-app-button px-3 py-2 text-sm text-white transition hover:bg-app-control"
+                className="flex min-h-[44px] w-full items-center gap-2 break-all rounded-app-button px-3 py-2 text-left text-sm text-white transition hover:bg-app-control focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
               >
-                <FiPlus size={14} />
+                <FiPlus size={14} className="shrink-0" aria-hidden="true" />
                 New tag
               </button>
             )}
@@ -212,7 +290,10 @@ export function TagPicker() {
 
       <TagDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={(isOpen) => {
+          setDialogOpen(isOpen)
+          if (!isOpen) triggerRef.current?.focus()
+        }}
         editTag={editingTag}
         initialName={initialName}
         onCreated={handleTagCreated}

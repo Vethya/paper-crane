@@ -307,7 +307,7 @@ export function AgentEditReviewBar() {
                           focusEdit(edit.id)
                           setLocationsOpen(false)
                         }}
-                        className={`flex w-full min-w-0 items-start gap-3 rounded-md px-3 py-2.5 text-left transition-colors ${
+                        className={`flex w-full min-w-0 items-start gap-3 rounded-app-button px-3 py-2.5 text-left transition-colors ${
                           isFocused
                             ? 'review-location-active'
                             : 'text-slate-200 hover:bg-app-control'
@@ -375,7 +375,7 @@ export function AgentEditReviewBar() {
                   type="button"
                   onClick={() => goTo(displayIdx - 1)}
                   disabled={displayIdx === 0}
-                  className="rounded p-1 text-slate-300 transition-colors hover:bg-app-control hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="rounded-app-small p-1 text-slate-300 transition-colors hover:bg-app-control hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Previous change"
                 >
                   <ChevronLeft className="h-4 w-4" />
@@ -387,7 +387,7 @@ export function AgentEditReviewBar() {
                   type="button"
                   onClick={() => goTo(displayIdx + 1)}
                   disabled={displayIdx >= pendingCount - 1}
-                  className="rounded p-1 text-slate-300 transition-colors hover:bg-app-control hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="rounded-app-small p-1 text-slate-300 transition-colors hover:bg-app-control hover:text-white disabled:opacity-30 disabled:cursor-not-allowed"
                   title="Next change"
                 >
                   <ChevronRight className="h-4 w-4" />
