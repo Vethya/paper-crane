@@ -123,9 +123,14 @@ export function AgentOverlay() {
   const requests = useRef(new AgentRequest())
   const cancelRequest = useCallback(() => {
     requests.current.cancel()
+    setMessages((prev) =>
+      prev.filter(
+        (message) => message.role !== 'assistant' || message.content.trim()
+      )
+    )
     setIsStreaming(false)
     setIsLoadingSession(false)
-  }, [setIsStreaming])
+  }, [setIsStreaming, setMessages])
   useEffect(() => cancelRequest, [cancelRequest, resumeId, mode])
   useEffect(() => {
     if (!open) cancelRequest()
