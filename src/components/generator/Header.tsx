@@ -302,7 +302,7 @@ function ResumeTitle({ resumeId }: { resumeId: string }) {
           if (e.key === 'Enter') commit()
           if (e.key === 'Escape') setDraft(null)
         }}
-        className="h-8 w-64 rounded-md border border-app-borderStrong bg-transparent px-2 text-sm font-medium text-white focus:outline-none"
+        className="h-8 w-64 rounded-app-button border border-app-borderStrong bg-transparent px-2 text-sm font-medium text-white focus:outline-none"
       />
     )
 
@@ -311,7 +311,7 @@ function ResumeTitle({ resumeId }: { resumeId: string }) {
       type="button"
       title="Rename"
       onClick={() => setDraft(title)}
-      className="h-8 min-w-0 truncate rounded-md px-2 text-sm font-medium text-white transition-colors hover:bg-app-hover"
+      className="h-8 min-w-0 truncate rounded-app-button px-2 text-sm font-medium text-white transition-colors hover:bg-app-hover"
     >
       {title || 'Untitled resume'}
     </button>

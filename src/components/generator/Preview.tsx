@@ -345,7 +345,7 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
   const isNarrow = containerWidth > 0 && containerWidth < 520
 
   const toolButton =
-    'flex h-8 min-w-8 items-center justify-center rounded-md px-1.5 text-slate-400 transition-colors hover:bg-app-control hover:text-white disabled:pointer-events-none disabled:opacity-40'
+    'flex h-8 min-w-8 items-center justify-center rounded-app-button px-1.5 text-slate-400 transition-colors hover:bg-app-control hover:text-white disabled:pointer-events-none disabled:opacity-40'
   const menuItem =
     'flex cursor-pointer items-center gap-2 px-3 py-2 text-sm text-slate-300 focus:bg-app-control focus:text-white data-[disabled]:opacity-40'
 
@@ -364,7 +364,7 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
           role="switch"
           aria-checked={autoRender}
           onClick={() => setAutoRender(!autoRender)}
-          className="ml-2 flex items-center gap-1.5 rounded text-xs text-slate-400 focus-visible:outline focus-visible:outline-2"
+          className="ml-2 flex items-center gap-1.5 rounded-app-small text-xs text-slate-400 focus-visible:outline focus-visible:outline-2"
         >
           Auto render
           <span
@@ -432,7 +432,7 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
-              className="ml-1 flex h-8 items-center gap-1.5 rounded-md border border-app-border px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-control"
+              className="ml-1 flex h-8 items-center gap-1.5 rounded-app-button border border-app-border px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-control"
               title="Download"
             >
               <IconDownload />
@@ -536,7 +536,7 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
                     renderTextLayer={false}
                     loading=""
                     error=""
-                    className="flex justify-center !bg-transparent py-8 [&>canvas]:rounded-sm [&>canvas]:shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.18)]"
+                    className="flex justify-center !bg-transparent py-8 [&>canvas]:rounded-app-small [&>canvas]:shadow-[0_0_0_1px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.18)]"
                   />
                 )}
               </Document>

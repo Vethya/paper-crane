@@ -49,7 +49,7 @@ export function AgentHistoryItem({
       >
         <div className="flex items-center justify-between gap-2 pr-6">
           <span
-            className={`rounded-md px-2 py-0.5 text-xs font-medium ${MODE_BADGE_STYLES[session.mode]}`}
+            className={`rounded-app-button px-2 py-0.5 text-xs font-medium ${MODE_BADGE_STYLES[session.mode]}`}
           >
             {session.mode}
           </span>
@@ -67,7 +67,7 @@ export function AgentHistoryItem({
           e.stopPropagation()
           onDelete(session._id)
         }}
-        className="absolute right-3 top-3 rounded-md border border-transparent p-1 text-slate-500 opacity-0 transition hover:border-app-controlBorder hover:bg-app-controlHover hover:text-red-400 group-hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="absolute right-3 top-3 rounded-app-button border border-transparent p-1 text-slate-500 opacity-0 transition hover:border-app-controlBorder hover:bg-app-controlHover hover:text-red-400 group-hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         aria-label="Delete chat"
       >
         <Trash2 className="h-3.5 w-3.5" />

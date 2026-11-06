@@ -49,7 +49,7 @@ export function MiniButton({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          'flex justify-center items-center font-inherit text-sm font-medium text-center no-underline px-3 py-1 text-white rounded-md border-none hover:cursor-pointer hover:bg-app-controlHover focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
+          'flex justify-center items-center font-inherit text-sm font-medium text-center no-underline px-3 py-1 text-white rounded-app-button border-none hover:cursor-pointer hover:bg-app-controlHover focus:outline-none disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
           className
         )
       )}
@@ -101,7 +101,7 @@ export function IconButton({ children, className, ...props }: BaseButtonProps) {
     <button
       className={twMerge(
         clsx(
-          'flex items-center outline-none border-none bg-transparent text-white rounded hover:bg-app-controlHover focus:bg-app-controlHover focus:outline-none',
+          'flex items-center outline-none border-none bg-transparent text-white rounded-app-small hover:bg-app-controlHover focus:bg-app-controlHover focus:outline-none',
           className
         )
       )}

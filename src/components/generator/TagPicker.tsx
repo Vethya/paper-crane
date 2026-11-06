@@ -233,7 +233,7 @@ export function TagPicker() {
                     className="flex min-h-[44px] min-w-0 flex-1 items-center gap-2 rounded-app-button px-2 py-1.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
                   >
                     <span
-                      className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-sm border transition-colors ${attached ? 'border-white bg-white' : 'border-white/20'}`}
+                      className={`flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-app-small border transition-colors ${attached ? 'border-white bg-white' : 'border-white/20'}`}
                     >
                       {attached && (
                         <FiCheck size={10} className="text-app-background" />
