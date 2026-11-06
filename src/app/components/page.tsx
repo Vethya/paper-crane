@@ -199,7 +199,7 @@ function ComponentsContent() {
                 {componentMeta[type].pluralLabel}
                 <span className="ml-2 text-xs opacity-70">
                   {loading ? (
-                    <Skeleton className="inline-block h-3 w-4" />
+                    <Skeleton inline className="inline-block h-3 w-4" />
                   ) : (
                     request.data && counts[type]
                   )}
@@ -234,7 +234,10 @@ function ComponentsContent() {
         {loading && <CardSkeletons label="Loading components" count={6} />}
 
         {error && (
-          <div className="rounded-app-card border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-400">
+          <div
+            role="alert"
+            className="rounded-app-card border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-400"
+          >
             {error}{' '}
             <button
               type="button"

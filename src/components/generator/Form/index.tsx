@@ -244,6 +244,7 @@ export function Form({
     return () => {
       cancelled = true
       setLoadedResumeId(null)
+      setLoadError(null)
       subscription.unsubscribe()
       document.removeEventListener('visibilitychange', renderLoaded)
     }

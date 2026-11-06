@@ -211,7 +211,7 @@ export function ComponentsPanel({
               {componentMeta[type].pluralLabel}
               <span className="ml-1.5 opacity-70">
                 {loading ? (
-                  <Skeleton className="inline-block h-3 w-4" />
+                  <Skeleton inline className="inline-block h-3 w-4" />
                 ) : (
                   request.data && counts[type]
                 )}

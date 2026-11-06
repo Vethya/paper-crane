@@ -1,8 +1,16 @@
 import { cn } from '@/lib/utils'
 
-export function Skeleton({ className }: { className?: string }) {
+// Inline skeletons render a span so they can sit inside buttons.
+export function Skeleton({
+  className,
+  inline = false
+}: {
+  className?: string
+  inline?: boolean
+}) {
+  const Tag = inline ? 'span' : 'div'
   return (
-    <div
+    <Tag
       aria-hidden="true"
       className={cn(
         'animate-pulse rounded-app-button bg-app-control motion-reduce:animate-none',
