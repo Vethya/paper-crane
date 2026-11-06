@@ -80,6 +80,16 @@ function zipEntries(buffer) {
   }
 }
 
+async function withExtractedZip(buffer, inspect) {
+  const { dir, zipPath } = writeZip(buffer)
+  try {
+    execFileSync('unzip', ['-q', zipPath, '-d', dir])
+    await inspect(dir)
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+}
+
 for (const id of TEMPLATES) {
   test(`template ${id} ZIP lays out files like the browser compiler`, async () => {
     const data = formData(id)
@@ -92,7 +102,47 @@ for (const id of TEMPLATES) {
 
     assert.deepEqual(zipEntries(await buildSourceZip(data)), expected)
   })
+
+  test(`template ${id} ZIP preserves the source and asset bytes`, async () => {
+    const data = formData(id)
+    const { texDoc, opts } = getTemplateData(data)
+    await withExtractedZip(await buildSourceZip(data), (dir) => {
+      assert.equal(
+        fs.readFileSync(path.join(dir, 'resume.tex'), 'utf8'),
+        texDoc
+      )
+      assert.match(
+        fs.readFileSync(path.join(dir, 'README.md'), 'utf8'),
+        new RegExp(`${opts.cmd} resume\\.tex`)
+      )
+      for (const [paths, folder] of [
+        [opts.inputs ?? [], ''],
+        [opts.fonts ?? [], 'fonts']
+      ]) {
+        for (const asset of paths) {
+          assert.deepEqual(
+            fs.readFileSync(path.join(dir, folder, path.basename(asset))),
+            fs.readFileSync(path.join(root, 'public', asset)),
+            asset
+          )
+        }
+      }
+    })
+  })
 }
+
+test('a missing template asset rejects instead of returning a partial ZIP', async () => {
+  const publicDir = fs.mkdtempSync(
+    path.join(os.tmpdir(), 'missing-zip-assets-')
+  )
+  try {
+    await assert.rejects(buildSourceZip(formData(2), publicDir), {
+      code: 'ENOENT'
+    })
+  } finally {
+    fs.rmSync(publicDir, { recursive: true, force: true })
+  }
+})
 
 test('template 2 ZIP has the class at the root and all 19 fonts', async () => {
   const entries = zipEntries(await buildSourceZip(formData(2)))
