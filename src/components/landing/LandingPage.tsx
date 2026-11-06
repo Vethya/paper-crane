@@ -185,7 +185,7 @@ function LandingHeader({
           <GithubBadge stars={githubStars} />
           <Link
             href="/login"
-            className="hidden whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-[#52525b] transition hover:text-[#18181b] lg:inline-flex"
+            className="hidden whitespace-nowrap rounded-app-button px-3 py-2 text-sm font-medium text-[#52525b] transition hover:text-[#18181b] lg:inline-flex"
           >
             Sign in
           </Link>
@@ -208,7 +208,7 @@ function GithubBadge({ stars }: { stars: number | null }) {
       target="_blank"
       rel="noreferrer"
       aria-label={`Resume Manager on GitHub${starLabel}`}
-      className="inline-flex h-10 items-center gap-2 rounded-md border border-[#e4e4e0] px-3 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
+      className="inline-flex h-10 items-center gap-2 rounded-app-button border border-[#e4e4e0] px-3 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
     >
       <GithubMark />
       {stars !== null && (
@@ -463,7 +463,7 @@ function Screenshot({
       height={height}
       priority={priority}
       sizes="(min-width: 1152px) 1088px, 100vw"
-      className={`h-auto w-full rounded-lg border border-[#e4e4e0] bg-[#ffffff] ${className}`}
+      className={`h-auto w-full rounded-app-button border border-[#e4e4e0] bg-[#ffffff] ${className}`}
     />
   )
 }
@@ -480,7 +480,7 @@ function LandingPrimaryButton({
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md bg-[#18181b] text-sm font-medium text-[#fafaf8] transition hover:bg-[#3f3f46] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#a1a1aa] ${
+      className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-app-button bg-[#18181b] text-sm font-medium text-[#fafaf8] transition hover:bg-[#3f3f46] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#a1a1aa] ${
         compact ? 'h-10 px-3' : 'h-12 px-6'
       }`}
     >
@@ -494,7 +494,7 @@ function ImportButton({ inputId }: { inputId: string }) {
   return (
     <label
       htmlFor={inputId}
-      className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-md border border-[#d4d4d0] px-6 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
+      className="inline-flex h-12 cursor-pointer items-center justify-center gap-2 rounded-app-button border border-[#d4d4d0] px-6 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
     >
       <Upload size={17} aria-hidden="true" />
       Import JSON
@@ -512,7 +512,7 @@ function SecondaryLink({
   return (
     <Link
       href={href}
-      className="inline-flex h-12 items-center justify-center rounded-md border border-[#d4d4d0] px-6 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
+      className="inline-flex h-12 items-center justify-center rounded-app-button border border-[#d4d4d0] px-6 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
     >
       {children}
     </Link>

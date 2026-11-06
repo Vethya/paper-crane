@@ -108,7 +108,7 @@ export function AgentEntryEditControls({ edit }: Props) {
             type="button"
             onClick={handleRemoveKeep}
             title="Keep this entry"
-            className="flex h-7 items-center gap-1 rounded-md bg-app-control px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
+            className="flex h-7 items-center gap-1 rounded-app-button bg-app-control px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
           >
             <Check className="h-3 w-3" />
             Keep
@@ -117,7 +117,7 @@ export function AgentEntryEditControls({ edit }: Props) {
             type="button"
             onClick={handleRemoveConfirm}
             title="Confirm removal of this entry"
-            className="flex h-7 items-center gap-1 rounded-md px-2.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10"
+            className="flex h-7 items-center gap-1 rounded-app-button px-2.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10"
           >
             <Trash2 className="h-3 w-3" />
             Remove
@@ -135,7 +135,7 @@ export function AgentEntryEditControls({ edit }: Props) {
           type="button"
           onClick={handleAppendKeep}
           title="Keep this entry"
-          className="flex h-7 items-center gap-1 rounded-md bg-app-control px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
+          className="flex h-7 items-center gap-1 rounded-app-button bg-app-control px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
         >
           <Check className="h-3 w-3" />
           Keep
@@ -144,7 +144,7 @@ export function AgentEntryEditControls({ edit }: Props) {
           type="button"
           onClick={handleAppendRemove}
           title="Remove this entry"
-          className="flex h-7 items-center gap-1 rounded-md px-2.5 text-xs font-medium text-slate-400 transition-colors hover:bg-app-control hover:text-white"
+          className="flex h-7 items-center gap-1 rounded-app-button px-2.5 text-xs font-medium text-slate-400 transition-colors hover:bg-app-control hover:text-white"
         >
           <RotateCcw className="h-3 w-3" />
           Remove

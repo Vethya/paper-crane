@@ -2,6 +2,9 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react'
 import { useAtom, useAtomValue } from 'jotai'
+import { formDataAtom } from '../../../atoms/formData'
+import { agentMessagesAtom } from '../../../atoms/agentAtom'
+import { agentWarnings } from '../../../lib/agentLimits'
 import {
   ChevronDown,
   Check,
@@ -44,7 +47,10 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
   const ActiveIcon = MODE_ICONS[mode]
   const placeholder = MODE_PLACEHOLDERS[mode]
 
-  const canSend = text.trim().length > 0 && !isStreaming
+  const resume = useAtomValue(formDataAtom)
+  const messages = useAtomValue(agentMessagesAtom)
+  const { warnings, blocked } = agentWarnings(resume ?? {}, messages, text)
+  const canSend = text.trim().length > 0 && !isStreaming && !blocked
 
   // Auto-focus on mount (when overlay opens)
   useEffect(() => {
@@ -113,6 +119,18 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
 
   return (
     <div className="shrink-0 p-4">
+      {warnings.length > 0 && (
+        <div
+          role="status"
+          aria-live="polite"
+          id="agent-limits"
+          className={`mb-3 space-y-1 text-xs ${blocked ? 'text-red-400' : 'text-amber-300'}`}
+        >
+          {warnings.map((warning) => (
+            <p key={warning}>{warning}</p>
+          ))}
+        </div>
+      )}
       <div className="flex flex-col gap-3 rounded-app-card border border-app-border bg-app-surface px-4 pb-3 pt-3.5 transition-colors focus-within:border-app-borderStrong">
         <textarea
           ref={textareaRef}
@@ -120,6 +138,9 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleTextareaKeyDown}
+          aria-label="Message"
+          aria-describedby={warnings.length ? 'agent-limits' : undefined}
+          aria-invalid={blocked}
           placeholder={placeholder}
           disabled={isStreaming}
           className="w-full resize-none bg-transparent text-sm text-white placeholder:text-slate-500 focus:outline-none disabled:opacity-50"
@@ -166,6 +187,7 @@ export function AgentComposer({ onSend }: AgentComposerProps) {
 
           {/* Send button */}
           <button
+            aria-label="Send message"
             onClick={submit}
             disabled={!canSend}
             className="flex h-8 w-8 items-center justify-center rounded-app-button bg-white text-app-background transition hover:bg-app-primaryHover focus:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:bg-app-control disabled:text-slate-500"
