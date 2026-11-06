@@ -40,7 +40,15 @@ export function escUrl(url: string): string {
   return url.replace(/[\\{}^~ %#&]/g, (char) => URL_ESCAPES[char])
 }
 
-// A link whose visible text is the URL itself.
-export function href(url: string): string {
-  return `\\href{${escUrl(url)}}{${esc(url)}}`
+// A link to url. Its visible text is the URL itself unless text is given.
+export function href(url: string, text = url): string {
+  return `\\href{${escUrl(url)}}{${esc(text)}}`
+}
+
+// Uppercase escaped text without changing the names of LaTeX commands, so
+// \textbackslash{} does not become the undefined \TEXTBACKSLASH{}.
+export function upper(escaped: string): string {
+  return escaped.replace(/\\[a-zA-Z]+|[^\\]+/g, (part) =>
+    part.startsWith('\\') ? part : part.toUpperCase()
+  )
 }

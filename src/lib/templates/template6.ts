@@ -1,7 +1,7 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
-import { href } from './escape'
+import { href, upper } from './escape'
 
 const generator: Omit<Generator, 'resumeHeader'> = {
   profileSection(basics) {
@@ -18,7 +18,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
       \\begin{center}
       % Personal
       % -----------------------------------------------------
-      {\\fontsize{\\sizeone}{\\sizeone}\\fontspec[Path = fonts/,LetterSpace=15]{Montserrat-Regular} ${name.toUpperCase()}}
+      {\\fontsize{\\sizeone}{\\sizeone}\\fontspec[Path = fonts/,LetterSpace=15]{Montserrat-Regular} ${upper(name)}}
       ${name && info.length > 1 ? '\\\\' : ''}
       \\vspace{2mm}
       {\\fontsize{1em}{1em}\\fontspec[Path = fonts/]{Montserrat-Light} ${info.join(
@@ -37,7 +37,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
       % Chapter: Education
       % ------------------
 
-      \\chap{${heading ? heading.toUpperCase() : 'EDUCATION'}}{
+      \\chap{${heading ? upper(heading) : 'EDUCATION'}}{
 
       ${education.map((school) => {
         const {
@@ -89,7 +89,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
     return source`
       % Chapter: Work Experience
       % ------------------------
-      \\chap{${heading ? heading.toUpperCase() : 'EXPERIENCE'}}{
+      \\chap{${heading ? upper(heading) : 'EXPERIENCE'}}{
 
       ${work.map((job) => {
         const {
@@ -142,7 +142,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
       % Chapter: Skills
       % ------------------------
 
-      \\chap{${heading ? heading.toUpperCase() : 'SKILLS'}}{
+      \\chap{${heading ? upper(heading) : 'SKILLS'}}{
       \\begin{newitemize}
         ${skills.map((skill) => {
           const { name = '', keywords = [] } = skill
@@ -173,7 +173,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
       % Chapter: Projects
       % ------------------------
 
-      \\chap{${heading ? heading.toUpperCase() : 'PROJECTS'}}{
+      \\chap{${heading ? upper(heading) : 'PROJECTS'}}{
 
         ${projects.map((project) => {
           const {
@@ -209,7 +209,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
       % Chapter: Awards
       % ------------------------
 
-      \\chap{${heading ? heading.toUpperCase() : 'AWARDS'}}{
+      \\chap{${heading ? upper(heading) : 'AWARDS'}}{
 
         ${awards.map((award) => {
           const { title = '', summary = '', awarder = '', date = '' } = award

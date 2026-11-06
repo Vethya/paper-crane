@@ -7,7 +7,7 @@ const ts = require('typescript')
 const getTemplateData = require('../test/loadTemplates.cjs')
 /* eslint-enable @typescript-eslint/no-require-imports */
 
-const { esc, escUrl, href } = (() => {
+const { esc, escUrl, href, upper } = (() => {
   const source = ts.transpileModule(
     readFileSync(join(__dirname, '../src/lib/templates/escape.ts'), 'utf8'),
     { compilerOptions: { module: ts.ModuleKind.CommonJS } }
@@ -58,6 +58,17 @@ test('href escapes the target and the visible text separately', () => {
     href('https://x.io/my_page#a'),
     '\\href{https://x.io/my_page\\#a}{https://x.io/my\\_page\\#a}'
   )
+  assert.equal(
+    href('http://x.io/a_b', 'x.io/a_b'),
+    '\\href{http://x.io/a_b}{x.io/a\\_b}'
+  )
+})
+
+test('upper keeps LaTeX command names', () => {
+  assert.equal(
+    upper(esc('jo \\x ^6 ~5 & a_b')),
+    'JO \\textbackslash{}X \\textasciicircum{}6 \\textasciitilde{}5 \\& A\\_B'
+  )
 })
 
 const tricky = {
@@ -85,5 +96,21 @@ for (let id = 1; id <= 9; id++) {
     // A raw % in a URL would comment out the rest of the line.
     assert.doesNotMatch(tex, /[^\\]%7E/)
     assert.ok(tex.includes('my\\_page'), 'website text')
+    // Uppercasing escaped text must not rename commands.
+    assert.doesNotMatch(tex, /\\TEXT[A-Z]/)
   })
 }
+
+test('template 7 links the homepage without adding a second scheme', () => {
+  const homepage = (website) =>
+    getTemplateData({
+      selectedTemplate: 7,
+      sections: ['profile'],
+      basics: { website }
+    }).texDoc.match(/\\homepage\{(.*)\}/)[1]
+  assert.equal(
+    homepage('https://x.io/~me'),
+    '\\href{https://x.io/\\%7Eme}{https://x.io/\\textasciitilde{}me}'
+  )
+  assert.equal(homepage('x.io/a_b'), '\\href{http://x.io/a_b}{x.io/a\\_b}')
+})
