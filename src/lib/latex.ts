@@ -1,4 +1,5 @@
 import { LaTeXOpts } from '../types'
+import { templateAssetEntries } from './latexAssets'
 
 const SIGLUM_BASE_URL = 'https://cdn.siglum.org/tl2025'
 
@@ -95,10 +96,10 @@ async function resolveAssets(
 ): Promise<Record<string, Uint8Array>> {
   return Object.fromEntries(
     await Promise.all(
-      [
-        ...(opts.inputs ?? []).map((path) => [basename(path), path]),
-        ...(opts.fonts ?? []).map((path) => [`fonts/${basename(path)}`, path])
-      ].map(async ([name, path]) => [name, await fetchAsset(path)])
+      templateAssetEntries(opts).map(async ([name, path]) => [
+        name,
+        await fetchAsset(path)
+      ])
     )
   )
 }
@@ -120,8 +121,4 @@ function fetchAsset(assetPath: string): Promise<Uint8Array> {
     })
   assetCache.set(assetPath, asset)
   return asset
-}
-
-function basename(assetPath: string): string {
-  return assetPath.split('/').pop() || assetPath
 }

@@ -78,7 +78,9 @@ export const CreateResumeSchema = z.object({
 export const UpdateResumeSchema = z.object({
   title: nonEmpty.optional(),
   content: ResumeContentSchema.optional(),
-  tags: z.array(z.string()).optional()
+  tags: z.array(z.string()).optional(),
+  // parseWriter checks it; a bad value only skips the stale-save check.
+  writer: z.unknown().optional()
 })
 
 const TagColorSchema = z.enum(TAG_COLORS)

@@ -138,6 +138,15 @@ test('resume schemas reject wrongly shaped fields', async () => {
   }
 })
 
+test('resume update keeps the content writer for stale-save checks', async () => {
+  const writer = { id: 'page-1', revision: 3 }
+  const { data } = await parse(schemas.UpdateResumeSchema, {
+    content: { sections: ['work'] },
+    writer
+  })
+  assert.deepEqual(data.writer, writer)
+})
+
 function routeFiles(dir) {
   return readdirSync(dir).flatMap((name) => {
     const path = join(dir, name)

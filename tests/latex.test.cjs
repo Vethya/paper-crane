@@ -17,6 +17,21 @@ const source = ts.transpileModule(
   }
 ).outputText
 
+function loadLatexAssets() {
+  const exports = {}
+  const assetsSource = ts.transpileModule(
+    readFileSync(join(__dirname, '../src/lib/latexAssets.ts'), 'utf8'),
+    {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2020
+      }
+    }
+  ).outputText
+  vm.runInNewContext(assetsSource, { exports })
+  return exports
+}
+
 function deferred() {
   let resolve, reject
   const promise = new Promise((yes, no) => {
@@ -62,6 +77,7 @@ function harness({
   vm.runInNewContext(source, {
     exports,
     require(name) {
+      if (name === './latexAssets') return loadLatexAssets()
       assert.equal(name, '@siglum/engine')
       return { SiglumCompiler: Compiler }
     },

@@ -1,70 +1,70 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useAtomValue, useSetAtom } from 'jotai'
+import { useAtomValue } from 'jotai'
 import { FormValues } from '@/types'
 import { saveStateAtom } from '@/atoms/saveState'
 import { agentPendingEditsAtom } from '@/atoms/agentEdits'
+import { loadedResumeIdAtom } from '@/atoms/resume'
+import { browserStorage, clearDraft, writeDraft } from '@/lib/draftRecovery'
+import type { AutoSaver } from '@/lib/autoSaver'
+import { patchResume, useResumeSaver } from './useResumeSaver'
 
 export type { SaveState } from '@/atoms/saveState'
+
+// Identifies this page load, so the server can order its content saves.
+const WRITER_ID = Math.random().toString(36).slice(2)
+
+async function saveContent(
+  resumeId: string,
+  snapshot: string,
+  revision: number
+) {
+  const writer = JSON.stringify({ id: WRITER_ID, revision })
+  await patchResume(resumeId, `{"content":${snapshot},"writer":${writer}}`)
+  // The server has this content now, so its local backup is not needed.
+  clearDraft(browserStorage, resumeId, snapshot)
+}
 
 export function useAutoSave(
   resumeId: string | null,
   formData: FormValues | null
 ) {
   const saveState = useAtomValue(saveStateAtom)
-  const setSaveState = useSetAtom(saveStateAtom)
-  const pendingEdits = useAtomValue(agentPendingEditsAtom)
-  const latestFormData = useRef(formData)
-  const lastKnownData = useRef<string | null>(null)
+  const paused = useAtomValue(agentPendingEditsAtom).some(
+    (e) => e.status === 'pending'
+  )
+  const loadedResumeId = useAtomValue(loadedResumeIdAtom)
+  const saverRef = useResumeSaver(resumeId, saveContent)
+  // The saver whose baseline was set. The baseline is the loaded resume, so
+  // it must not replace a backup that the generator may still offer back.
+  const startedRef = useRef<AutoSaver | null>(null)
 
   useEffect(() => {
-    latestFormData.current = formData
-  }, [formData])
-
-  // Reset lastKnownData when navigating to a different resume
-  useEffect(() => {
-    lastKnownData.current = null
-  }, [resumeId])
-
-  useEffect(() => {
-    if (!resumeId || !formData) return
+    const saver = saverRef.current
+    // Wait for this resume's server copy. Until then formData can hold an
+    // earlier visit's form, which must not become the baseline.
+    if (!saver || !resumeId || !formData || loadedResumeId !== resumeId) return
+    const snapshot = JSON.stringify(formData)
+    const started = startedRef.current === saver
+    startedRef.current = saver
 
     // Pause auto-save while agent edits are pending review.
     // Any form changes (agent-applied or manual) will save together once resolved.
-    if (pendingEdits.some((e) => e.status === 'pending')) return
-
-    const serialized = JSON.stringify(formData)
-
-    // First load: store as baseline, don't save
-    if (lastKnownData.current === null) {
-      lastKnownData.current = serialized
+    // Keep a local backup meanwhile, so leaving the page does not lose them.
+    if (paused) {
+      saver.cancel()
+      if (started) writeDraft(browserStorage, resumeId, snapshot)
       return
     }
 
-    // Section switch or field registration: values unchanged, don't save
-    if (serialized === lastKnownData.current) return
-
-    const timer = setTimeout(async () => {
-      setSaveState('saving')
-      try {
-        const res = await fetch(`/api/resumes/${resumeId}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ content: latestFormData.current })
-        })
-        if (!res.ok) throw new Error()
-        lastKnownData.current = JSON.stringify(latestFormData.current)
-        setSaveState('saved')
-        setTimeout(() => setSaveState('idle'), 2000)
-      } catch {
-        setSaveState('error')
-        setTimeout(() => setSaveState('idle'), 2000)
-      }
-    }, 2000)
-
-    return () => clearTimeout(timer)
-  }, [resumeId, formData, pendingEdits, setSaveState])
+    // The first snapshot is the loaded resume, which needs no save.
+    saver.update(snapshot)
+    if (!started) return
+    if (saver.hasUnsavedChanges())
+      writeDraft(browserStorage, resumeId, snapshot)
+    else clearDraft(browserStorage, resumeId)
+  }, [saverRef, resumeId, loadedResumeId, formData, paused])
 
   return saveState
 }

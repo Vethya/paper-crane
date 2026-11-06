@@ -18,6 +18,11 @@ const workerHeaders = [
 
 const NextConfig = {
   reactStrictMode: true,
+  // The source ZIP route reads template files from public/, which serverless
+  // hosts don't bundle into functions by default.
+  outputFileTracingIncludes: {
+    '/api/generate-source': ['./public/templates/**/*']
+  },
   swcMinify: true,
   compiler: {
     styledComponents: true
