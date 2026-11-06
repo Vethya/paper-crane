@@ -177,8 +177,8 @@ test('agent session save checks IDs, mode, and messages', async () => {
 
 test('agent chat and edit require a message list', async () => {
   const messages = [{ role: 'user', content: 'Hi' }]
-  const chat = await parse(schemas.AgentChatSchema, { messages, mode: 'Chat' })
-  assert.deepEqual(chat.data, { messages, mode: 'Chat' })
+  const chat = await parse(schemas.AgentChatSchema, { messages, mode: 'Chat', resumeData: {} })
+  assert.deepEqual(chat.data, { messages, mode: 'Chat', resumeData: {} })
   const edit = await parse(schemas.AgentEditSchema, {
     messages,
     resumeData: { basics: { name: 'Ada' } }
@@ -236,3 +236,68 @@ for (const path of routes) {
     })
   }
 }
+
+const limits = load(join(libDir, 'agentLimits.ts'))
+const { AGENT_LIMITS, characterCount, prepareAgentMessages, agentWarnings } = limits
+const user = (content) => ({ role: 'user', content })
+const assistant = (content) => ({ role: 'assistant', content })
+const resumeAt = (size) => ({ text: 'a'.repeat(size - 11) })
+
+test('AI limits count emoji as code points and preserve multilingual text', async () => {
+  assert.equal(characterCount('a😀ក'), 3)
+  const content = '😀'.repeat(32_000)
+  const valid = { resumeData: {}, messages: [user(content)], mode: 'Chat' }
+  assert.ok((await parse(schemas.AgentChatSchema, valid)).data)
+  assert.equal((await parse(schemas.AgentChatSchema, {
+    ...valid, messages: [user(content + 'ក')]
+  })).status, 400)
+})
+
+test('both AI routes accept exact boundaries and reject oversized content', async () => {
+  for (const schema of [schemas.AgentChatSchema, schemas.AgentEditSchema]) {
+    const valid = { resumeData: resumeAt(64_000), messages: [user('a'.repeat(32_000)), assistant('b'.repeat(32_000))], mode: 'Chat' }
+    assert.ok((await parse(schema, valid)).data)
+    for (const invalid of [
+      { ...valid, resumeData: resumeAt(64_001) },
+      { ...valid, messages: [user('x'.repeat(32_001))] },
+      { ...valid, messages: [...valid.messages, user('x')] },
+      { ...valid, messages: [] }
+    ]) assert.equal((await parse(schema, invalid)).status, 400)
+  }
+})
+
+test('transport cap counts streamed bytes without trusting Content-Length', async () => {
+  const body = JSON.stringify({ value: '😀' })
+  const bytes = new TextEncoder().encode(body)
+  const schema = require('zod').z.object({ value: require('zod').z.string() })
+  const request = () => new Request('http://localhost', {
+    method: 'POST', duplex: 'half', headers: { 'Content-Length': '1' },
+    body: new ReadableStream({ start(c) {
+      for (const byte of bytes) c.enqueue(new Uint8Array([byte]))
+      c.close()
+    } })
+  })
+  assert.equal((await parseBody(request(), schema, bytes.length)).data.value, '😀')
+  assert.equal((await parseBody(request(), schema, bytes.length - 1)).error.status, 413)
+})
+
+test('history trimming keeps complete recent exchanges and never changes originals', () => {
+  const history = [user('old'), assistant('reply'), user('b'.repeat(32_000)), assistant('c'.repeat(32_000)), user('latest')]
+  const copy = structuredClone(history)
+  const result = prepareAgentMessages(resumeAt(64_000), history)
+  assert.deepEqual(result.messages, [user('latest')])
+  assert.equal(result.trimmed, true)
+  assert.deepEqual(history, copy)
+  assert.deepEqual(prepareAgentMessages({}, [assistant('orphan'), user('now'), { ...assistant('error'), error: true }]).messages, [user('now')])
+})
+
+test('warnings stay hidden below 80%, allow exact limits, and block overflow', () => {
+  assert.deepEqual(agentWarnings({}, [], 'normal'), { warnings: [], blocked: false })
+  assert.equal(agentWarnings({}, [], 'x'.repeat(25_599)).warnings.length, 0)
+  assert.match(agentWarnings({}, [], 'x'.repeat(25_600)).warnings[0], /25,600 \/ 32,000 characters/)
+  assert.equal(agentWarnings({}, [], '😀'.repeat(32_000)).blocked, false)
+  assert.equal(agentWarnings({}, [], '😀'.repeat(32_001)).blocked, true)
+  assert.equal(agentWarnings(resumeAt(64_000), [], '').blocked, false)
+  assert.equal(agentWarnings(resumeAt(64_001), [], '').blocked, true)
+  assert.match(agentWarnings(resumeAt(64_000), [user('x'.repeat(32_000)), assistant('y'.repeat(10_000))], '').warnings.at(-1), /getting long/)
+})
