@@ -37,6 +37,11 @@ const AgentTriggerButton = dynamic(
       .AgentTriggerButton,
   { ssr: false }
 )
+const AgentSavedEdits = dynamic(
+  async () =>
+    (await import('../../components/agent/AgentSavedEdits')).AgentSavedEdits,
+  { ssr: false }
+)
 const AgentOverlay = dynamic(
   async () =>
     (await import('../../components/agent/AgentOverlay/index')).AgentOverlay,
@@ -269,6 +274,7 @@ function GeneratorContent() {
           <AgentTriggerButton />
           <AgentOverlay />
           <AgentEditReviewBar />
+          <AgentSavedEdits />
         </>
       )}
     </main>

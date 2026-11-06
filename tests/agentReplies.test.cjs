@@ -163,3 +163,19 @@ test('edit saves an error reply when tailoring fails', async () => {
   assert.equal(saved[0].error, true)
   assert.equal(saved[0].pendingEdits, undefined)
 })
+
+test('conflicts are edits whose field or entry changed after tailoring started', () => {
+  const file = resolve(__dirname, '../src/lib/agentTailoring.ts')
+  const module = { exports: {} }
+  const code = ts.transpileModule(readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText
+  new Function('exports', 'module', code)(module.exports, module)
+  const { toStoredEdits, findConflicts } = module.exports
+  const edits = toStoredEdits(resume, [
+    { type: 'set', fieldPath: 'basics.name', newValue: 'New', reason: 'r' },
+    { type: 'remove', arrayPath: 'work', index: 0, reason: 'r' },
+    { type: 'appendSkill', name: 'Cloud', keywords: [], reason: 'r' }
+  ])
+  assert.deepEqual(findConflicts(resume, edits), [])
+  const changed = { basics: { name: 'Edited' }, work: [{ company: 'Other' }] }
+  assert.deepEqual(findConflicts(changed, edits).map((e) => e.type), ['set', 'remove'])
+})

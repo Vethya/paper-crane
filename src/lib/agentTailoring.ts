@@ -65,3 +65,25 @@ export function toStoredEdits(
     return edit
   })
 }
+
+const same = (a: unknown, b: unknown) =>
+  JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+
+/** Edits whose field or entry the user changed after tailoring started. */
+export function findConflicts(
+  resume: Record<string, unknown>,
+  edits: StoredEdit[]
+): StoredEdit[] {
+  return edits.filter((edit) => {
+    if (edit.type === 'set')
+      return !same(getValueAtPath(resume, edit.fieldPath), edit.originalValue)
+    if (edit.type === 'remove') {
+      const list = resume[edit.arrayPath]
+      return !same(
+        Array.isArray(list) ? list[edit.index] : undefined,
+        edit.entry
+      )
+    }
+    return false
+  })
+}
