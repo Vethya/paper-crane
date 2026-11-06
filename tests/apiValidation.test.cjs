@@ -9,9 +9,8 @@ const ts = require('typescript')
 
 const libDir = join(__dirname, '../src/lib')
 const apiDir = join(__dirname, '../src/app/api')
-// Converted in a later change.
-const PENDING = ['agent', 'generate-source']
-const SKIPPED = ['auth', ...PENDING]
+// Better Auth reads its own requests.
+const SKIPPED = ['auth']
 
 function load(filename) {
   const module = { exports: {} }
@@ -145,6 +144,63 @@ test('resume update keeps the content writer for stale-save checks', async () =>
     writer
   })
   assert.deepEqual(data.writer, writer)
+})
+
+const RESUME_ID = '64b7f0c2a1b2c3d4e5f60718'
+const message = { id: 'm1', role: 'user', content: 'Hi' }
+
+test('agent session save checks IDs, mode, and messages', async () => {
+  const valid = {
+    resumeId: RESUME_ID,
+    sessionId: null,
+    mode: 'Chat',
+    messages: [{ ...message, error: true }]
+  }
+  const { data } = await parse(schemas.SaveAgentSessionSchema, valid)
+  assert.deepEqual(data.messages, [message])
+
+  const bad = [
+    { ...valid, resumeId: 'abc' },
+    { ...valid, sessionId: 'abc' },
+    { ...valid, mode: 'Other' },
+    { ...valid, messages: 'hi' },
+    { ...valid, messages: [{ ...message, role: 'system' }] },
+    { ...valid, messages: [{ ...message, content: '' }] }
+  ]
+  for (const body of bad) {
+    const result = await parse(schemas.SaveAgentSessionSchema, body)
+    assert.equal(result.status, 400, JSON.stringify(body))
+  }
+  const badId = await parse(schemas.SaveAgentSessionSchema, bad[0])
+  assert.equal(badId.message, 'resumeId: Invalid ID format')
+})
+
+test('agent chat and edit require a message list', async () => {
+  const messages = [{ role: 'user', content: 'Hi' }]
+  const chat = await parse(schemas.AgentChatSchema, { messages, mode: 'Chat' })
+  assert.deepEqual(chat.data, { messages, mode: 'Chat' })
+  const edit = await parse(schemas.AgentEditSchema, {
+    messages,
+    resumeData: { basics: { name: 'Ada' } }
+  })
+  assert.deepEqual(edit.data.resumeData, { basics: { name: 'Ada' } })
+
+  for (const [schema, body] of [
+    [schemas.AgentChatSchema, { mode: 'Chat' }],
+    [schemas.AgentChatSchema, { messages, mode: 'Other' }],
+    [schemas.AgentEditSchema, { messages, resumeData: 'x' }]
+  ]) {
+    const result = await parse(schema, body)
+    assert.equal(result.status, 400, JSON.stringify(body))
+  }
+})
+
+test('source ZIP body needs a template number', async () => {
+  const body = { sections: ['work'], headings: {}, selectedTemplate: 3 }
+  const { data } = await parse(schemas.SourceZipSchema, body)
+  assert.equal(data.selectedTemplate, 3)
+  const missing = await parse(schemas.SourceZipSchema, { sections: [] })
+  assert.equal(missing.status, 400)
 })
 
 function routeFiles(dir) {

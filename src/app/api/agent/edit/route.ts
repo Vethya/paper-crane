@@ -5,6 +5,8 @@ import { z } from 'zod'
 import { auth } from '../../../../lib/auth'
 import { TAILORING_SYSTEM_PROMPT } from '../../../../constants/prompts.constants'
 import { aiDisabledResponse } from '@/lib/aiFeatures'
+import { parseBody } from '@/lib/apiValidation'
+import { AgentEditSchema } from '@/lib/apiSchemas'
 
 // Ensure the env var is validated at startup via src/env.ts
 import '../../../../env'
@@ -131,10 +133,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { messages, resumeData } = (await request.json()) as {
-    messages: Array<{ role: 'user' | 'assistant'; content: string }>
-    resumeData: Record<string, unknown>
-  }
+  const { data, error } = await parseBody(request, AgentEditSchema)
+  if (error) return error
+  const { messages, resumeData } = data
 
   const model = google('gemini-3.1-flash-lite-preview')
   const system = `${TAILORING_SYSTEM_PROMPT}\n\n## User's current resume\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`

@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import { connectDB } from '@/db'
 import { AgentSession } from '@/db/models/agentSession'
 import { aiDisabledResponse } from '@/lib/aiFeatures'
+import { invalidId } from '@/lib/apiValidation'
 
 export async function GET(
   request: NextRequest,
@@ -17,6 +18,8 @@ export async function GET(
   }
 
   const { id } = await params
+  const badId = invalidId(id)
+  if (badId) return badId
 
   await connectDB()
 
@@ -45,6 +48,8 @@ export async function DELETE(
   }
 
   const { id } = await params
+  const badId = invalidId(id)
+  if (badId) return badId
 
   await connectDB()
 
