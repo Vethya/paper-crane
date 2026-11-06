@@ -1,6 +1,7 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { href } from './escape'
 
 const generator: Generator = {
   profileSection(basics) {
@@ -9,7 +10,7 @@ const generator: Generator = {
     }
 
     const { name, email, phone, location = {}, website } = basics
-    const websiteLine = website ? `\\href{${website}}{${website}}` : ''
+    const websiteLine = website ? href(website) : ''
 
     const info = [email, phone, location.address, websiteLine]
       .filter(Boolean)
@@ -170,7 +171,7 @@ const generator: Generator = {
 
       ${projects.map((project, i) => {
         const { name, description, keywords = [], url } = project
-        const urlLine = url ? `\\href{${url}}{${url}}` : ''
+        const urlLine = url ? href(url) : ''
 
         return stripIndent`
           \\ProjectEntry{${name || ''}}{${urlLine || ''}}

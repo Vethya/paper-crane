@@ -15,7 +15,7 @@ test('template 4 gives project URLs a separate paragraph', () => {
   })
   assert.match(
     tex,
-    /TypeScript[\s\S]*?\\par\\nopagebreak\[4\]\s*\\noindent\\location\{\\url\{https:\/\/example.com\}\}/
+    /TypeScript[\s\S]*?\\par\\nopagebreak\[4\]\s*\\noindent\\location\{\\href\{https:\/\/example.com\}\{https:\/\/example.com\}\}/
   )
   assert.doesNotMatch(tex, /\\hfill/)
 })

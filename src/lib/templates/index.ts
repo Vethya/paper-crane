@@ -19,22 +19,17 @@ import {
   TEMPLATE9
 } from './constants'
 import { FormValues, TemplateData } from '../../types'
-
-// Escape LaTeX special characters in user-provided text.
-// URL fields (website, url) are intentionally excluded.
-function esc(str: string | undefined): string | undefined {
-  return str
-    ?.replace(/&/g, '\\&')
-    .replace(/%/g, '\\%')
-    .replace(/\$/g, '\\$')
-    .replace(/#/g, '\\#')
-    .replace(/_/g, '\\_')
-}
+import { esc } from './escape'
 
 function sanitizeFormValues(data: FormValues): FormValues {
   return {
     ...data,
-    headings: data.headings ?? {},
+    headings: Object.fromEntries(
+      Object.entries(data.headings ?? {}).map(([key, value]) => [
+        key,
+        esc(value)
+      ])
+    ),
     basics: data.basics
       ? {
           ...data.basics,
@@ -47,7 +42,7 @@ function sanitizeFormValues(data: FormValues): FormValues {
                 address: esc(data.basics.location.address)
               }
             : undefined
-          // website intentionally not escaped (used in \href{})
+          // website is escaped where it is used, by href()
         }
       : undefined,
     work: (() => {
@@ -57,6 +52,8 @@ function sanitizeFormValues(data: FormValues): FormValues {
           company: esc(job.company),
           position: esc(job.position),
           location: esc(job.location),
+          startDate: esc(job.startDate),
+          endDate: esc(job.endDate),
           highlights: job.highlights.map((h) => esc(h) as string)
         }))
         .filter(
@@ -78,6 +75,8 @@ function sanitizeFormValues(data: FormValues): FormValues {
           area: esc(edu.area),
           studyType: esc(edu.studyType),
           score: esc(edu.score),
+          startDate: esc(edu.startDate),
+          endDate: esc(edu.endDate),
           location: esc(edu.location)
         }))
         .filter(
@@ -97,6 +96,7 @@ function sanitizeFormValues(data: FormValues): FormValues {
         ?.map((award) => ({
           ...award,
           title: esc(award.title),
+          date: esc(award.date),
           awarder: esc(award.awarder),
           summary: esc(award.summary)
         }))
@@ -120,7 +120,7 @@ function sanitizeFormValues(data: FormValues): FormValues {
           name: esc(project.name),
           description: esc(project.description),
           keywords: project.keywords?.map((k) => esc(k) as string)
-          // url intentionally not escaped (used in \href{})
+          // url is escaped where it is used, by href()
         }))
         .filter(
           (p) => p.name || p.description || p.url || p.keywords?.some(Boolean)

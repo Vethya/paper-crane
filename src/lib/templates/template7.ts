@@ -1,6 +1,17 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { href } from './escape'
+
+// moderncv's \httplink always adds http:// and reuses its text as the link
+// target. The preamble makes \httplink print its argument as is, so the
+// homepage is passed as a finished link instead.
+function homepageLink(website: string) {
+  const url = /^[a-z][a-z0-9+.-]*:/i.test(website)
+    ? website
+    : `http://${website}`
+  return href(url, website)
+}
 
 const generator: Generator = {
   profileSection(basics = {}) {
@@ -12,7 +23,7 @@ const generator: Generator = {
     \\address{${location.address || ''}}
     ${phone ? `\\phone[mobile]{${phone}}` : ''}
     ${email ? `\\email{${email || ''}}` : ''}
-    ${website ? `\\homepage{${website || ''}}` : ''}
+    ${website ? `\\homepage{${homepageLink(website)}}` : ''}
   `
   },
 
@@ -145,7 +156,7 @@ const generator: Generator = {
         }
 
         if (url) {
-          detailsLine += url
+          detailsLine += href(url)
         }
 
         return stripIndent`
@@ -214,6 +225,7 @@ const generator: Generator = {
       \\renewcommand*{\\mobilephonesymbol}{Phone:~}
       \\renewcommand*{\\emailsymbol}{Email:~}
       \\renewcommand*{\\homepagesymbol}{Website:~}
+      \\renewcommand*{\\httplink}[2][]{#2}
       \\hyphenpenalty=10000
       \\exhyphenpenalty=10000
       \\emergencystretch=2em

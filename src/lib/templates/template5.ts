@@ -1,6 +1,7 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { href } from './escape'
 
 const generator: Omit<Generator, 'resumeHeader'> = {
   profileSection(basics) {
@@ -9,7 +10,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
     }
 
     const { name, email, phone, location = {}, website } = basics
-    const websiteLine = website ? `\\href{${website}}{${website}}` : ''
+    const websiteLine = website ? href(website) : ''
 
     const info = [email, phone, location.address, websiteLine]
       .filter(Boolean)
@@ -197,7 +198,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
         }
 
         if (url) {
-          const urlLine = url ? `\\href{${url}}{${url}}` : ''
+          const urlLine = url ? href(url) : ''
           projectLine += projectLine ? `\\\\ ${urlLine}` : urlLine
         }
 
