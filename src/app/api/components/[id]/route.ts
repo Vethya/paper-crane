@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import mongoose from 'mongoose'
 import { auth } from '@/lib/auth'
 import { connectDB } from '@/db'
 import { ResumeComponent } from '@/db/models/resumeComponent'
@@ -8,6 +7,8 @@ import {
   isComponentType,
   validateComponentContent
 } from '@/lib/resumeComponents'
+import { invalidId, parseBody } from '@/lib/apiValidation'
+import { ComponentBodySchema } from '@/lib/apiSchemas'
 
 export async function PATCH(
   request: NextRequest,
@@ -19,11 +20,12 @@ export async function PATCH(
   }
 
   const { id } = await params
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
-  }
+  const badId = invalidId(id)
+  if (badId) return badId
 
-  const { type, content } = await request.json()
+  const { data, error } = await parseBody(request, ComponentBodySchema)
+  if (error) return error
+  const { type, content } = data
 
   await connectDB()
 
@@ -82,9 +84,8 @@ export async function DELETE(
   }
 
   const { id } = await params
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 })
-  }
+  const badId = invalidId(id)
+  if (badId) return badId
 
   await connectDB()
 
