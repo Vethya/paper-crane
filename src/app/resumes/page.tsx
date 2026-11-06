@@ -8,28 +8,29 @@ import { Header } from '@/components/generator/Header'
 import { ResumeCard } from '@/components/resumes/ResumeCard'
 import { CreateResumeDialog } from '@/components/resumes/CreateResumeDialog'
 import { ImportResumeDialog } from '@/components/resumes/ImportResumeDialog'
-import { tagColorMap, type TagColor } from '@/lib/tagColors'
+import { tagColorMap } from '@/lib/tagColors'
+import { useQuery } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { resumesQuery, tagsQuery, type ResumeListItem } from '@/lib/queries'
+import {
+  CardSkeletons,
+  LibrarySkeleton
+} from '@/components/library/LibrarySkeleton'
 
-interface ResumeListItem {
-  _id: string
-  title: string
-  tags?: string[]
-  updatedAt: string
-}
-
-interface TagItem {
-  _id: string
-  name: string
-  color: TagColor
-}
+const EMPTY_RESUMES: ResumeListItem[] = []
 
 export default function ResumesPage() {
   const { data: session, isPending } = authClient.useSession()
   const router = useRouter()
-  const [resumes, setResumes] = useState<ResumeListItem[]>([])
-  const [tagMap, setTagMap] = useState<Record<string, TagItem>>({})
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const account = useQueryAccount()
+  const resumeRequest = useQuery(resumesQuery(account))
+  const tagRequest = useQuery(tagsQuery(account))
+  const resumes = resumeRequest.data ?? EMPTY_RESUMES
+  const tagMap = Object.fromEntries(
+    (tagRequest.data ?? []).map((tag) => [tag.name, tag])
+  )
+  const loading = resumeRequest.isPending
+  const error = !resumeRequest.data ? resumeRequest.error?.message : null
   const [query, setQuery] = useState('')
   const [activeTags, setActiveTags] = useState<string[]>([])
 
@@ -60,26 +61,8 @@ export default function ResumesPage() {
     }
   }, [session, isPending, router])
 
-  useEffect(() => {
-    if (!session) return
-    Promise.all([
-      fetch('/api/resumes').then((res) => {
-        if (!res.ok) throw new Error('Failed to load resumes')
-        return res.json()
-      }),
-      fetch('/api/tags').then((res) => (res.ok ? res.json() : []))
-    ])
-      .then(([resumeData, tagsData]) => {
-        setResumes(resumeData)
-        const map: Record<string, TagItem> = {}
-        for (const tag of tagsData) map[tag.name] = tag
-        setTagMap(map)
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false))
-  }, [session])
-
-  if (isPending || !session) return null
+  if (isPending) return <LibrarySkeleton title="My Resumes" />
+  if (!session) return null
 
   return (
     <div className="min-h-screen bg-app-background text-slate-100">
@@ -176,20 +159,40 @@ export default function ResumesPage() {
           </div>
         )}
 
-        {loading && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-36 animate-pulse rounded-app-card border border-app-border bg-app-surface"
-              />
-            ))}
-          </div>
+        {tagRequest.isError && (
+          <p role="status" className="mb-4 text-sm text-slate-400">
+            Unable to refresh tags.{' '}
+            <button
+              className="underline"
+              onClick={() => void tagRequest.refetch()}
+            >
+              Retry
+            </button>
+          </p>
         )}
+        {resumeRequest.isError && resumeRequest.data && (
+          <p role="status" className="mb-4 text-sm text-slate-400">
+            Unable to refresh resumes.{' '}
+            <button
+              className="underline"
+              onClick={() => void resumeRequest.refetch()}
+            >
+              Retry
+            </button>
+          </p>
+        )}
+        {loading && <CardSkeletons label="Loading resumes" />}
 
         {error && (
           <div className="rounded-app-card border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-400">
-            {error}
+            {error}{' '}
+            <button
+              type="button"
+              className="underline"
+              onClick={() => void resumeRequest.refetch()}
+            >
+              Retry
+            </button>
           </div>
         )}
 
@@ -238,9 +241,6 @@ export default function ResumesPage() {
                 tags={resume.tags}
                 tagMap={tagMap}
                 updatedAt={resume.updatedAt}
-                onDelete={(id) =>
-                  setResumes((prev) => prev.filter((r) => r._id !== id))
-                }
               />
             ))}
           </div>

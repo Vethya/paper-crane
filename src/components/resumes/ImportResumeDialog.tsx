@@ -1,5 +1,9 @@
 'use client'
 
+import { useQueryClient } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { queryKeys } from '@/lib/queries'
+
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { FiUpload } from 'react-icons/fi'
@@ -20,6 +24,8 @@ interface ImportResumeDialogProps {
 
 export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
   const router = useRouter()
+  const client = useQueryClient()
+  const account = useQueryAccount()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [open, setOpen] = useState(false)
@@ -100,6 +106,7 @@ export function ImportResumeDialog({ children }: ImportResumeDialogProps) {
         throw new Error(data.error ?? 'Failed to import resume')
       }
       const { _id } = await res.json()
+      void client.invalidateQueries({ queryKey: queryKeys.resumes(account) })
       setOpeningGenerator(true)
       router.push(`/generator?id=${_id}`)
     } catch (err) {
