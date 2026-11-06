@@ -1,22 +1,24 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { saveResume, trackResumeWork } from '@/lib/resumeCache'
 import { useSetAtom } from 'jotai'
 import { saveStateAtom } from '@/atoms/saveState'
 import { createAutoSaver, type AutoSaver } from '@/lib/autoSaver'
 
-// Browsers cap keepalive request bodies at 64KB.
-const KEEPALIVE_LIMIT = 60_000
-
-export async function patchResume(resumeId: string, body: string) {
-  const res = await fetch(`/api/resumes/${resumeId}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body,
-    // Lets the save finish if the tab closes while it is running.
-    keepalive: new TextEncoder().encode(body).length < KEEPALIVE_LIMIT
-  })
-  if (!res.ok) throw new Error(`Save failed with status ${res.status}`)
+export function usePatchResume() {
+  const client = useQueryClient()
+  const account = useQueryAccount()
+  return useCallback(
+    (id: string, body: string) => {
+      if (!account)
+        return Promise.reject(new Error('Sign in to save this resume'))
+      return saveResume(client, account, id, body)
+    },
+    [client, account]
+  )
 }
 
 // Keeps one saver per resume. Leaving the page, hiding the tab, or switching
@@ -26,6 +28,7 @@ export function useResumeSaver(
   save: (resumeId: string, snapshot: string, revision: number) => Promise<void>,
   baseline?: string
 ) {
+  const client = useQueryClient()
   const setSaveState = useSetAtom(saveStateAtom)
   const saverRef = useRef<AutoSaver | null>(null)
 
@@ -40,14 +43,15 @@ export function useResumeSaver(
       baseline
     })
     saverRef.current = saver
+    const flush = () => trackResumeWork(client, resumeId, saver.flush())
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') void saver.flush()
+      if (document.visibilityState === 'hidden') void flush()
     }
     const handlePageHide = () => saver.sendPending()
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
       if (!saver.hasUnsavedChanges()) return
-      void saver.flush()
+      void flush()
       event.preventDefault()
     }
     document.addEventListener('visibilitychange', handleVisibilityChange)
@@ -61,9 +65,9 @@ export function useResumeSaver(
       attached = false
       saverRef.current = null
       setSaveState('idle')
-      void saver.flush()
+      void flush()
     }
-  }, [resumeId, save, baseline, setSaveState])
+  }, [resumeId, save, baseline, setSaveState, client])
 
   return saverRef
 }

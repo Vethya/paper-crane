@@ -23,11 +23,12 @@ import type { ResumeComponentType } from '@/lib/resumeComponents'
 import { useIsHydrated } from '@/hooks/useIsHydrated'
 import { useAiFeaturesEnabled } from '@/hooks/useAiFeaturesEnabled'
 import { resumeAtom } from '../../atoms/resume'
+import { FormSkeleton } from '@/components/ui/skeleton'
 import { hasPdfUrlViewers } from '../../lib/pdfBuffer'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
-  { ssr: false }
+  { ssr: false, loading: () => <FormSkeleton /> }
 )
 
 // Loaded only when AI is on, so the hosted bundle skips the agent code.
@@ -65,7 +66,7 @@ function getValidSection(section: string | null) {
 
 export default function GeneratorPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<FormSkeleton />}>
       <GeneratorContent />
     </Suspense>
   )

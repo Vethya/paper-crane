@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { useAtomValue } from 'jotai'
 import { FormValues } from '@/types'
 import { saveStateAtom } from '@/atoms/saveState'
@@ -8,28 +8,29 @@ import { agentPendingEditsAtom } from '@/atoms/agentEdits'
 import { loadedResumeIdAtom } from '@/atoms/resume'
 import { browserStorage, clearDraft, writeDraft } from '@/lib/draftRecovery'
 import type { AutoSaver } from '@/lib/autoSaver'
-import { patchResume, useResumeSaver } from './useResumeSaver'
+import { usePatchResume, useResumeSaver } from './useResumeSaver'
 
 export type { SaveState } from '@/atoms/saveState'
 
 // Identifies this page load, so the server can order its content saves.
 const WRITER_ID = Math.random().toString(36).slice(2)
 
-async function saveContent(
-  resumeId: string,
-  snapshot: string,
-  revision: number
-) {
-  const writer = JSON.stringify({ id: WRITER_ID, revision })
-  await patchResume(resumeId, `{"content":${snapshot},"writer":${writer}}`)
-  // The server has this content now, so its local backup is not needed.
-  clearDraft(browserStorage, resumeId, snapshot)
-}
-
 export function useAutoSave(
   resumeId: string | null,
   formData: FormValues | null
 ) {
+  const patchResume = usePatchResume()
+  const saveContent = useCallback(
+    async (id: string, snapshot: string, revision: number) => {
+      const writer = JSON.stringify({ id: WRITER_ID, revision })
+      const accepted = await patchResume(
+        id,
+        `{"content":${snapshot},"writer":${writer}}`
+      )
+      if (accepted) clearDraft(browserStorage, id, snapshot)
+    },
+    [patchResume]
+  )
   const saveState = useAtomValue(saveStateAtom)
   const paused = useAtomValue(agentPendingEditsAtom).some(
     (e) => e.status === 'pending'

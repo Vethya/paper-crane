@@ -8,12 +8,16 @@ import { resumeTagsAtom } from '@/atoms/resumeTags'
 import { TagDialog, type TagItem } from './TagDialog'
 import { tagColorMap } from '@/lib/tagColors'
 import { useOnClickOutside } from '@/hooks/useOnClickOutside'
-import { patchResume, useResumeSaver } from '@/hooks/useResumeSaver'
-
-const saveTags = (resumeId: string, snapshot: string) =>
-  patchResume(resumeId, `{"tags":${snapshot}}`)
+import { usePatchResume, useResumeSaver } from '@/hooks/useResumeSaver'
 
 export function TagPicker() {
+  const patchResume = usePatchResume()
+  const saveTags = useCallback(
+    async (id: string, snapshot: string) => {
+      await patchResume(id, `{"tags":${snapshot}}`)
+    },
+    [patchResume]
+  )
   const searchParams = useSearchParams()
   const resumeId = searchParams.get('id')
 
