@@ -15,6 +15,7 @@ import {
   ArrowUp
 } from 'lucide-react'
 import {
+  agentDraftAtom,
   agentModeAtom,
   agentIsStreamingAtom,
   AGENT_MODES,
@@ -40,7 +41,7 @@ interface AgentComposerProps {
 export function AgentComposer({ onSend }: AgentComposerProps) {
   const [mode, setMode] = useAtom(agentModeAtom)
   const isStreaming = useAtomValue(agentIsStreamingAtom)
-  const [text, setText] = useState('')
+  const [text, setText] = useAtom(agentDraftAtom)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)

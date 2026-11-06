@@ -4,6 +4,7 @@ import { useHydrateAtoms } from 'jotai/utils'
 import { useForm } from 'react-hook-form'
 import type { FormValues } from '@/types'
 import {
+  agentConversationResumeIdAtom,
   agentModeAtom,
   agentIsStreamingAtom,
   agentOpenAtom,
@@ -41,6 +42,7 @@ function Seed({
 }) {
   const form = useForm<FormValues>({ defaultValues: state.form ?? resume })
   useHydrateAtoms([
+    [agentConversationResumeIdAtom, state.resumeId ?? null],
     [agentModeAtom, state.mode ?? 'Chat'],
     [agentIsStreamingAtom, !!state.streaming],
     [isLoadingResumeAtom, !!state.loading],

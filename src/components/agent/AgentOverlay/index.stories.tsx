@@ -1,6 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
 import { expect, waitFor } from 'storybook/test'
 import { seeded } from '@/stories/seed'
+import { AgentTriggerButton } from '../AgentTriggerButton'
+import { useSetAtom } from 'jotai'
+import { agentResumeIdAtom } from '@/atoms/agentAtom'
+import { useState } from 'react'
 import { messages } from '@/stories/fixtures/agent'
 import { AgentOverlay } from './index'
 
@@ -145,7 +149,7 @@ export const CancelTailoring: Story = {
   }
 }
 
-export const CancelBeforeReplyOnModeChange: Story = {
+export const ContinueReplyOnModeChange: Story = {
   parameters: { state: { open: true, resumeId: '64b7f0c2a1b2c3d4e5f60718' } },
   play: async ({ canvas, userEvent }) => {
     const original = globalThis.fetch
@@ -172,8 +176,11 @@ export const CancelBeforeReplyOnModeChange: Story = {
       await waitFor(() => expect(pending).toBeDefined())
       await userEvent.click(canvas.getByRole('button', { name: /Chat/ }))
       await userEvent.click(canvas.getByRole('button', { name: 'Feedback' }))
-      await expect(pending?.aborted).toBe(true)
-      finish(new Response('Late cancelled reply'))
+      await expect(pending?.aborted).toBe(false)
+      finish(new Response('Original chat reply'))
+      await expect(
+        canvas.findByText('Original chat reply')
+      ).resolves.toBeVisible()
       await userEvent.type(
         canvas.getByRole('textbox'),
         'Second question{enter}'
@@ -188,11 +195,173 @@ export const CancelBeforeReplyOnModeChange: Story = {
       await expect(
         savedMessages?.filter((message) => message.role === 'assistant')
       ).toEqual([
+        expect.objectContaining({ content: 'Original chat reply' }),
         expect.objectContaining({ content: 'Feedback after cancellation' })
       ])
       await expect(
         canvas.queryByText('Late cancelled reply')
       ).not.toBeInTheDocument()
+    } finally {
+      globalThis.fetch = original
+    }
+  }
+}
+
+export const ReopenWhileStreaming: Story = {
+  render: () => (
+    <>
+      <AgentTriggerButton />
+      <AgentOverlay />
+    </>
+  ),
+  parameters: {
+    state: { open: true, resumeId: '64b7f0c2a1b2c3d4e5f60718', messages },
+    // Seeded messages keep the initial chatId from triggering a restore.
+    nextjs: { navigation: { query: { chatId: 'old-link' } } }
+  },
+  play: async ({ canvas, userEvent }) => {
+    const original = globalThis.fetch
+    let pending: AbortSignal | undefined
+    let stream: ReadableStreamDefaultController<Uint8Array> | undefined
+    let reads = 0
+    let saves = 0
+    let finishSave: (response: Response) => void = () => {}
+    globalThis.fetch = async (input, init) => {
+      if (String(input) === '/api/agent/chat') {
+        pending = init?.signal ?? undefined
+        return new Response(
+          new ReadableStream<Uint8Array>({
+            start(c) {
+              stream = c
+            }
+          })
+        )
+      }
+      if (String(input).startsWith('/api/agent/sessions/') && !init?.method)
+        reads++
+      if (String(input) === '/api/agent/sessions' && init?.method === 'POST') {
+        saves++
+        return new Promise<Response>((resolve) => {
+          finishSave = resolve
+        })
+      }
+      return original(input, init)
+    }
+    try {
+      await userEvent.type(canvas.getByRole('textbox'), 'Keep working{enter}')
+      await waitFor(() => expect(stream).toBeDefined())
+      stream!.enqueue(new TextEncoder().encode('First part'))
+      await expect(canvas.findByText('First part')).resolves.toBeVisible()
+      await userEvent.click(canvas.getByRole('button', { name: 'Close agent' }))
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Resume Agent' })
+      )
+      await expect(pending?.aborted).toBe(false)
+      await expect(canvas.getByText('First part')).toBeVisible()
+      stream!.enqueue(new TextEncoder().encode(' and final part'))
+      stream!.close()
+      await expect(
+        canvas.findByText('First part and final part')
+      ).resolves.toBeVisible()
+      await userEvent.click(canvas.getByRole('button', { name: 'Close agent' }))
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Resume Agent' })
+      )
+      await expect(canvas.getByText('First part and final part')).toBeVisible()
+      finishSave(Response.json({ sessionId: '64b7f0c2a1b2c3d4e5f60719' }))
+      await userEvent.type(canvas.getByRole('textbox'), 'Unsent draft')
+      await userEvent.click(canvas.getByRole('button', { name: 'Close agent' }))
+      await userEvent.click(
+        await canvas.findByRole('button', { name: 'Resume Agent' })
+      )
+      await expect(canvas.getByRole('textbox')).toHaveValue('Unsent draft')
+      await expect(reads).toBe(0)
+      await expect(saves).toBe(1)
+    } finally {
+      globalThis.fetch = original
+    }
+  }
+}
+
+function LifecycleHarness() {
+  const [mounted, setMounted] = useState(true)
+  const setResume = useSetAtom(agentResumeIdAtom)
+  return (
+    <>
+      <button onClick={() => setResume('other-resume')}>Switch resume</button>
+      <button onClick={() => setMounted(false)}>Leave generator</button>
+      {mounted && <AgentOverlay />}
+    </>
+  )
+}
+export const CancelOnResumeSwitch: Story = {
+  render: () => <LifecycleHarness />,
+  parameters: { state: { open: true, resumeId: 'first-resume' } },
+  play: async ({ canvas, userEvent }) => {
+    const original = globalThis.fetch
+    let pending: AbortSignal | undefined
+    let finish: (response: Response) => void = () => {}
+    globalThis.fetch = async (input, init) => {
+      if (String(input) !== '/api/agent/edit') return original(input, init)
+      pending = init?.signal ?? undefined
+      return new Promise<Response>((resolve) => {
+        finish = resolve
+      })
+    }
+    try {
+      await userEvent.click(canvas.getByRole('button', { name: /Chat/ }))
+      await userEvent.click(canvas.getByRole('button', { name: 'Tailoring' }))
+      await userEvent.type(
+        canvas.getByRole('textbox'),
+        'Tailor old resume{enter}'
+      )
+      await waitFor(() => expect(pending).toBeDefined())
+      // Harness controls represent navigation outside the fullscreen overlay.
+      await userEvent.click(canvas.getByRole('button', { name: 'Close agent' }))
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Switch resume' })
+      )
+      await expect(pending?.aborted).toBe(true)
+      finish(
+        Response.json({
+          summary: 'Stale edit',
+          edits: [
+            {
+              type: 'set',
+              fieldPath: 'basics.name',
+              newValue: 'Wrong resume',
+              reason: 'late'
+            }
+          ]
+        })
+      )
+      await expect(canvas.queryByText(/Stale edit/)).not.toBeInTheDocument()
+    } finally {
+      globalThis.fetch = original
+    }
+  }
+}
+
+export const CancelOnLeaveGenerator: Story = {
+  render: () => <LifecycleHarness />,
+  parameters: { state: { open: true, resumeId: 'first-resume' } },
+  play: async ({ canvas, userEvent }) => {
+    const original = globalThis.fetch
+    let pending: AbortSignal | undefined
+    globalThis.fetch = async (input, init) => {
+      if (String(input) !== '/api/agent/chat') return original(input, init)
+      pending = init?.signal ?? undefined
+      return new Promise<Response>(() => {})
+    }
+    try {
+      await userEvent.type(canvas.getByRole('textbox'), 'Still working{enter}')
+      await waitFor(() => expect(pending).toBeDefined())
+      await userEvent.click(canvas.getByRole('button', { name: 'Close agent' }))
+      await expect(pending?.aborted).toBe(false)
+      await userEvent.click(
+        canvas.getByRole('button', { name: 'Leave generator' })
+      )
+      await expect(pending?.aborted).toBe(true)
     } finally {
       globalThis.fetch = original
     }

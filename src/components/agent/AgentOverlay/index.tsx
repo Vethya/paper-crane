@@ -1,11 +1,13 @@
 'use client'
 
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
+  agentDraftAtom,
+  agentConversationResumeIdAtom,
   agentOpenAtom,
   agentMessagesAtom,
   agentIsStreamingAtom,
@@ -105,7 +107,11 @@ export function AgentOverlay() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const chatIdParam = searchParams.get('chatId')
-  const prevOpenRef = useRef(false)
+  const setDraft = useSetAtom(agentDraftAtom)
+  const [conversationResumeId, setConversationResumeId] = useAtom(
+    agentConversationResumeIdAtom
+  )
+  const restoredChatId = useRef<string | null>(null)
   const requests = useRef(new AgentRequest())
   const cancelRequest = useCallback(() => {
     requests.current.cancel()
@@ -117,21 +123,51 @@ export function AgentOverlay() {
     setIsStreaming(false)
     setIsLoadingSession(false)
   }, [setIsStreaming, setMessages])
-  useEffect(() => cancelRequest, [cancelRequest, resumeId, mode])
+  useEffect(
+    () => () => {
+      cancelRequest()
+      restoredChatId.current = null
+    },
+    [cancelRequest, resumeId]
+  )
   useEffect(() => {
-    if (!open) cancelRequest()
-  }, [open, cancelRequest])
-
-  const handleClose = useCallback(() => {
+    if (conversationResumeId === resumeId) return
     cancelRequest()
-    setOpen(false)
     setMessages([])
     setSessionId(null)
+    setDraft('')
+    setConversationResumeId(resumeId)
+    // Do not restore a link that still points at the previous resume's chat.
+    if (conversationResumeId !== null && chatIdParam === sessionId) {
+      restoredChatId.current = chatIdParam
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('chatId')
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+    }
+  }, [
+    conversationResumeId,
+    resumeId,
+    cancelRequest,
+    setMessages,
+    setSessionId,
+    setDraft,
+    setConversationResumeId,
+    chatIdParam,
+    sessionId,
+    searchParams,
+    pathname,
+    router
+  ])
+
+  const handleClose = useCallback(() => {
+    setOpen(false)
     setHistoryOpen(false)
-  }, [cancelRequest, setOpen, setMessages, setSessionId, setHistoryOpen])
+  }, [setOpen, setHistoryOpen])
 
   const handleNewChat = useCallback(() => {
     cancelRequest()
+    restoredChatId.current = chatIdParam
+    setDraft('')
     setMessages([])
     setSessionId(null)
     setHistoryOpen(false)
@@ -140,6 +176,8 @@ export function AgentOverlay() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }, [
     cancelRequest,
+    chatIdParam,
+    setDraft,
     setMessages,
     setSessionId,
     setHistoryOpen,
@@ -151,6 +189,8 @@ export function AgentOverlay() {
   const handleSelectSession = useCallback(
     async (id: string) => {
       cancelRequest()
+      restoredChatId.current = id
+      setDraft('')
       const signal = requests.current.begin()
       setHistoryOpen(false)
       setIsLoadingSession(true)
@@ -172,7 +212,14 @@ export function AgentOverlay() {
         if (requests.current.isCurrent(signal)) setIsLoadingSession(false)
       }
     },
-    [cancelRequest, setHistoryOpen, setMessages, setSessionId, setMode]
+    [
+      cancelRequest,
+      setDraft,
+      setHistoryOpen,
+      setMessages,
+      setSessionId,
+      setMode
+    ]
   )
 
   // Auto-open overlay on mount if chatId is present in URL
@@ -181,13 +228,29 @@ export function AgentOverlay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // When overlay opens fresh (no active session), load the chat from URL
+  // Restore a deep link once. Reopening uses the current in-memory conversation.
   useEffect(() => {
-    const justOpened = open && !prevOpenRef.current
-    prevOpenRef.current = open
-    if (!justOpened || sessionId !== null || !chatIdParam) return
+    if (
+      !open ||
+      !chatIdParam ||
+      sessionId ||
+      messages.length ||
+      isStreaming ||
+      isLoadingSession ||
+      restoredChatId.current === chatIdParam
+    )
+      return
+    restoredChatId.current = chatIdParam
     handleSelectSession(chatIdParam)
-  }, [open, chatIdParam, sessionId, handleSelectSession])
+  }, [
+    open,
+    chatIdParam,
+    sessionId,
+    messages.length,
+    isStreaming,
+    isLoadingSession,
+    handleSelectSession
+  ])
 
   // Sync sessionId → URL
   useEffect(() => {
@@ -511,8 +574,7 @@ export function AgentOverlay() {
             })
             if (!requests.current.isCurrent(signal)) return
             setSessionId(savedId)
-            // Sync chatId to URL immediately — handleClose() will clear sessionId,
-            // so the useEffect-based sync would never fire for Tailoring mode.
+            // Keep the completed tailoring conversation linked while reviewing edits.
             const params = new URLSearchParams(searchParams.toString())
             params.set('chatId', savedId)
             router.replace(`${pathname}?${params.toString()}`, {
