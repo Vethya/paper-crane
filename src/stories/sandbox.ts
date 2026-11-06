@@ -6,7 +6,13 @@ import { resume } from './fixtures/resume'
 export function sandbox({ parameters }: StoryContext) {
   mocked(authClient.useSession).mockReturnValue(
     parameters.session ?? {
-      data: { user: { name: 'Jordan Diaz', email: 'jordan@example.com' } },
+      data: {
+        user: {
+          id: 'story-user',
+          name: 'Jordan Diaz',
+          email: 'jordan@example.com'
+        }
+      },
       isPending: false
     }
   )
