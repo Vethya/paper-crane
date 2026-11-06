@@ -112,7 +112,7 @@ export function ResumeCard({
                 }}
                 disabled={deleting}
                 aria-label={`Actions for ${title}`}
-                className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 opacity-0 transition hover:bg-app-controlHover hover:text-white focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:bg-app-controlHover data-[state=open]:text-white data-[state=open]:opacity-100"
+                className="flex h-7 w-7 items-center justify-center rounded-app-button text-slate-400 opacity-0 transition hover:bg-app-controlHover hover:text-white focus-visible:opacity-100 group-hover:opacity-100 data-[state=open]:bg-app-controlHover data-[state=open]:text-white data-[state=open]:opacity-100"
               >
                 <FiMoreVertical size={15} />
               </button>

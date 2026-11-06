@@ -59,6 +59,8 @@ GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-key
 
 The server reads the flag at runtime, so with `next start` changing it takes a restart, not a rebuild. On Vercel, env changes apply only to new deployments, so redeploy after changing it. If the flag is on and the key is missing, the server fails at startup. When the flag is off, the agent UI is hidden and the agent API routes return 404. `/api/agent/status` reports whether the flag is on.
 
+When AI is enabled, resume data and conversation messages are sent to Google Gemini. Saved chat history is stored in MongoDB in `agentSession`. AI requests allow 64,000 characters of serialized resume JSON, 32,000 per message, and 128,000 across the resume and message content, counted as Unicode code points. Older complete exchanges are left out when necessary; saved history stays intact. Warnings appear at 80% of a limit. Oversized resumes and new messages must be shortened. A separate 768,000-byte transport cap protects the server before JSON parsing. Chat output is capped at 2,048 tokens; editing and its single repair attempt each allow 8,192. Incomplete edits are never applied.
+
 The generator route sends the headers required by WebAssembly threading (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`).
 
 ## Templates

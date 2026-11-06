@@ -85,6 +85,7 @@ module.exports = {
         'app-button': '0.5rem',
         'app-card': '0.75rem',
         'app-panel': '0.875rem',
+        'app-small': '0.25rem',
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)'
