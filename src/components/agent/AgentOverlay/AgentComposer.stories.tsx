@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { fn } from 'storybook/test'
+import { expect, fn, fireEvent } from 'storybook/test'
 import { seeded } from '@/stories/seed'
 import { AgentComposer } from './AgentComposer'
 
@@ -17,3 +17,65 @@ export const Chat: Story = {}
 export const Feedback: Story = { parameters: { state: { mode: 'Feedback' } } }
 export const Tailoring: Story = { parameters: { state: { mode: 'Tailoring' } } }
 export const Streaming: Story = { parameters: { state: { streaming: true } } }
+
+export const MessageLimits: Story = {
+  play: async ({ canvas, args }) => {
+    const input = canvas.getByRole('textbox', { name: 'Message' })
+    const send = canvas.getByRole('button', { name: 'Send message' })
+    await expect(canvas.queryByRole('status')).not.toBeInTheDocument()
+    fireEvent.change(input, { target: { value: 'x'.repeat(25_600) } })
+    await expect(canvas.getByRole('status')).toHaveTextContent(
+      '25,600 / 32,000 characters'
+    )
+    fireEvent.change(input, { target: { value: 'x'.repeat(32_001) } })
+    await expect(send).toBeDisabled()
+    fireEvent.keyDown(input, { key: 'Enter' })
+    await expect(args.onSend).not.toHaveBeenCalled()
+    fireEvent.change(input, { target: { value: 'x'.repeat(32_000) } })
+    await expect(send).toBeEnabled()
+    fireEvent.change(input, { target: { value: 'Short again' } })
+    await expect(canvas.queryByRole('status')).not.toBeInTheDocument()
+  }
+}
+export const ResumeNearLimit: Story = {
+  parameters: { state: { form: { basics: { name: 'x'.repeat(52_000) } } } },
+  play: async ({ canvas }) => {
+    await expect(canvas.getByRole('status')).toHaveTextContent(
+      "Your current resume is included in this chat for context. It's close to the size limit: 52,022 / 64,000 characters. 11,978 characters remaining."
+    )
+  }
+}
+export const ResumeOverLimit: Story = {
+  parameters: { state: { form: { basics: { name: 'x'.repeat(64_000) } } } },
+  play: async ({ canvas, userEvent }) => {
+    await expect(canvas.getByRole('status')).toHaveTextContent(
+      'Return to the resume editor and shorten some descriptions.'
+    )
+    await userEvent.type(canvas.getByRole('textbox'), 'Review my resume')
+    await expect(
+      canvas.getByRole('button', { name: 'Send message' })
+    ).toBeDisabled()
+  }
+}
+export const ContextNearLimit: Story = {
+  parameters: {
+    state: {
+      messages: Array.from({ length: 4 }, (_, i) => ({
+        id: String(i),
+        role: i % 2 ? 'assistant' : 'user',
+        content: 'x'.repeat(26_000)
+      }))
+    }
+  }
+}
+export const ContextTrimmed: Story = {
+  parameters: {
+    state: {
+      messages: Array.from({ length: 6 }, (_, i) => ({
+        id: String(i),
+        role: i % 2 ? 'assistant' : 'user',
+        content: 'x'.repeat(26_000)
+      }))
+    }
+  }
+}

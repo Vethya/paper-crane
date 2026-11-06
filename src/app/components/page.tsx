@@ -212,7 +212,7 @@ function ComponentsContent() {
             {Array.from({ length: 6 }).map((_, i) => (
               <div
                 key={i}
-                className="h-32 animate-pulse rounded-lg border border-app-border bg-app-surface"
+                className="h-32 animate-pulse rounded-app-button border border-app-border bg-app-surface"
               />
             ))}
           </div>

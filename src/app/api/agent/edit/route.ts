@@ -7,6 +7,7 @@ import { TAILORING_SYSTEM_PROMPT } from '../../../../constants/prompts.constants
 import { aiDisabledResponse } from '@/lib/aiFeatures'
 import { parseBody } from '@/lib/apiValidation'
 import { AgentEditSchema } from '@/lib/apiSchemas'
+import { editLimitMessage } from '@/lib/agentLimits'
 
 // Ensure the env var is validated at startup via src/env.ts
 import '../../../../env'
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data, error } = await parseBody(request, AgentEditSchema)
+  const { data, error } = await parseBody(request, AgentEditSchema, 768_000)
   if (error) return error
   const { messages, resumeData } = data
 
@@ -141,25 +142,36 @@ export async function POST(request: NextRequest) {
   const system = `${TAILORING_SYSTEM_PROMPT}\n\n## User's current resume\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`
 
   try {
-    const { output } = await generateText({
+    const result = await generateText({
       model,
+      maxOutputTokens: 8192,
       output: Output.object({ schema: AgentEditResponseSchema }),
       system,
       messages: messages.map(({ role, content }) => ({ role, content }))
     })
 
+    if (result.finishReason === 'length')
+      return NextResponse.json({ error: editLimitMessage }, { status: 422 })
+    const { output } = result
     console.log('[agent/edit] Generated edits:', {
       editCount: output.edits.length
     })
     return NextResponse.json(output)
   } catch (err) {
+    if (
+      NoObjectGeneratedError.isInstance(err) &&
+      err.finishReason === 'length'
+    ) {
+      return NextResponse.json({ error: editLimitMessage }, { status: 422 })
+    }
     if (NoObjectGeneratedError.isInstance(err)) {
       console.warn(
         '[agent/edit] Schema validation failed, attempting repair...'
       )
       try {
-        const { output: repaired } = await generateText({
+        const repair = await generateText({
           model,
+          maxOutputTokens: 8192,
           output: Output.object({ schema: AgentEditResponseSchema }),
           prompt: [
             'The following JSON was generated but failed schema validation:',
@@ -170,11 +182,20 @@ export async function POST(request: NextRequest) {
           ].join('\n\n')
         })
 
+        if (repair.finishReason === 'length')
+          return NextResponse.json({ error: editLimitMessage }, { status: 422 })
+        const { output: repaired } = repair
         console.log('[agent/edit] Repair successful:', {
           editCount: repaired.edits.length
         })
         return NextResponse.json(repaired)
       } catch (repairErr) {
+        if (
+          NoObjectGeneratedError.isInstance(repairErr) &&
+          repairErr.finishReason === 'length'
+        ) {
+          return NextResponse.json({ error: editLimitMessage }, { status: 422 })
+        }
         console.error('[agent/edit] Repair failed:', repairErr)
       }
     }

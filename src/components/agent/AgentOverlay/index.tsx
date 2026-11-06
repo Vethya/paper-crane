@@ -27,6 +27,7 @@ import {
   type PendingEdit
 } from '../../../atoms/agentEdits'
 import { authClient } from '../../../db/auth-client'
+import { prepareAgentMessages } from '../../../lib/agentLimits'
 import { MOCK_EDIT_RESPONSE } from '../../../lib/agentMock'
 import { AgentOverlayHeader } from './AgentOverlayHeader'
 import { AgentMessageList } from './AgentMessageList'
@@ -36,21 +37,6 @@ import { AgentHistoryDialog } from '../AgentHistory/AgentHistoryDialog'
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function buildResumeContextMessages(resumeData: object): AgentMessage[] {
-  return [
-    {
-      id: 'ctx-resume',
-      role: 'user',
-      content: `Here is my current resume data in JSON format. Please use this as context for our conversation:\n\n<resume>\n${JSON.stringify(resumeData, null, 2)}\n</resume>`
-    },
-    {
-      id: 'ctx-ack',
-      role: 'assistant',
-      content: "I've reviewed your resume. How can I help you?"
-    }
-  ]
-}
 
 function getValueAtPath(
   data: unknown,
@@ -210,20 +196,29 @@ export function AgentOverlay() {
       setMessages([...nextMessages, assistantMessage])
       setIsStreaming(true)
 
-      const apiMessages = [
-        ...buildResumeContextMessages(formData ?? {}),
-        ...nextMessages
-      ]
+      const { messages: apiMessages } = prepareAgentMessages(
+        formData ?? {},
+        nextMessages
+      )
       let finalContent = ''
 
       try {
         const res = await fetch('/api/agent/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages: apiMessages, mode })
+          body: JSON.stringify({
+            messages: apiMessages,
+            mode,
+            resumeData: formData ?? {}
+          })
         })
 
-        if (!res.ok || !res.body) throw new Error('Stream request failed')
+        if (!res.ok)
+          throw new Error(
+            (await res.json()).error ??
+              'Something went wrong. Please try again.'
+          )
+        if (!res.body) throw new Error('Stream request failed')
 
         const reader = res.body.getReader()
         const decoder = new TextDecoder()
@@ -243,7 +238,10 @@ export function AgentOverlay() {
         }
       } catch (err) {
         console.error('[AgentOverlay] Stream error:', err)
-        finalContent = 'Something went wrong. Please try again.'
+        finalContent =
+          err instanceof Error
+            ? err.message
+            : 'Something went wrong. Please try again.'
         setMessages((prev) => {
           const updated = [...prev]
           updated[updated.length - 1] = {
@@ -351,14 +349,15 @@ export function AgentOverlay() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              messages: nextMessages.map(({ role, content }) => ({
-                role,
-                content
-              })),
+              messages: prepareAgentMessages(snapshot, nextMessages).messages,
               resumeData: snapshot
             })
           })
-          if (!res.ok) throw new Error('Edit request failed')
+          if (!res.ok)
+            throw new Error(
+              (await res.json()).error ??
+                'Something went wrong. Please try again.'
+            )
           data = (await res.json()) as typeof data
         }
 
@@ -497,7 +496,9 @@ export function AgentOverlay() {
         const errorMessage: AgentMessage = {
           ...thinkingMessage,
           content:
-            'Something went wrong while tailoring your resume. Please try again.',
+            err instanceof Error
+              ? err.message
+              : 'Something went wrong while tailoring your resume. Please try again.',
           error: true
         }
         setMessages([...nextMessages, errorMessage])

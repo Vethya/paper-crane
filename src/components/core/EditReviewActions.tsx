@@ -19,7 +19,7 @@ export function EditReviewActions({ reason, onKeep, onRestore }: Props) {
           type="button"
           onClick={onKeep}
           title="Keep this change"
-          className="flex h-7 items-center gap-1 rounded-md bg-app-control px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
+          className="flex h-7 items-center gap-1 rounded-app-button bg-app-control px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
         >
           <Check className="h-3 w-3" aria-hidden="true" />
           Keep
@@ -28,7 +28,7 @@ export function EditReviewActions({ reason, onKeep, onRestore }: Props) {
           type="button"
           onClick={onRestore}
           title="Restore the original value"
-          className="flex h-7 items-center gap-1 rounded-md px-2.5 text-xs font-medium text-slate-400 transition-colors hover:bg-app-control hover:text-white"
+          className="flex h-7 items-center gap-1 rounded-app-button px-2.5 text-xs font-medium text-slate-400 transition-colors hover:bg-app-control hover:text-white"
         >
           <RotateCcw className="h-3 w-3" aria-hidden="true" />
           Restore

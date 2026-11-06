@@ -23,11 +23,32 @@ type ParsedBody<T> =
  */
 export async function parseBody<S extends z.ZodType>(
   request: Request,
-  schema: S
+  schema: S,
+  maxBytes?: number
 ): Promise<ParsedBody<z.output<S>>> {
   let body: unknown
   try {
-    body = await request.json()
+    if (maxBytes && request.body) {
+      const reader = request.body.getReader()
+      const chunks: Uint8Array[] = []
+      let size = 0
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        size += value.byteLength
+        if (size > maxBytes) {
+          void reader.cancel().catch(() => {})
+          return {
+            error: NextResponse.json(
+              { error: 'Request is too large' },
+              { status: 413 }
+            )
+          }
+        }
+        chunks.push(value)
+      }
+      body = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+    } else body = await request.json()
   } catch {
     return { error: badRequest('Invalid JSON body') }
   }
