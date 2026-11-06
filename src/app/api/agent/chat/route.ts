@@ -20,9 +20,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { data, error } = await parseBody(request, AgentChatSchema)
+  const { data, error } = await parseBody(request, AgentChatSchema, 768_000)
   if (error) return error
-  const { messages, mode } = data
+  const { messages, mode, resumeData } = data
 
   const modelMessages: ModelMessage[] = messages.map(({ role, content }) => ({
     role,
@@ -36,7 +36,15 @@ export async function POST(request: NextRequest) {
     system:
       SYSTEM_PROMPTS[mode as Exclude<AgentMode, 'Tailoring'>] ??
       SYSTEM_PROMPTS.Chat,
-    messages: modelMessages
+    maxOutputTokens: 2048,
+    messages: [
+      {
+        role: 'user',
+        content: `Current resume: ${JSON.stringify(resumeData)}`
+      },
+      { role: 'assistant', content: 'I will use this resume as context.' },
+      ...modelMessages
+    ]
   })
 
   // Use fullStream to detect errors — textStream silently swallows them.
@@ -53,6 +61,10 @@ export async function POST(request: NextRequest) {
       if (part.type === 'error') {
         throw part.error
       }
+      if (part.type === 'finish' && part.finishReason === 'length')
+        firstChunks.push(
+          'Reply reached its length limit. Ask a narrower question for more detail.'
+        )
       if (part.type === 'text-delta') {
         firstChunks.push(part.text)
         break
@@ -86,6 +98,12 @@ export async function POST(request: NextRequest) {
           if (cancelled) return
           if (part.type === 'text-delta') {
             controller.enqueue(encoder.encode(part.text))
+          } else if (part.type === 'finish' && part.finishReason === 'length') {
+            controller.enqueue(
+              encoder.encode(
+                '\n\nReply reached its length limit. Ask a narrower question for more detail.'
+              )
+            )
           } else if (part.type === 'error') {
             console.error('[agent/chat] Stream error:', part.error)
             break

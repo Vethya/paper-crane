@@ -285,14 +285,14 @@ export function ComponentsPanel({
             {Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={index}
-                className="h-32 animate-pulse rounded-lg border border-app-border bg-app-surface"
+                className="h-32 animate-pulse rounded-app-button border border-app-border bg-app-surface"
               />
             ))}
           </div>
         )}
 
         {!loading && activeComponents.length === 0 && (
-          <div className="rounded-lg border border-dashed border-app-controlBorder px-5 py-10 text-center">
+          <div className="rounded-app-button border border-dashed border-app-controlBorder px-5 py-10 text-center">
             <p className="mb-4 text-sm text-slate-400">
               No {componentMeta[activeType].pluralLabel.toLowerCase()} saved
               yet.
