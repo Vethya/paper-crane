@@ -3,8 +3,9 @@ import { auth } from '@/lib/auth'
 import { connectDB } from '@/db'
 import { AgentSession } from '@/db/models/agentSession'
 import { Resume } from '@/db/models/resume'
-import type { AgentMode, AgentMessage } from '@/atoms/agentAtom'
 import { aiDisabledResponse } from '@/lib/aiFeatures'
+import { invalidId, parseBody } from '@/lib/apiValidation'
+import { SaveAgentSessionSchema } from '@/lib/apiSchemas'
 
 export async function GET(request: NextRequest) {
   const disabled = aiDisabledResponse()
@@ -19,6 +20,8 @@ export async function GET(request: NextRequest) {
   if (!resumeId) {
     return NextResponse.json({ error: 'resumeId is required' }, { status: 400 })
   }
+  const badId = invalidId(resumeId)
+  if (badId) return badId
 
   await connectDB()
 
@@ -54,16 +57,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { resumeId, sessionId, mode, messages } = (await request.json()) as {
-    resumeId: string
-    sessionId: string | null
-    mode: AgentMode
-    messages: AgentMessage[]
-  }
-
-  if (!resumeId) {
-    return NextResponse.json({ error: 'resumeId is required' }, { status: 400 })
-  }
+  const { data, error } = await parseBody(request, SaveAgentSessionSchema)
+  if (error) return error
+  const { resumeId, sessionId, mode, messages } = data
 
   await connectDB()
 

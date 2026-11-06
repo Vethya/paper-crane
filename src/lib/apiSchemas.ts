@@ -1,7 +1,11 @@
+import mongoose from 'mongoose'
 import { z } from 'zod'
 import { TAG_COLORS } from './tagColors'
 
 const nonEmpty = z.string().trim().min(1, 'must not be empty')
+const objectId = z
+  .string()
+  .refine((id) => mongoose.Types.ObjectId.isValid(id), 'Invalid ID format')
 
 // Imported JSON Resume files may hold numbers or nulls in text fields.
 // Mongoose stores those as strings, so accept them as before.
@@ -93,6 +97,41 @@ export const CreateTagSchema = z.object({
 export const UpdateTagSchema = z.object({
   name: nonEmpty.optional(),
   color: TagColorSchema.optional()
+})
+
+/** The form values that the LaTeX source ZIP is built from. */
+export const SourceZipSchema = ResumeContentSchema.extend({
+  selectedTemplate: z.number().int()
+})
+
+const AgentModeSchema = z.enum(['Chat', 'Feedback', 'Tailoring'])
+
+const ChatMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string()
+})
+
+export const AgentChatSchema = z.object({
+  messages: z.array(ChatMessageSchema),
+  mode: AgentModeSchema
+})
+
+export const AgentEditSchema = z.object({
+  messages: z.array(ChatMessageSchema),
+  resumeData: z.record(z.string(), z.unknown())
+})
+
+export const SaveAgentSessionSchema = z.object({
+  resumeId: objectId,
+  sessionId: objectId.nullish(),
+  mode: AgentModeSchema,
+  // The session model requires a non-empty id and content.
+  messages: z.array(
+    ChatMessageSchema.extend({
+      id: z.string().min(1),
+      content: z.string().min(1)
+    })
+  )
 })
 
 /** Component type and content are checked by the resumeComponents helpers. */
