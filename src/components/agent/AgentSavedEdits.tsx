@@ -2,7 +2,11 @@
 
 import { useAtomValue, useSetAtom } from 'jotai'
 import { useEffect, useState } from 'react'
-import { agentOpenAtom, agentResumeIdAtom } from '@/atoms/agentAtom'
+import {
+  agentIsStreamingAtom,
+  agentOpenAtom,
+  agentResumeIdAtom
+} from '@/atoms/agentAtom'
 import {
   agentEditSummaryAtom,
   agentFocusedEditIdAtom,
@@ -42,6 +46,8 @@ const button =
 export function AgentSavedEdits() {
   const resumeId = useAtomValue(agentResumeIdAtom)
   const open = useAtomValue(agentOpenAtom)
+  // The user's own tailoring applies its result itself when it finishes.
+  const streaming = useAtomValue(agentIsStreamingAtom)
   const reviewing = useAtomValue(agentPendingEditsAtom).some(
     (e) => e.status === 'pending'
   )
@@ -67,27 +73,38 @@ export function AgentSavedEdits() {
     !!resumeId &&
     loadedResumeId === resumeId &&
     !open &&
+    !streaming &&
     !reviewing &&
     !reviewTarget &&
     !marking
 
-  // Check again whenever the overlay closes or a review ends.
+  // Check again whenever the overlay closes or a review ends. Checks stop
+  // while not idle, such as while the overlay is open.
   useEffect(() => {
     if (!idle) return
     let current = true
     let timer: ReturnType<typeof setTimeout> | undefined
+    const checkAgain = () => {
+      if (current) timer = setTimeout(() => setChecks((n) => n + 1), 3000)
+    }
     fetch(`/api/agent/sessions?resumeId=${resumeId}`)
-      .then((res) => (res.ok ? res.json() : []))
+      .then((res) => {
+        if (!res.ok) throw new Error(`Load failed with status ${res.status}`)
+        return res.json()
+      })
       .then((list: Listed[]) => {
         const ready = list.find((s) => s.pendingEdits?.status === 'ready')
         if (!current) return
         setConflicts(null)
         setSaved(ready ? { id: ready._id, ...ready.pendingEdits! } : null)
         // A reply that is still running may finish while the user is here.
-        if (list.some((s) => isGenerating(s.generatingSince)))
-          timer = setTimeout(() => setChecks((n) => n + 1), 3000)
+        if (list.some((s) => isGenerating(s.generatingSince))) checkAgain()
       })
-      .catch((err) => console.error('[AgentSavedEdits] Load error:', err))
+      .catch((err) => {
+        console.error('[AgentSavedEdits] Load error:', err)
+        // A failed check says nothing about the results, so try again.
+        checkAgain()
+      })
     return () => {
       current = false
       clearTimeout(timer)
