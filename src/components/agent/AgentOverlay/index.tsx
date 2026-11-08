@@ -581,7 +581,11 @@ export function AgentOverlay() {
               console.error('[AgentOverlay] Session save error:', err)
             )
           else
-            setReviewTarget({ sessionId: savedId, replyId: thinkingMessage.id })
+            setReviewTarget({
+              resumeId: resumeId!,
+              sessionId: savedId,
+              replyId: thinkingMessage.id
+            })
           // Keep the completed tailoring conversation linked while reviewing edits.
           const params = new URLSearchParams(searchParams.toString())
           params.set('chatId', savedId)

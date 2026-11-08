@@ -71,7 +71,7 @@ export function useAutoSave(
       clearDraft(browserStorage, resumeId)
       // Only a saved resume holds the decisions, so only now is the review done.
       // A result with no usable edits is done too, or it would never be marked.
-      if (reviewTarget) {
+      if (reviewTarget?.resumeId === resumeId) {
         void markAgentEdits(
           reviewTarget.sessionId,
           reviewTarget.replyId,
@@ -91,6 +91,13 @@ export function useAutoSave(
     reviewTarget,
     setReviewTarget
   ])
+
+  // A result under review belongs to one resume. Another resume's saves
+  // must never mark it, so drop it once a different resume is open.
+  useEffect(() => {
+    if (reviewTarget && resumeId && reviewTarget.resumeId !== resumeId)
+      setReviewTarget(null)
+  }, [reviewTarget, resumeId, setReviewTarget])
 
   return saveState
 }

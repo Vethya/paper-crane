@@ -43,8 +43,9 @@ export const agentFocusedEditIdAtom = atom<string | null>(null)
 agentFocusedEditIdAtom.debugLabel = 'agentFocusedEditIdAtom'
 
 // The saved tailoring result under review. It is marked reviewed on the
-// server only once the resume holds the user's decisions.
+// server only once its resume holds the user's decisions.
 export const agentReviewTargetAtom = atom<{
+  resumeId: string
   sessionId: string
   replyId: string
 } | null>(null)
