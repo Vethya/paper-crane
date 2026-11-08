@@ -30,3 +30,7 @@ agentResumeIdAtom.debugLabel = 'agentResumeIdAtom'
 
 export const agentHistoryOpenAtom = atom(false)
 agentHistoryOpenAtom.debugLabel = 'agentHistoryOpenAtom'
+
+// Keep the draft and conversation owner while the overlay is hidden.
+export const agentDraftAtom = atom('')
+export const agentConversationResumeIdAtom = atom<string | null>(null)
