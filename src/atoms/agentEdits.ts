@@ -1,4 +1,5 @@
 import { atom } from 'jotai'
+import type { ReviewTarget } from '@/lib/markAgentEdits'
 
 export type FieldEdit = {
   id: string
@@ -41,3 +42,9 @@ agentEditSummaryAtom.debugLabel = 'agentEditSummaryAtom'
 // Tracks which pending edit the user is currently reviewing
 export const agentFocusedEditIdAtom = atom<string | null>(null)
 agentFocusedEditIdAtom.debugLabel = 'agentFocusedEditIdAtom'
+
+// The saved tailoring result under review. It is marked reviewed on the
+// server only once its resume holds the user's decisions.
+// It stays set until that request has finished.
+export const agentReviewTargetAtom = atom<ReviewTarget | null>(null)
+agentReviewTargetAtom.debugLabel = 'agentReviewTargetAtom'

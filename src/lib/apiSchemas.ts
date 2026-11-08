@@ -130,6 +130,9 @@ const AgentRequestSchema = z.object({
       })
     )
     .min(1),
+  // With both set, the server saves the reply even if the browser disconnects.
+  sessionId: objectId.optional(),
+  replyId: z.string().min(1).optional(),
   resumeData: z
     .record(z.string(), z.unknown())
     .refine(
@@ -155,9 +158,15 @@ export const SaveAgentSessionSchema = z.object({
   messages: z.array(
     ChatMessageSchema.extend({
       id: z.string().min(1),
-      content: z.string().min(1)
+      content: z.string().min(1),
+      error: z.boolean().optional()
     })
   )
+})
+
+export const UpdateAgentSessionSchema = z.object({
+  replyId: z.string().min(1).nullable(),
+  pendingEdits: z.enum(['applied', 'dismissed'])
 })
 
 /** Component type and content are checked by the resumeComponents helpers. */
