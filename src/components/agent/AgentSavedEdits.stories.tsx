@@ -74,7 +74,8 @@ export const Ready: Story = {
     ).resolves.toBeInTheDocument()
     await settled(canvasElement)
     await expect(canvas.queryByText(/Tailoring finished/)).toBeNull()
-    await expect(patches).toEqual([{ pendingEdits: 'applied' }])
+    // Marked only once the resume holds the decisions, which needs a save.
+    await expect(patches).toEqual([])
   }
 }
 
@@ -90,7 +91,8 @@ export const Conflict: Story = {
       canvas.findByText('1 change to review')
     ).resolves.toBeInTheDocument()
     await settled(canvasElement)
-    await expect(patches).toEqual([{ pendingEdits: 'applied' }])
+    // Marked only once the resume holds the decisions, which needs a save.
+    await expect(patches).toEqual([])
   }
 }
 
@@ -117,7 +119,9 @@ export const Dismiss: Story = {
       expect(canvas.queryByText(/Tailoring finished/)).toBeNull()
     )
     await expect(canvas.queryByText(/to review/)).toBeNull()
-    await expect(patches).toEqual([{ pendingEdits: 'dismissed' }])
+    await expect(patches).toEqual([
+      { replyId: null, pendingEdits: 'dismissed' }
+    ])
   }
 }
 
