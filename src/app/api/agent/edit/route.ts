@@ -171,6 +171,7 @@ async function saveTailoring(
   if (!response.ok) return finishReply(target, body.error, true)
   await finishReply(target, tailoringDoneMessage(body.summary), false, {
     pendingEdits: {
+      replyId: target.replyId,
       summary: body.summary,
       edits: toStoredEdits(resume, body.edits as ModelEdit[]),
       status: 'ready'

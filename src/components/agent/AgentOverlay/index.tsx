@@ -71,11 +71,15 @@ function withFailedReply(messages: AgentMessage[]): AgentMessage[] {
 }
 
 /** Records that saved tailoring results were opened for review. */
-const markEdits = (id: string, status: 'applied' | 'dismissed') =>
+const markEdits = (
+  id: string,
+  replyId: string,
+  status: 'applied' | 'dismissed'
+) =>
   fetch(`/api/agent/sessions/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pendingEdits: status })
+    body: JSON.stringify({ replyId, pendingEdits: status })
   }).catch((err) => console.error('[AgentOverlay] Mark edits error:', err))
 
 async function saveSession({
@@ -586,7 +590,7 @@ export function AgentOverlay() {
             }).catch((err) =>
               console.error('[AgentOverlay] Session save error:', err)
             )
-          else void markEdits(savedId, 'applied')
+          else void markEdits(savedId, thinkingMessage.id, 'applied')
           // Keep the completed tailoring conversation linked while reviewing edits.
           const params = new URLSearchParams(searchParams.toString())
           params.set('chatId', savedId)

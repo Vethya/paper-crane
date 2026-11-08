@@ -165,6 +165,7 @@ export const SaveAgentSessionSchema = z.object({
 })
 
 export const UpdateAgentSessionSchema = z.object({
+  replyId: z.string().min(1).nullable(),
   pendingEdits: z.enum(['applied', 'dismissed'])
 })
 
