@@ -3,7 +3,7 @@
 import dynamic from 'next/dynamic'
 import { useRef, useState, Suspense, useEffect, useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useSetAtom } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import { Form } from '../../components/generator/Form'
 import { Header } from '../../components/generator/Header'
 import {
@@ -22,12 +22,13 @@ import { Blocks } from 'lucide-react'
 import type { ResumeComponentType } from '@/lib/resumeComponents'
 import { useIsHydrated } from '@/hooks/useIsHydrated'
 import { useAiFeaturesEnabled } from '@/hooks/useAiFeaturesEnabled'
-import { resumeAtom } from '../../atoms/resume'
+import { resumeAtom, loadedResumeIdAtom } from '../../atoms/resume'
+import { FormSkeleton } from '@/components/ui/skeleton'
 import { hasPdfUrlViewers } from '../../lib/pdfBuffer'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
-  { ssr: false }
+  { ssr: false, loading: () => <FormSkeleton /> }
 )
 
 // Loaded only when AI is on, so the hosted bundle skips the agent code.
@@ -70,7 +71,7 @@ function getValidSection(section: string | null) {
 
 export default function GeneratorPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<FormSkeleton />}>
       <GeneratorContent />
     </Suspense>
   )
@@ -89,6 +90,7 @@ function GeneratorContent() {
   const [isDesktopLayout, setIsDesktopLayout] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
   const resumeId = searchParams.get('id')
+  const loadedResumeId = useAtomValue(loadedResumeIdAtom)
   const { data: session, isPending } = authClient.useSession()
   const showRedirectDialog = !isPending && !!session && !resumeId
   const setAgentResumeId = useSetAtom(agentResumeIdAtom)
@@ -222,7 +224,9 @@ function GeneratorContent() {
               <PrimaryButton
                 type="submit"
                 form="resume-form"
-                disabled={!isHydrated}
+                disabled={
+                  !isHydrated || (!!resumeId && loadedResumeId !== resumeId)
+                }
                 className="w-full"
                 onClick={() =>
                   previewRef.current?.scrollIntoView({ behavior: 'smooth' })

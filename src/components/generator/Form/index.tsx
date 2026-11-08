@@ -2,9 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { isCancelledError, useQueryClient } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { authClient } from '@/db/auth-client'
+import { loadResume } from '@/lib/resumeCache'
 import { FormProvider, useForm } from 'react-hook-form'
 import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai'
-import { Loader2 } from 'lucide-react'
+import { FormSkeleton } from '@/components/ui/skeleton'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { ProfileSection } from './sections/ProfileSection'
 import { EducationSection } from './sections/EducationSection'
@@ -74,6 +78,11 @@ export function Form({
   const searchParams = useSearchParams()
   const currSection = activeSection
   const resumeId = searchParams.get('id')
+  const client = useQueryClient()
+  const account = useQueryAccount()
+  const { isPending: sessionPending } = authClient.useSession()
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadAttempt, setLoadAttempt] = useState(0)
 
   const store = useStore()
   const [, setResume] = useAtom(resumeAtom)
@@ -83,7 +92,7 @@ export function Form({
   const setFormSetValue = useSetAtom(formSetValueAtom)
   const markBuilt = useSetAtom(markBuiltAtom)
   const setResumeTitle = useSetAtom(resumeTitleAtom)
-  const setLoadedResumeId = useSetAtom(loadedResumeIdAtom)
+  const [loadedResumeId, setLoadedResumeId] = useAtom(loadedResumeIdAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
   const autoRender = useAtomValue(autoRenderAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
@@ -170,12 +179,18 @@ export function Form({
 
     async function loadData() {
       setRecovery(null)
+      setLoadError(null)
       if (resumeId) {
         setIsLoadingResume(true)
+        if (sessionPending) return
         try {
-          const res = await fetch(`/api/resumes/${resumeId}`)
-          if (!res.ok) return
-          const data = await res.json()
+          if (!account) return setLoadError('Sign in to open this resume.')
+          const data = await loadResume(
+            client,
+            account,
+            resumeId,
+            !!readDraft(browserStorage, resumeId)
+          )
           if (cancelled) return
           const content = data.content as FormValues
           // Offer back edits the server never confirmed, else drop the backup.
@@ -194,6 +209,11 @@ export function Form({
           owner.ready = true
           loaded = content
           renderLoaded()
+        } catch (error) {
+          if (cancelled) return
+          // A save or tag change cancels this read, so start it again.
+          if (isCancelledError(error)) setLoadAttempt((attempt) => attempt + 1)
+          else setLoadError('Unable to load resume.')
         } finally {
           if (!cancelled) setIsLoadingResume(false)
         }
@@ -235,7 +255,11 @@ export function Form({
     setResumeTitle,
     setIsLoadingResume,
     generateAndSetResume,
-    owner
+    owner,
+    client,
+    account,
+    sessionPending,
+    loadAttempt
   ])
 
   useEffect(() => {
@@ -337,10 +361,19 @@ export function Form({
         method="post"
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
-        {isLoadingResume ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        {loadError ? (
+          <div role="alert" className="p-6 text-sm text-red-400">
+            {loadError}{' '}
+            <button
+              type="button"
+              className="underline"
+              onClick={() => setLoadAttempt((attempt) => attempt + 1)}
+            >
+              Retry
+            </button>
           </div>
+        ) : resumeId && (isLoadingResume || loadedResumeId !== resumeId) ? (
+          <FormSkeleton />
         ) : (
           <>
             {recovery && (

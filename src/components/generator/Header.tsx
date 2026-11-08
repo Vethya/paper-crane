@@ -10,10 +10,12 @@ import { LibraryNav } from '../library/LibraryNav'
 import { authClient } from '@/db/auth-client'
 import { useAtom, useAtomValue } from 'jotai'
 import { formDataAtom } from '@/atoms/formData'
-import { resumeTitleAtom } from '@/atoms/resume'
+import { resumeTitleAtom, loadedResumeIdAtom } from '@/atoms/resume'
+import { Skeleton } from '@/components/ui/skeleton'
 import { agentPendingEditsAtom } from '@/atoms/agentEdits'
 import { TagPicker } from './TagPicker'
 import { useAutoSave } from '@/hooks/useAutoSave'
+import { usePatchResume } from '@/hooks/useResumeSaver'
 import {
   applyTheme,
   getStoredTheme,
@@ -257,6 +259,8 @@ function SaveStatus({
 }
 
 function ResumeTitle({ resumeId }: { resumeId: string }) {
+  const loadedId = useAtomValue(loadedResumeIdAtom)
+  const patchResume = usePatchResume()
   const [title, setTitle] = useAtom(resumeTitleAtom)
   const [draft, setDraft] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -280,15 +284,16 @@ function ResumeTitle({ resumeId }: { resumeId: string }) {
     const previous = title
     const version = ++renameVersion.current
     setTitle(next)
-    const res = await fetch(`/api/resumes/${resumeId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: next })
-    }).catch(() => null)
-    if (!res?.ok && renameVersion.current === version) {
+    const accepted = await patchResume(
+      resumeId,
+      JSON.stringify({ title: next })
+    ).catch(() => false)
+    if (!accepted && renameVersion.current === version) {
       setTitle((current) => (current === next ? previous : current))
     }
   }
+
+  if (loadedId !== resumeId) return <Skeleton className="h-5 w-32" />
 
   if (draft !== null)
     return (

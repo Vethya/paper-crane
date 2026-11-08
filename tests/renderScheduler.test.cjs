@@ -378,6 +378,11 @@ function formHarness() {
       },
       'react/jsx-runtime': { jsx() {}, jsxs() {} },
       'next/navigation': { useSearchParams: () => ({ get: () => null }) },
+      '@tanstack/react-query': { useQueryClient: () => ({}) },
+      '@/components/providers/QueryProvider': { useQueryAccount: () => null },
+      '@/db/auth-client': {
+        authClient: { useSession: () => ({ isPending: false }) }
+      },
       'react-hook-form': { useForm: () => form },
       jotai: {
         useStore: () => store,

@@ -3,7 +3,7 @@ import { expect, waitFor } from 'storybook/test'
 import { useState } from 'react'
 import { useAtom } from 'jotai'
 import { useHydrateAtoms } from 'jotai/utils'
-import { resumeTitleAtom } from '@/atoms/resume'
+import { resumeTitleAtom, loadedResumeIdAtom } from '@/atoms/resume'
 import { Header } from './Header'
 
 const meta = {
@@ -31,7 +31,10 @@ export const Library: Story = {
 }
 
 function RenameHarness() {
-  useHydrateAtoms([[resumeTitleAtom, 'Original resume']])
+  useHydrateAtoms([
+    [resumeTitleAtom, 'Original resume'],
+    [loadedResumeIdAtom, 'jordan']
+  ])
   const [title, setTitle] = useAtom(resumeTitleAtom)
   const [showHeader, setShowHeader] = useState(true)
 
@@ -111,7 +114,13 @@ export const EarlierFailedRename: Story = {
         )
       }
       await waitFor(() => expect(requests).toHaveLength(2))
-      requests[1](new Response(null, { status: 200 }))
+      requests[1](
+        Response.json({
+          _id: 'jordan',
+          title: 'Latest rename',
+          updatedAt: new Date().toISOString()
+        })
+      )
       await new Promise(requestAnimationFrame)
       requests[0](new Response(null, { status: 503 }))
       await new Promise(requestAnimationFrame)

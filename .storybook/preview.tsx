@@ -1,5 +1,6 @@
 import type { Preview } from '@storybook/nextjs-vite'
 import { Provider } from 'jotai'
+import { QueryProvider } from '../src/components/providers/QueryProvider'
 import { Geist } from 'next/font/google'
 import { sb } from 'storybook/test'
 import { sandbox } from '../src/stories/sandbox'
@@ -46,7 +47,9 @@ export default {
     (Story, { id, globals }) => (
       <Provider key={id}>
         <Theme theme={globals.theme === 'light' ? 'light' : 'dark'}>
-          <Story />
+          <QueryProvider>
+            <Story />
+          </QueryProvider>
         </Theme>
       </Provider>
     )
