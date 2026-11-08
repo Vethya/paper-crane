@@ -93,3 +93,11 @@ export function agentWarnings(
     )
   return { warnings, blocked }
 }
+
+// A reply still marked as generating after this long has failed on the server.
+export const REPLY_TIMEOUT_MS = 90_000
+export const isGenerating = (generatingSince?: string | Date | null) =>
+  !!generatingSince &&
+  Date.now() - new Date(generatingSince).getTime() < REPLY_TIMEOUT_MS
+export const failedReplyMessage =
+  'This reply could not be generated. Please try again.'

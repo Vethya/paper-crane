@@ -71,10 +71,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const visibleMessages = messages.map(({ id, role, content }) => ({
+  const visibleMessages = messages.map(({ id, role, content, error }) => ({
     id,
     role,
-    content
+    content,
+    ...(error && { error })
   }))
 
   if (sessionId) {
