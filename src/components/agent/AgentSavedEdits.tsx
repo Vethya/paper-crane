@@ -57,15 +57,19 @@ export function AgentSavedEdits() {
   const [saved, setSaved] = useState<Saved | null>(null)
   const [conflicts, setConflicts] = useState<StoredEdit[] | null>(null)
   const [checks, setChecks] = useState(0)
+  // A dismissal still being recorded. Checking meanwhile would offer it again.
+  const [marking, setMarking] = useState(false)
   // Edits must land in this resume's own form, not one still loading, and the
-  // last review must be saved before its result stops being offered.
+  // last review must be saved and marked before its result stops being
+  // offered. Until then a check could offer it, and its new entries, again.
   const idle =
     !!session &&
     !!resumeId &&
     loadedResumeId === resumeId &&
     !open &&
     !reviewing &&
-    !reviewTarget
+    !reviewTarget &&
+    !marking
 
   // Check again whenever the overlay closes or a review ends.
   useEffect(() => {
@@ -94,6 +98,7 @@ export function AgentSavedEdits() {
 
   const dismiss = () => {
     setSaved(null)
+    setMarking(true)
     void markAgentEdits(
       {
         resumeId: resumeId!,
@@ -101,7 +106,7 @@ export function AgentSavedEdits() {
         replyId: saved.replyId ?? null
       },
       'dismissed'
-    )
+    ).then(() => setMarking(false))
   }
   const review = (edits: StoredEdit[]) => {
     const pending = applyAgentEdits(formData, edits, formSetValue)
