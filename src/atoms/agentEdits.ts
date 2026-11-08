@@ -46,6 +46,6 @@ agentFocusedEditIdAtom.debugLabel = 'agentFocusedEditIdAtom'
 // server only once the resume holds the user's decisions.
 export const agentReviewTargetAtom = atom<{
   sessionId: string
-  replyId: string
+  replyId: string | null
 } | null>(null)
 agentReviewTargetAtom.debugLabel = 'agentReviewTargetAtom'

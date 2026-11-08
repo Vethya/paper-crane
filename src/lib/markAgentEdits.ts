@@ -1,7 +1,7 @@
 /** Records that saved tailoring results were reviewed. */
 export const markAgentEdits = (
   id: string,
-  replyId: string,
+  replyId: string | null,
   status: 'applied' | 'dismissed'
 ) =>
   fetch(`/api/agent/sessions/${id}`, {
