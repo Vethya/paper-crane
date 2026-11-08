@@ -30,7 +30,7 @@ function route(kind, ai, { data = body, owned = true } = {}) {
       if (name.endsWith('/apiSchemas')) return {}
       if (name.endsWith('/agentReplies')) return {
         startReply: async () => owned,
-        finishReply: async (target, content, error = false) => saved.push({ ...target, content, error })
+        finishReply: async (target, content, error = false, extra) => saved.push({ ...target, content, error, ...extra })
       }
       if (name.startsWith('@/')) return load(resolve(__dirname, '../src', name.slice(2) + '.ts'))
       if (name.startsWith('.')) return load(resolve(dirname(filename), name + '.ts'))
@@ -128,4 +128,39 @@ test('detaching marks old results as stale without stopping anything', () => {
   assert.equal(requests.isCurrent(current), true)
   requests.detach()
   assert.equal(requests.isCurrent(current), false)
+})
+
+const resume = { basics: { name: 'Jordan' }, work: [{ company: 'Acme' }] }
+const editBody = { ...body, resumeData: resume }
+
+test('edit saves the result for later review, with the values it replaces', async () => {
+  const output = {
+    summary: 'Tailored 2 fields.',
+    edits: [
+      { type: 'set', fieldPath: 'basics.name', newValue: 'Jordan D.', reason: 'r' },
+      { type: 'remove', arrayPath: 'work', index: 0, reason: 'r' }
+    ]
+  }
+  const { api, saved, background } = route('edit', {
+    generateText: async () => ({ finishReason: 'stop', output })
+  }, { data: editBody })
+  const response = await api.POST(request())
+  await Promise.all(background)
+  assert.deepEqual(await response.json(), output)
+  assert.equal(saved.length, 1)
+  assert.match(saved[0].content, /^Done! Tailored 2 fields\./)
+  assert.equal(saved[0].pendingEdits.status, 'ready')
+  assert.equal(saved[0].pendingEdits.replyId, editBody.replyId)
+  assert.equal(saved[0].pendingEdits.edits[0].originalValue, 'Jordan')
+  assert.deepEqual(saved[0].pendingEdits.edits[1].entry, { company: 'Acme' })
+})
+
+test('edit saves an error reply when tailoring fails', async () => {
+  const { api, saved, background } = route('edit', {
+    generateText: async () => { throw new Error('model down') }
+  }, { data: editBody })
+  assert.equal((await api.POST(request())).status, 500)
+  await Promise.all(background)
+  assert.equal(saved[0].error, true)
+  assert.equal(saved[0].pendingEdits, undefined)
 })

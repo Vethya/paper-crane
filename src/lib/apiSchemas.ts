@@ -130,6 +130,9 @@ const AgentRequestSchema = z.object({
       })
     )
     .min(1),
+  // With both set, the server saves the reply even if the browser disconnects.
+  sessionId: objectId.optional(),
+  replyId: z.string().min(1).optional(),
   resumeData: z
     .record(z.string(), z.unknown())
     .refine(
@@ -140,10 +143,7 @@ const AgentRequestSchema = z.object({
 const contextFits = (data: z.infer<typeof AgentRequestSchema>) =>
   contextSize(data.resumeData, data.messages) <= AGENT_LIMITS.context
 export const AgentChatSchema = AgentRequestSchema.extend({
-  mode: AgentModeSchema,
-  // With both set, the server saves the reply even if the browser disconnects.
-  sessionId: objectId.optional(),
-  replyId: z.string().min(1).optional()
+  mode: AgentModeSchema
 }).refine(contextFits, 'Conversation exceeds 128,000 characters')
 export const AgentEditSchema = AgentRequestSchema.refine(
   contextFits,
@@ -162,6 +162,11 @@ export const SaveAgentSessionSchema = z.object({
       error: z.boolean().optional()
     })
   )
+})
+
+export const UpdateAgentSessionSchema = z.object({
+  replyId: z.string().min(1).nullable(),
+  pendingEdits: z.enum(['applied', 'dismissed'])
 })
 
 /** Component type and content are checked by the resumeComponents helpers. */

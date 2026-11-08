@@ -26,7 +26,8 @@ import {
   type FieldEdit,
   type NewEntryEdit,
   type RemoveEntryEdit,
-  type PendingEdit
+  type PendingEdit,
+  agentReviewTargetAtom
 } from '../../../atoms/agentEdits'
 import { authClient } from '../../../db/auth-client'
 import {
@@ -35,6 +36,11 @@ import {
   prepareAgentMessages
 } from '../../../lib/agentLimits'
 import { MOCK_EDIT_RESPONSE } from '../../../lib/agentMock'
+import {
+  getValueAtPath,
+  tailoringDoneMessage,
+  type ModelEdit
+} from '../../../lib/agentTailoring'
 import { AgentOverlayHeader } from './AgentOverlayHeader'
 import { AgentMessageList } from './AgentMessageList'
 import { AgentComposer } from './AgentComposer'
@@ -44,27 +50,6 @@ import { AgentRequest } from '../../../lib/agentRequest'
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function getValueAtPath(
-  data: unknown,
-  path: string
-): string | string[] | undefined {
-  const parts = path.split('.')
-  let current: unknown = data
-  for (const part of parts) {
-    if (current == null) return undefined
-    const index = Number(part)
-    if (!isNaN(index) && Array.isArray(current)) {
-      current = current[index]
-    } else {
-      current = (current as Record<string, unknown>)[part]
-    }
-  }
-  if (typeof current === 'string') return current
-  if (Array.isArray(current) && current.every((v) => typeof v === 'string'))
-    return current as string[]
-  return undefined
-}
 
 const pendingReply: AgentMessage = {
   id: 'pending-reply',
@@ -123,6 +108,7 @@ export function AgentOverlay() {
   const formSetValue = useAtomValue(formSetValueAtom)
   const [, setPendingEdits] = useAtom(agentPendingEditsAtom)
   const [, setEditSummary] = useAtom(agentEditSummaryAtom)
+  const setReviewTarget = useSetAtom(agentReviewTargetAtom)
   const [, setFocusedEditId] = useAtom(agentFocusedEditIdAtom)
   const { data: session } = authClient.useSession()
   const [isLoadingSession, setIsLoadingSession] = useState(false)
@@ -441,35 +427,17 @@ export function AgentOverlay() {
         const isMock = process.env.NEXT_PUBLIC_AGENT_MOCK === 'true'
 
         // In mock mode skip the real API call entirely — no tokens spent
-        let data: {
-          summary: string
-          edits: Array<
-            | {
-                type: 'set'
-                fieldPath: string
-                newValue: string | string[]
-                reason: string
-              }
-            | {
-                type: 'append'
-                arrayPath: string
-                entry: Record<string, unknown>
-                reason: string
-              }
-            | {
-                type: 'appendSkill'
-                name: string
-                keywords: string[]
-                reason: string
-              }
-            | {
-                type: 'remove'
-                arrayPath: string
-                index: number
-                reason: string
-              }
-          >
-        }
+        // Save the question first. The server saves the result for review.
+        const savedId = resumeId
+          ? await saveSession({
+              resumeId,
+              sessionId,
+              mode,
+              messages: nextMessages
+            })
+          : null
+        if (savedId && requests.current.isCurrent(token)) setSessionId(savedId)
+        let data: { summary: string; edits: ModelEdit[] }
         if (isMock) {
           await new Promise((r) => setTimeout(r, 800)) // simulate network delay
           data = MOCK_EDIT_RESPONSE
@@ -479,7 +447,11 @@ export function AgentOverlay() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               messages: prepareAgentMessages(snapshot, nextMessages).messages,
-              resumeData: snapshot
+              resumeData: snapshot,
+              ...(savedId && {
+                sessionId: savedId,
+                replyId: thinkingMessage.id
+              })
             })
           })
           if (!res.ok)
@@ -593,30 +565,31 @@ export function AgentOverlay() {
 
         const doneMessage: AgentMessage = {
           ...thinkingMessage,
-          content: `Done! ${data.summary} Review the highlighted changes in the form, then approve or reject each one.`
+          content: tailoringDoneMessage(data.summary)
         }
         setMessages([...nextMessages, doneMessage])
 
-        // Save session
-        if (resumeId) {
-          try {
-            const savedId = await saveSession({
-              resumeId,
-              sessionId,
+        if (savedId) {
+          // Mock results never reach the server, so save them here.
+          if (isMock)
+            await saveSession({
+              resumeId: resumeId!,
+              sessionId: savedId,
               mode,
               messages: [...nextMessages, doneMessage]
+            }).catch((err) =>
+              console.error('[AgentOverlay] Session save error:', err)
+            )
+          else
+            setReviewTarget({
+              resumeId: resumeId!,
+              sessionId: savedId,
+              replyId: thinkingMessage.id
             })
-            if (!requests.current.isCurrent(token)) return
-            setSessionId(savedId)
-            // Keep the completed tailoring conversation linked while reviewing edits.
-            const params = new URLSearchParams(searchParams.toString())
-            params.set('chatId', savedId)
-            router.replace(`${pathname}?${params.toString()}`, {
-              scroll: false
-            })
-          } catch (err) {
-            console.error('[AgentOverlay] Session save error:', err)
-          }
+          // Keep the completed tailoring conversation linked while reviewing edits.
+          const params = new URLSearchParams(searchParams.toString())
+          params.set('chatId', savedId)
+          router.replace(`${pathname}?${params.toString()}`, { scroll: false })
         }
 
         // Close only the operation that applied these edits.
@@ -649,6 +622,7 @@ export function AgentOverlay() {
       setSessionId,
       setPendingEdits,
       setEditSummary,
+      setReviewTarget,
       setFocusedEditId,
       handleClose,
       searchParams,

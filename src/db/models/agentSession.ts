@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose'
+import type { StoredTailoring } from '@/lib/agentTailoring'
 
 type AgentMode = 'Chat' | 'Feedback' | 'Tailoring'
 
@@ -16,6 +17,8 @@ export interface IAgentSession extends Document {
   messages: IAgentSessionMessage[]
   /** Set while the server generates a reply, so a reopened chat can wait for it. */
   generatingSince?: Date
+  /** Tailoring results the server saved, waiting for the user to review. */
+  pendingEdits?: StoredTailoring
   createdAt: Date
   updatedAt: Date
 }
@@ -40,7 +43,22 @@ const AgentSessionSchema = new Schema<IAgentSession>(
       required: true
     },
     messages: { type: [AgentSessionMessageSchema], default: [] },
-    generatingSince: { type: Date }
+    generatingSince: { type: Date },
+    pendingEdits: {
+      type: new Schema(
+        {
+          replyId: { type: String },
+          summary: { type: String, required: true },
+          edits: { type: [Schema.Types.Mixed], default: [] },
+          status: {
+            type: String,
+            enum: ['ready', 'applied', 'dismissed'],
+            required: true
+          }
+        },
+        { _id: false, timestamps: true }
+      )
+    }
   },
   { timestamps: true }
 )
