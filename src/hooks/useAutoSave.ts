@@ -1,10 +1,14 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useAtomValue } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { FormValues } from '@/types'
 import { saveStateAtom } from '@/atoms/saveState'
-import { agentPendingEditsAtom } from '@/atoms/agentEdits'
+import {
+  agentPendingEditsAtom,
+  agentReviewTargetAtom
+} from '@/atoms/agentEdits'
+import { markAgentEdits } from '@/lib/markAgentEdits'
 import { loadedResumeIdAtom } from '@/atoms/resume'
 import { browserStorage, clearDraft, writeDraft } from '@/lib/draftRecovery'
 import type { AutoSaver } from '@/lib/autoSaver'
@@ -31,9 +35,9 @@ export function useAutoSave(
   formData: FormValues | null
 ) {
   const saveState = useAtomValue(saveStateAtom)
-  const paused = useAtomValue(agentPendingEditsAtom).some(
-    (e) => e.status === 'pending'
-  )
+  const edits = useAtomValue(agentPendingEditsAtom)
+  const [reviewTarget, setReviewTarget] = useAtom(agentReviewTargetAtom)
+  const paused = edits.some((e) => e.status === 'pending')
   const loadedResumeId = useAtomValue(loadedResumeIdAtom)
   const saverRef = useResumeSaver(resumeId, saveContent)
   // The saver whose baseline was set. The baseline is the loaded resume, so
@@ -63,8 +67,30 @@ export function useAutoSave(
     if (!started) return
     if (saver.hasUnsavedChanges())
       writeDraft(browserStorage, resumeId, snapshot)
-    else clearDraft(browserStorage, resumeId)
-  }, [saverRef, resumeId, loadedResumeId, formData, paused])
+    else {
+      clearDraft(browserStorage, resumeId)
+      // Only a saved resume holds the decisions, so only now is the review done.
+      if (reviewTarget && edits.length > 0) {
+        const applied = edits.some((e) => e.status === 'approved')
+        void markAgentEdits(
+          reviewTarget.sessionId,
+          reviewTarget.replyId,
+          applied ? 'applied' : 'dismissed'
+        )
+        setReviewTarget(null)
+      }
+    }
+  }, [
+    saverRef,
+    resumeId,
+    loadedResumeId,
+    formData,
+    paused,
+    saveState,
+    edits,
+    reviewTarget,
+    setReviewTarget
+  ])
 
   return saveState
 }

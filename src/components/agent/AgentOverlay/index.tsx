@@ -26,7 +26,8 @@ import {
   type FieldEdit,
   type NewEntryEdit,
   type RemoveEntryEdit,
-  type PendingEdit
+  type PendingEdit,
+  agentReviewTargetAtom
 } from '../../../atoms/agentEdits'
 import { authClient } from '../../../db/auth-client'
 import {
@@ -70,18 +71,6 @@ function withFailedReply(messages: AgentMessage[]): AgentMessage[] {
   ]
 }
 
-/** Records that saved tailoring results were opened for review. */
-const markEdits = (
-  id: string,
-  replyId: string,
-  status: 'applied' | 'dismissed'
-) =>
-  fetch(`/api/agent/sessions/${id}`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ replyId, pendingEdits: status })
-  }).catch((err) => console.error('[AgentOverlay] Mark edits error:', err))
-
 async function saveSession({
   resumeId,
   sessionId,
@@ -119,6 +108,7 @@ export function AgentOverlay() {
   const formSetValue = useAtomValue(formSetValueAtom)
   const [, setPendingEdits] = useAtom(agentPendingEditsAtom)
   const [, setEditSummary] = useAtom(agentEditSummaryAtom)
+  const setReviewTarget = useSetAtom(agentReviewTargetAtom)
   const [, setFocusedEditId] = useAtom(agentFocusedEditIdAtom)
   const { data: session } = authClient.useSession()
   const [isLoadingSession, setIsLoadingSession] = useState(false)
@@ -590,7 +580,8 @@ export function AgentOverlay() {
             }).catch((err) =>
               console.error('[AgentOverlay] Session save error:', err)
             )
-          else void markEdits(savedId, thinkingMessage.id, 'applied')
+          else
+            setReviewTarget({ sessionId: savedId, replyId: thinkingMessage.id })
           // Keep the completed tailoring conversation linked while reviewing edits.
           const params = new URLSearchParams(searchParams.toString())
           params.set('chatId', savedId)
@@ -627,6 +618,7 @@ export function AgentOverlay() {
       setSessionId,
       setPendingEdits,
       setEditSummary,
+      setReviewTarget,
       setFocusedEditId,
       handleClose,
       searchParams,
