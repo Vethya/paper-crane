@@ -4,7 +4,8 @@ export type ReviewStatus = 'applied' | 'dismissed'
 export type ReviewTarget = {
   resumeId: string
   sessionId: string
-  replyId: string
+  // Results saved before replies had IDs have none.
+  replyId: string | null
 }
 
 /**
