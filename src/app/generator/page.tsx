@@ -23,12 +23,12 @@ import type { ResumeComponentType } from '@/lib/resumeComponents'
 import { useIsHydrated } from '@/hooks/useIsHydrated'
 import { useAiFeaturesEnabled } from '@/hooks/useAiFeaturesEnabled'
 import { resumeAtom, loadedResumeIdAtom } from '../../atoms/resume'
-import { FormSkeleton } from '@/components/ui/skeleton'
+import { FormSkeleton, PreviewSkeleton } from '@/components/ui/skeleton'
 import { hasPdfUrlViewers } from '../../lib/pdfBuffer'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
-  { ssr: false, loading: () => <FormSkeleton /> }
+  { ssr: false, loading: () => <PreviewSkeleton /> }
 )
 
 // Loaded only when AI is on, so the hosted bundle skips the agent code.
@@ -189,7 +189,7 @@ function GeneratorContent() {
                 componentsOpen={componentsOpen}
                 onComponentsToggle={toggleComponents}
                 onSectionChange={changeActiveSection}
-                showComponents={!!resumeId}
+                showComponents={!!resumeId && !!session}
                 formId="resume-form-desktop"
               />
             </div>
@@ -200,7 +200,7 @@ function GeneratorContent() {
             />
           )}
 
-          {!isDesktopLayout && resumeId && (
+          {!isDesktopLayout && resumeId && session && (
             <button
               type="button"
               onClick={toggleComponents}

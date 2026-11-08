@@ -1,7 +1,12 @@
 'use client'
 
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { componentsQuery, queryKeys } from '@/lib/queries'
+import { Skeleton } from '@/components/ui/skeleton'
+
 import Link from 'next/link'
-import { DragEvent, useCallback, useEffect, useMemo, useState } from 'react'
+import { DragEvent, useEffect, useMemo, useState } from 'react'
 import { useAtomValue, useSetAtom } from 'jotai'
 import { ExternalLink, Plus, Search, X } from 'lucide-react'
 import { toast } from '@/components/ui/sonner'
@@ -22,6 +27,8 @@ import {
   type ResumeComponentType
 } from '@/lib/resumeComponents'
 
+const EMPTY_COMPONENTS: ResumeComponent[] = []
+
 interface ComponentsPanelProps {
   activeType: ResumeComponentType
   onActiveTypeChange: (type: ResumeComponentType) => void
@@ -35,10 +42,12 @@ export function ComponentsPanel({
   onClose,
   variant = 'panel'
 }: ComponentsPanelProps) {
-  const [componentsByType, setComponentsByType] = useState<
-    Partial<Record<ResumeComponentType, ResumeComponent[]>>
-  >({})
-  const [loading, setLoading] = useState(false)
+  const client = useQueryClient()
+  const account = useQueryAccount()
+  const request = useQuery(componentsQuery(account))
+  const components = request.data ?? EMPTY_COMPONENTS
+  const loading = request.isPending
+  const error = request.isError
   const [query, setQuery] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
   const [details, setDetails] = useState<ResumeComponent | null>(null)
@@ -49,33 +58,10 @@ export function ComponentsPanel({
   const setFocusRequest = useSetAtom(componentInsertFocusAtom)
   const changeFormSection = useAtomValue(activeSectionSetterAtom)
 
-  const loadComponents = useCallback(async () => {
-    setLoading(true)
-    try {
-      const res = await fetch('/api/components')
-      if (!res.ok) throw new Error('Failed to load components')
-      const nextComponents = (await res.json()) as ResumeComponent[]
-      setComponentsByType(
-        componentTypes.reduce(
-          (acc, type) => {
-            acc[type] = nextComponents.filter(
-              (component) => component.type === type
-            )
-            return acc
-          },
-          {} as Record<ResumeComponentType, ResumeComponent[]>
-        )
-      )
-    } catch {
-      toast.error('Unable to load components.')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    loadComponents()
-  }, [loadComponents])
+  async function refreshComponents() {
+    await client.cancelQueries({ queryKey: queryKeys.components(account) })
+    await client.invalidateQueries({ queryKey: queryKeys.components(account) })
+  }
 
   useEffect(() => {
     if (!highlightedId) return
@@ -85,13 +71,16 @@ export function ComponentsPanel({
 
   const counts = useMemo(() => {
     return Object.fromEntries(
-      componentTypes.map((type) => [type, componentsByType[type]?.length ?? 0])
+      componentTypes.map((type) => [
+        type,
+        components.filter((component) => component.type === type).length
+      ])
     ) as Record<ResumeComponentType, number>
-  }, [componentsByType])
+  }, [components])
 
-  const activeComponents = (componentsByType[activeType] ?? []).filter(
-    (component) => componentMatchesSearch(component, query)
-  )
+  const activeComponents = components
+    .filter((component) => component.type === activeType)
+    .filter((component) => componentMatchesSearch(component, query))
 
   function addToResume(component: ResumeComponent) {
     if (!formSetValue) return
@@ -125,7 +114,7 @@ export function ComponentsPanel({
       throw new Error(data?.error ?? 'Unable to save component')
     }
 
-    await loadComponents()
+    await refreshComponents()
     setHighlightedId(data?._id)
     toast.success('Component created.')
   }
@@ -172,7 +161,7 @@ export function ComponentsPanel({
     if (res.status === 409) {
       setHighlightedId(body?.duplicateId)
       onActiveTypeChange(data.type)
-      await loadComponents()
+      await refreshComponents()
       toast.error('That component is already saved.')
       return
     }
@@ -181,7 +170,7 @@ export function ComponentsPanel({
       return
     }
 
-    await loadComponents()
+    await refreshComponents()
     setHighlightedId(body?._id)
     onActiveTypeChange(data.type)
     toast.success('Form item saved as component.')
@@ -220,7 +209,13 @@ export function ComponentsPanel({
               }`}
             >
               {componentMeta[type].pluralLabel}
-              <span className="ml-1.5 opacity-70">{counts[type]}</span>
+              <span className="ml-1.5 opacity-70">
+                {loading ? (
+                  <Skeleton inline className="inline-block h-3 w-4" />
+                ) : (
+                  request.data && counts[type]
+                )}
+              </span>
             </button>
           ))}
         </div>
@@ -281,17 +276,34 @@ export function ComponentsPanel({
 
       <div className="min-h-0 flex-1 overflow-y-auto p-5">
         {loading && (
-          <div className="space-y-3">
+          <div
+            role="status"
+            aria-label="Loading components"
+            aria-busy="true"
+            className="space-y-3"
+          >
             {Array.from({ length: 3 }).map((_, index) => (
               <div
                 key={index}
-                className="h-32 animate-pulse rounded-app-button border border-app-border bg-app-surface"
+                className="h-32 animate-pulse rounded-app-button border border-app-border bg-app-surface motion-reduce:animate-none"
               />
             ))}
           </div>
         )}
 
-        {!loading && activeComponents.length === 0 && (
+        {error && (
+          <p role="alert" className="mb-4 text-sm text-red-400">
+            Unable to {request.data ? 'refresh' : 'load'} components.{' '}
+            <button
+              type="button"
+              className="underline"
+              onClick={() => void request.refetch()}
+            >
+              Retry
+            </button>
+          </p>
+        )}
+        {!loading && !error && activeComponents.length === 0 && (
           <div className="rounded-app-button border border-dashed border-app-controlBorder px-5 py-10 text-center">
             <p className="mb-4 text-sm text-slate-400">
               No {componentMeta[activeType].pluralLabel.toLowerCase()} saved

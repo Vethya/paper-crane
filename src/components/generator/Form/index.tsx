@@ -22,7 +22,8 @@ import {
   markBuiltAtom,
   autoRenderAtom,
   resumeTitleAtom,
-  loadedResumeIdAtom
+  loadedResumeIdAtom,
+  resumeLoadErrorAtom
 } from '../../../atoms/resume'
 import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
 import { AgentFieldFocuser } from '../../agent/AgentFieldFocuser'
@@ -81,7 +82,7 @@ export function Form({
   const client = useQueryClient()
   const account = useQueryAccount()
   const { isPending: sessionPending } = authClient.useSession()
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [loadError, setLoadError] = useAtom(resumeLoadErrorAtom)
   const [loadAttempt, setLoadAttempt] = useState(0)
 
   const store = useStore()
@@ -243,6 +244,7 @@ export function Form({
     return () => {
       cancelled = true
       setLoadedResumeId(null)
+      setLoadError(null)
       subscription.unsubscribe()
       document.removeEventListener('visibilitychange', renderLoaded)
     }
@@ -259,7 +261,8 @@ export function Form({
     client,
     account,
     sessionPending,
-    loadAttempt
+    loadAttempt,
+    setLoadError
   ])
 
   useEffect(() => {

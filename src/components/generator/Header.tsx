@@ -10,7 +10,11 @@ import { LibraryNav } from '../library/LibraryNav'
 import { authClient } from '@/db/auth-client'
 import { useAtom, useAtomValue } from 'jotai'
 import { formDataAtom } from '@/atoms/formData'
-import { resumeTitleAtom, loadedResumeIdAtom } from '@/atoms/resume'
+import {
+  resumeTitleAtom,
+  loadedResumeIdAtom,
+  resumeLoadErrorAtom
+} from '@/atoms/resume'
 import { Skeleton } from '@/components/ui/skeleton'
 import { agentPendingEditsAtom } from '@/atoms/agentEdits'
 import { TagPicker } from './TagPicker'
@@ -260,6 +264,7 @@ function SaveStatus({
 
 function ResumeTitle({ resumeId }: { resumeId: string }) {
   const loadedId = useAtomValue(loadedResumeIdAtom)
+  const loadError = useAtomValue(resumeLoadErrorAtom)
   const patchResume = usePatchResume()
   const [title, setTitle] = useAtom(resumeTitleAtom)
   const [draft, setDraft] = useState<string | null>(null)
@@ -293,7 +298,12 @@ function ResumeTitle({ resumeId }: { resumeId: string }) {
     }
   }
 
-  if (loadedId !== resumeId) return <Skeleton className="h-5 w-32" />
+  if (loadedId !== resumeId)
+    return loadError ? (
+      <span className="text-sm text-slate-400">Resume unavailable</span>
+    ) : (
+      <Skeleton className="h-5 w-32" />
+    )
 
   if (draft !== null)
     return (

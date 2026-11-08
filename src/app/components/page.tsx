@@ -1,6 +1,15 @@
 'use client'
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { componentsQuery, queryKeys } from '@/lib/queries'
+import { Skeleton } from '@/components/ui/skeleton'
+import {
+  CardSkeletons,
+  LibrarySkeleton
+} from '@/components/library/LibrarySkeleton'
+
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { FiPlus, FiSearch } from 'react-icons/fi'
 import { toast } from '@/components/ui/sonner'
@@ -27,11 +36,13 @@ import {
   DialogTitle
 } from '@/components/ui/dialog'
 
+const EMPTY_COMPONENTS: ResumeComponent[] = []
+
 const DEFAULT_TYPE: ResumeComponentType = 'work'
 
 export default function ComponentsPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<LibrarySkeleton title="Components" />}>
       <ComponentsContent />
     </Suspense>
   )
@@ -44,9 +55,13 @@ function ComponentsContent() {
   const searchParams = useSearchParams()
   const urlType = searchParams.get('type')
   const activeType = isComponentType(urlType) ? urlType : DEFAULT_TYPE
-  const [components, setComponents] = useState<ResumeComponent[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const client = useQueryClient()
+  const account = useQueryAccount()
+  const request = useQuery(componentsQuery(account))
+  const components = request.data ?? EMPTY_COMPONENTS
+  const loading = request.isPending
+  const error =
+    request.isError && !request.data ? 'Unable to load components.' : null
   const [query, setQuery] = useState('')
   const [editorOpen, setEditorOpen] = useState(false)
   const [editing, setEditing] = useState<ResumeComponent | null>(null)
@@ -66,24 +81,10 @@ function ComponentsContent() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }, [activeType, pathname, router, searchParams])
 
-  const loadComponents = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/components')
-      if (!res.ok) throw new Error('Failed to load components')
-      setComponents(await res.json())
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load components')
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!session) return
-    loadComponents()
-  }, [session, loadComponents])
+  async function refreshComponents() {
+    await client.cancelQueries({ queryKey: queryKeys.components(account) })
+    await client.invalidateQueries({ queryKey: queryKeys.components(account) })
+  }
 
   const counts = useMemo(() => {
     return Object.fromEntries(
@@ -127,7 +128,7 @@ function ComponentsContent() {
       throw new Error(data?.error ?? 'Unable to save component')
     }
 
-    await loadComponents()
+    await refreshComponents()
     toast.success(editing ? 'Component updated.' : 'Component created.')
     setEditing(null)
   }
@@ -141,13 +142,23 @@ function ComponentsContent() {
       toast.error('Unable to delete component.')
       return
     }
-    setComponents((prev) => prev.filter((item) => item._id !== deleting._id))
+    const queryKey = queryKeys.components(account)
+    const state = client.getQueryState(queryKey)
+    await client.cancelQueries({ queryKey })
+    client.setQueryData<ResumeComponent[]>(queryKey, (items) =>
+      items?.filter((item) => item._id !== deleting._id)
+    )
+    // The cancelled refresh may have been fetching a confirmed save.
+    if (state && (state.fetchStatus !== 'idle' || state.isInvalidated)) {
+      await client.invalidateQueries({ queryKey })
+    }
     setDetails((current) => (current?._id === deleting._id ? null : current))
     setDeleting(null)
     toast.success('Component deleted.')
   }
 
-  if (isPending || !session) return null
+  if (isPending) return <LibrarySkeleton title="Components" />
+  if (!session) return null
 
   return (
     <div className="min-h-screen bg-app-background text-slate-100">
@@ -191,7 +202,13 @@ function ComponentsContent() {
                 }`}
               >
                 {componentMeta[type].pluralLabel}
-                <span className="ml-2 text-xs opacity-70">{counts[type]}</span>
+                <span className="ml-2 text-xs opacity-70">
+                  {loading ? (
+                    <Skeleton inline className="inline-block h-3 w-4" />
+                  ) : (
+                    request.data && counts[type]
+                  )}
+                </span>
               </button>
             ))}
           </div>
@@ -207,20 +224,33 @@ function ComponentsContent() {
           </label>
         </div>
 
-        {loading && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-32 animate-pulse rounded-app-button border border-app-border bg-app-surface"
-              />
-            ))}
-          </div>
+        {request.isError && request.data && (
+          <p role="status" className="mb-4 text-sm text-slate-400">
+            Unable to refresh components.{' '}
+            <button
+              type="button"
+              className="underline"
+              onClick={() => void request.refetch()}
+            >
+              Retry
+            </button>
+          </p>
         )}
+        {loading && <CardSkeletons label="Loading components" count={6} />}
 
         {error && (
-          <div className="rounded-app-card border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-400">
-            {error}
+          <div
+            role="alert"
+            className="rounded-app-card border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-400"
+          >
+            {error}{' '}
+            <button
+              type="button"
+              className="underline"
+              onClick={() => void request.refetch()}
+            >
+              Retry
+            </button>
           </div>
         )}
 
