@@ -50,6 +50,22 @@ export function getValueAtPath(
 export const tailoringDoneMessage = (summary: string) =>
   `Done! ${summary} Review the highlighted changes in the form, then approve or reject each one.`
 
+const ENTRY_NAME_KEYS = ['company', 'institution', 'name', 'title']
+
+/** The list entry a field path points into, reduced to what names it. */
+function entryIdentity(resume: unknown, fieldPath: string) {
+  const [list, index] = fieldPath.split('.')
+  const entry = (resume as Record<string, unknown>)[list]
+  if (!Array.isArray(entry) || isNaN(Number(index))) return undefined
+  const source = (entry[Number(index)] ?? {}) as Record<string, unknown>
+  return Object.fromEntries(
+    ENTRY_NAME_KEYS.filter((key) => key in source).map((key) => [
+      key,
+      source[key]
+    ])
+  )
+}
+
 /** Records the values each edit replaces in the resume the model was given. */
 export function toStoredEdits(
   resume: Record<string, unknown>,
@@ -57,7 +73,11 @@ export function toStoredEdits(
 ): StoredEdit[] {
   return edits.map((edit) => {
     if (edit.type === 'set')
-      return { ...edit, originalValue: getValueAtPath(resume, edit.fieldPath) }
+      return {
+        ...edit,
+        originalValue: getValueAtPath(resume, edit.fieldPath),
+        entry: entryIdentity(resume, edit.fieldPath)
+      }
     if (edit.type === 'remove') {
       const list = resume[edit.arrayPath]
       const entry = Array.isArray(list) ? list[edit.index] : undefined
@@ -77,7 +97,12 @@ export function findConflicts(
 ): StoredEdit[] {
   return edits.filter((edit) => {
     if (edit.type === 'set')
-      return !same(getValueAtPath(resume, edit.fieldPath), edit.originalValue)
+      // Entries that were reordered or swapped keep their old index.
+      return (
+        !same(getValueAtPath(resume, edit.fieldPath), edit.originalValue) ||
+        (edit.entry !== undefined &&
+          !same(entryIdentity(resume, edit.fieldPath), edit.entry))
+      )
     if (edit.type === 'remove') {
       const list = resume[edit.arrayPath]
       return !same(

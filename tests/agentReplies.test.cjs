@@ -180,3 +180,20 @@ test('conflicts are edits whose field or entry changed after tailoring started',
   const changed = { basics: { name: 'Edited' }, work: [{ company: 'Other' }] }
   assert.deepEqual(findConflicts(changed, edits).map((e) => e.type), ['set', 'remove'])
 })
+
+test('reordered entries with the same field value are conflicts', () => {
+  const file = resolve(__dirname, '../src/lib/agentTailoring.ts')
+  const module = { exports: {} }
+  const code = ts.transpileModule(readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText
+  new Function('exports', 'module', code)(module.exports, module)
+  const { toStoredEdits, findConflicts } = module.exports
+  const work = [
+    { company: 'Acme', position: 'Engineer' },
+    { company: 'Beta', position: 'Engineer' }
+  ]
+  const edits = toStoredEdits({ work }, [
+    { type: 'set', fieldPath: 'work.0.position', newValue: 'Lead', reason: 'r' }
+  ])
+  assert.deepEqual(findConflicts({ work }, edits), [])
+  assert.equal(findConflicts({ work: [...work].reverse() }, edits).length, 1)
+})
