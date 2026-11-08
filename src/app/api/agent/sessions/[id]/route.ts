@@ -82,7 +82,13 @@ export async function PATCH(
   await connectDB()
 
   await AgentSession.updateOne(
-    { _id: id, userId: session.user.id, 'pendingEdits.status': 'ready' },
+    {
+      _id: id,
+      userId: session.user.id,
+      'pendingEdits.status': 'ready',
+      // Null matches older results stored without an ID, never a newer result.
+      'pendingEdits.replyId': data.replyId
+    },
     { $set: { 'pendingEdits.status': data.pendingEdits } }
   )
 

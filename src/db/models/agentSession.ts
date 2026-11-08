@@ -47,6 +47,7 @@ const AgentSessionSchema = new Schema<IAgentSession>(
     pendingEdits: {
       type: new Schema(
         {
+          replyId: { type: String },
           summary: { type: String, required: true },
           edits: { type: [Schema.Types.Mixed], default: [] },
           status: {

@@ -150,6 +150,7 @@ test('edit saves the result for later review, with the values it replaces', asyn
   assert.equal(saved.length, 1)
   assert.match(saved[0].content, /^Done! Tailored 2 fields\./)
   assert.equal(saved[0].pendingEdits.status, 'ready')
+  assert.equal(saved[0].pendingEdits.replyId, editBody.replyId)
   assert.equal(saved[0].pendingEdits.edits[0].originalValue, 'Jordan')
   assert.deepEqual(saved[0].pendingEdits.edits[1].entry, { company: 'Acme' })
 })

@@ -22,6 +22,7 @@ export type StoredEdit = ModelEdit & {
 }
 
 export type StoredTailoring = {
+  replyId?: string
   summary: string
   edits: StoredEdit[]
   status: 'ready' | 'applied' | 'dismissed'
