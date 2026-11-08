@@ -8,7 +8,7 @@ import {
   agentPendingEditsAtom,
   agentReviewTargetAtom
 } from '@/atoms/agentEdits'
-import { markAgentEdits } from '@/lib/markAgentEdits'
+import { markAgentEdits, reviewStatus } from '@/lib/markAgentEdits'
 import { loadedResumeIdAtom } from '@/atoms/resume'
 import { browserStorage, clearDraft, writeDraft } from '@/lib/draftRecovery'
 import type { AutoSaver } from '@/lib/autoSaver'
@@ -70,12 +70,12 @@ export function useAutoSave(
     else {
       clearDraft(browserStorage, resumeId)
       // Only a saved resume holds the decisions, so only now is the review done.
-      if (reviewTarget && edits.length > 0) {
-        const applied = edits.some((e) => e.status === 'approved')
+      // A result with no usable edits is done too, or it would never be marked.
+      if (reviewTarget) {
         void markAgentEdits(
           reviewTarget.sessionId,
           reviewTarget.replyId,
-          applied ? 'applied' : 'dismissed'
+          reviewStatus(edits)
         )
         setReviewTarget(null)
       }
