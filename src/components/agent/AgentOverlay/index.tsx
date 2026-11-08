@@ -1,11 +1,13 @@
 'use client'
 
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Sparkles } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import {
+  agentDraftAtom,
+  agentConversationResumeIdAtom,
   agentOpenAtom,
   agentMessagesAtom,
   agentIsStreamingAtom,
@@ -27,12 +29,17 @@ import {
   type PendingEdit
 } from '../../../atoms/agentEdits'
 import { authClient } from '../../../db/auth-client'
-import { prepareAgentMessages } from '../../../lib/agentLimits'
+import {
+  failedReplyMessage,
+  isGenerating,
+  prepareAgentMessages
+} from '../../../lib/agentLimits'
 import { MOCK_EDIT_RESPONSE } from '../../../lib/agentMock'
 import { AgentOverlayHeader } from './AgentOverlayHeader'
 import { AgentMessageList } from './AgentMessageList'
 import { AgentComposer } from './AgentComposer'
 import { AgentHistoryDialog } from '../AgentHistory/AgentHistoryDialog'
+import { AgentRequest } from '../../../lib/agentRequest'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -57,6 +64,26 @@ function getValueAtPath(
   if (Array.isArray(current) && current.every((v) => typeof v === 'string'))
     return current as string[]
   return undefined
+}
+
+const pendingReply: AgentMessage = {
+  id: 'pending-reply',
+  role: 'assistant',
+  content: ''
+}
+
+/** A question with no saved reply means the server failed to finish it. */
+function withFailedReply(messages: AgentMessage[]): AgentMessage[] {
+  if (messages.at(-1)?.role !== 'user') return messages
+  return [
+    ...messages,
+    {
+      id: crypto.randomUUID(),
+      role: 'assistant',
+      content: failedReplyMessage,
+      error: true
+    }
+  ]
 }
 
 async function saveSession({
@@ -104,16 +131,67 @@ export function AgentOverlay() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const chatIdParam = searchParams.get('chatId')
-  const prevOpenRef = useRef(false)
+  const setDraft = useSetAtom(agentDraftAtom)
+  const [conversationResumeId, setConversationResumeId] = useAtom(
+    agentConversationResumeIdAtom
+  )
+  const restoredChatId = useRef<string | null>(null)
+  const requests = useRef(new AgentRequest())
+  const detachRequest = useCallback(() => {
+    requests.current.detach()
+    setMessages((prev) =>
+      prev.filter(
+        (message) => message.role !== 'assistant' || message.content.trim()
+      )
+    )
+    setIsStreaming(false)
+    setIsLoadingSession(false)
+  }, [setIsStreaming, setMessages])
+  useEffect(
+    () => () => {
+      detachRequest()
+      restoredChatId.current = null
+    },
+    [detachRequest, resumeId]
+  )
+  useEffect(() => {
+    if (conversationResumeId === resumeId) return
+    detachRequest()
+    setMessages([])
+    setSessionId(null)
+    setDraft('')
+    setConversationResumeId(resumeId)
+    // Do not restore a link that still points at the previous resume's chat.
+    if (conversationResumeId !== null && chatIdParam === sessionId) {
+      restoredChatId.current = chatIdParam
+      const params = new URLSearchParams(searchParams.toString())
+      params.delete('chatId')
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+    }
+  }, [
+    conversationResumeId,
+    resumeId,
+    detachRequest,
+    setMessages,
+    setSessionId,
+    setDraft,
+    setConversationResumeId,
+    chatIdParam,
+    sessionId,
+    searchParams,
+    pathname,
+    router
+  ])
 
   const handleClose = useCallback(() => {
     setOpen(false)
-    setMessages([])
-    setSessionId(null)
     setHistoryOpen(false)
-  }, [setOpen, setMessages, setSessionId, setHistoryOpen])
+  }, [setOpen, setHistoryOpen])
 
   const handleNewChat = useCallback(() => {
+    detachRequest()
+    restoredChatId.current = chatIdParam
+    setDraft('')
     setMessages([])
     setSessionId(null)
     setHistoryOpen(false)
@@ -121,6 +199,9 @@ export function AgentOverlay() {
     params.delete('chatId')
     router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }, [
+    detachRequest,
+    chatIdParam,
+    setDraft,
     setMessages,
     setSessionId,
     setHistoryOpen,
@@ -131,25 +212,54 @@ export function AgentOverlay() {
 
   const handleSelectSession = useCallback(
     async (id: string) => {
+      detachRequest()
+      restoredChatId.current = id
+      setDraft('')
+      const token = requests.current.begin()
       setHistoryOpen(false)
       setIsLoadingSession(true)
-      try {
+      const load = async () => {
         const res = await fetch(`/api/agent/sessions/${id}`)
         if (!res.ok) throw new Error('Failed to load session')
-        const data = (await res.json()) as {
+        return (await res.json()) as {
           mode: AgentMode
           messages: AgentMessage[]
+          generatingSince?: string
         }
-        setMessages(data.messages)
+      }
+      try {
+        let data = await load()
+        if (!requests.current.isCurrent(token)) return
         setSessionId(id)
         setMode(data.mode)
+        // The server is still finishing a reply from earlier: wait for it.
+        while (isGenerating(data.generatingSince)) {
+          setMessages([...data.messages, pendingReply])
+          setIsStreaming(true)
+          setIsLoadingSession(false)
+          await new Promise((resolve) => setTimeout(resolve, 2000))
+          if (!requests.current.isCurrent(token)) return
+          data = await load()
+          if (!requests.current.isCurrent(token)) return
+        }
+        setIsStreaming(false)
+        setMessages(withFailedReply(data.messages))
       } catch (err) {
-        console.error('[AgentOverlay] Load session error:', err)
+        if (requests.current.isCurrent(token))
+          console.error('[AgentOverlay] Load session error:', err)
       } finally {
-        setIsLoadingSession(false)
+        if (requests.current.isCurrent(token)) setIsLoadingSession(false)
       }
     },
-    [setHistoryOpen, setMessages, setSessionId, setMode]
+    [
+      detachRequest,
+      setDraft,
+      setHistoryOpen,
+      setMessages,
+      setIsStreaming,
+      setSessionId,
+      setMode
+    ]
   )
 
   // Auto-open overlay on mount if chatId is present in URL
@@ -158,13 +268,29 @@ export function AgentOverlay() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // When overlay opens fresh (no active session), load the chat from URL
+  // Restore a deep link once. Reopening uses the current in-memory conversation.
   useEffect(() => {
-    const justOpened = open && !prevOpenRef.current
-    prevOpenRef.current = open
-    if (!justOpened || sessionId !== null || !chatIdParam) return
+    if (
+      !open ||
+      !chatIdParam ||
+      sessionId ||
+      messages.length ||
+      isStreaming ||
+      isLoadingSession ||
+      restoredChatId.current === chatIdParam
+    )
+      return
+    restoredChatId.current = chatIdParam
     handleSelectSession(chatIdParam)
-  }, [open, chatIdParam, sessionId, handleSelectSession])
+  }, [
+    open,
+    chatIdParam,
+    sessionId,
+    messages.length,
+    isStreaming,
+    isLoadingSession,
+    handleSelectSession
+  ])
 
   // Sync sessionId → URL
   useEffect(() => {
@@ -181,6 +307,7 @@ export function AgentOverlay() {
 
   const handleChatSend = useCallback(
     async (text: string, baseMessages?: AgentMessage[]) => {
+      const token = requests.current.begin()
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -203,13 +330,28 @@ export function AgentOverlay() {
       let finalContent = ''
 
       try {
+        // Save the question first. The server then saves the reply itself,
+        // so it survives switching chats, switching resumes or leaving.
+        const savedId = resumeId
+          ? await saveSession({
+              resumeId,
+              sessionId,
+              mode,
+              messages: nextMessages
+            })
+          : null
+        if (savedId && requests.current.isCurrent(token)) setSessionId(savedId)
         const res = await fetch('/api/agent/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             messages: apiMessages,
             mode,
-            resumeData: formData ?? {}
+            resumeData: formData ?? {},
+            ...(savedId && {
+              sessionId: savedId,
+              replyId: assistantMessage.id
+            })
           })
         })
 
@@ -225,6 +367,8 @@ export function AgentOverlay() {
 
         while (true) {
           const { done, value } = await reader.read()
+          // Stop reading only. The server keeps generating and saves the reply.
+          if (!requests.current.isCurrent(token)) return void reader.cancel()
           if (done) break
           finalContent += decoder.decode(value, { stream: true })
           setMessages((prev) => {
@@ -237,6 +381,7 @@ export function AgentOverlay() {
           })
         }
       } catch (err) {
+        if (!requests.current.isCurrent(token)) return
         console.error('[AgentOverlay] Stream error:', err)
         finalContent =
           err instanceof Error
@@ -252,24 +397,7 @@ export function AgentOverlay() {
           return updated
         })
       } finally {
-        setIsStreaming(false)
-        if (resumeId && finalContent) {
-          const finalMessages = [
-            ...nextMessages,
-            { ...assistantMessage, content: finalContent }
-          ]
-          try {
-            const savedId = await saveSession({
-              resumeId,
-              sessionId,
-              mode,
-              messages: finalMessages
-            })
-            setSessionId(savedId)
-          } catch (err) {
-            console.error('[AgentOverlay] Session save error:', err)
-          }
-        }
+        if (requests.current.isCurrent(token)) setIsStreaming(false)
       }
     },
     [
@@ -290,6 +418,7 @@ export function AgentOverlay() {
 
   const handleEditSend = useCallback(
     async (text: string, baseMessages?: AgentMessage[]) => {
+      const token = requests.current.begin()
       const userMessage: AgentMessage = {
         id: crypto.randomUUID(),
         role: 'user',
@@ -361,6 +490,7 @@ export function AgentOverlay() {
           data = (await res.json()) as typeof data
         }
 
+        if (!requests.current.isCurrent(token)) return
         const pendingEdits: PendingEdit[] = []
 
         // Track the in-progress arrays so successive appends to the same path stack correctly
@@ -476,9 +606,9 @@ export function AgentOverlay() {
               mode,
               messages: [...nextMessages, doneMessage]
             })
+            if (!requests.current.isCurrent(token)) return
             setSessionId(savedId)
-            // Sync chatId to URL immediately — handleClose() will clear sessionId,
-            // so the useEffect-based sync would never fire for Tailoring mode.
+            // Keep the completed tailoring conversation linked while reviewing edits.
             const params = new URLSearchParams(searchParams.toString())
             params.set('chatId', savedId)
             router.replace(`${pathname}?${params.toString()}`, {
@@ -489,9 +619,10 @@ export function AgentOverlay() {
           }
         }
 
-        // Close overlay so the user can see the highlighted form
-        handleClose()
+        // Close only the operation that applied these edits.
+        if (requests.current.isCurrent(token)) handleClose()
       } catch (err) {
+        if (!requests.current.isCurrent(token)) return
         console.error('[AgentOverlay] Edit error:', err)
         const errorMessage: AgentMessage = {
           ...thinkingMessage,
@@ -503,7 +634,7 @@ export function AgentOverlay() {
         }
         setMessages([...nextMessages, errorMessage])
       } finally {
-        setIsStreaming(false)
+        if (requests.current.isCurrent(token)) setIsStreaming(false)
       }
     },
     [

@@ -156,8 +156,9 @@ test('agent session save checks IDs, mode, and messages', async () => {
     mode: 'Chat',
     messages: [{ ...message, error: true }]
   }
+  // Error replies stay marked, so a reopened chat still offers Retry.
   const { data } = await parse(schemas.SaveAgentSessionSchema, valid)
-  assert.deepEqual(data.messages, [message])
+  assert.deepEqual(data.messages, [{ ...message, error: true }])
 
   const bad = [
     { ...valid, resumeId: 'abc' },
