@@ -11,6 +11,7 @@ import {
 import {
   markAgentEdits,
   reviewStatus,
+  sendAgentEditsMark,
   type ReviewTarget
 } from '@/lib/markAgentEdits'
 import { loadedResumeIdAtom } from '@/atoms/resume'
@@ -99,6 +100,17 @@ export function useAutoSave(
     reviewTarget,
     setReviewTarget
   ])
+
+  // Leaving the page after deciding every edit must not leave the result
+  // offered for review again, so send its mark as the page goes away.
+  useEffect(() => {
+    if (paused || reviewTarget?.resumeId !== resumeId) return
+    const target = reviewTarget
+    const status = reviewStatus(edits)
+    const handlePageHide = () => sendAgentEditsMark(target, status)
+    window.addEventListener('pagehide', handlePageHide)
+    return () => window.removeEventListener('pagehide', handlePageHide)
+  }, [paused, reviewTarget, resumeId, edits])
 
   // A result under review belongs to one resume. Another resume's saves
   // must never mark it, so drop it once a different resume is open.

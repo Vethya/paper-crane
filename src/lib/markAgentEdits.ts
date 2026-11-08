@@ -14,6 +14,18 @@ export type ReviewTarget = {
 export const reviewStatus = (edits: { status: string }[]): ReviewStatus =>
   edits.some((e) => e.status === 'approved') ? 'applied' : 'dismissed'
 
+const markRequest = (
+  target: ReviewTarget,
+  status: ReviewStatus
+): [string, RequestInit] => [
+  `/api/agent/sessions/${target.sessionId}`,
+  {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ replyId: target.replyId, pendingEdits: status })
+  }
+]
+
 /** Records that a saved tailoring result was reviewed. Tries twice, and
  * resolves to whether the server accepted it. */
 export async function markAgentEdits(
@@ -23,11 +35,7 @@ export async function markAgentEdits(
 ): Promise<boolean> {
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await send(`/api/agent/sessions/${target.sessionId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ replyId: target.replyId, pendingEdits: status })
-      })
+      const res = await send(...markRequest(target, status))
       if (res.ok) return true
       console.error('[AgentOverlay] Mark edits failed:', res.status)
     } catch (err) {
@@ -35,4 +43,14 @@ export async function markAgentEdits(
     }
   }
   return false
+}
+
+/** A single best-effort mark that can outlive the page as it unloads. */
+export function sendAgentEditsMark(
+  target: ReviewTarget,
+  status: ReviewStatus,
+  send: typeof fetch = fetch
+) {
+  const [url, init] = markRequest(target, status)
+  send(url, { ...init, keepalive: true }).catch(() => {})
 }

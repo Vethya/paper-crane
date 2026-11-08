@@ -15,7 +15,7 @@ const { outputText } = ts.transpileModule(
 )
 const mod = { exports: {} }
 new Function('module', 'exports', outputText)(mod, mod.exports)
-const { reviewStatus, markAgentEdits } = mod.exports
+const { reviewStatus, markAgentEdits, sendAgentEditsMark } = mod.exports
 
 const target = { resumeId: 'r1', sessionId: 's1', replyId: 'reply-1' }
 
@@ -70,4 +70,19 @@ test('marking gives up after two failed attempts', async (t) => {
   const { send, calls } = sender([false, false, true])
   assert.equal(await markAgentEdits(target, 'applied', send), false)
   assert.equal(calls.length, 2)
+})
+
+test('the unload mark is sent once with keepalive and ignores failures', async () => {
+  const calls = []
+  sendAgentEditsMark(target, 'dismissed', async (url, init) => {
+    calls.push({ url, init })
+    throw new Error('offline')
+  })
+  await new Promise((resolve) => setImmediate(resolve))
+  assert.equal(calls.length, 1)
+  assert.equal(calls[0].init.keepalive, true)
+  assert.deepEqual(JSON.parse(calls[0].init.body), {
+    replyId: 'reply-1',
+    pendingEdits: 'dismissed'
+  })
 })
