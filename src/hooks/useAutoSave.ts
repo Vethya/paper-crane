@@ -8,7 +8,11 @@ import {
   agentPendingEditsAtom,
   agentReviewTargetAtom
 } from '@/atoms/agentEdits'
-import { markAgentEdits, reviewStatus } from '@/lib/markAgentEdits'
+import {
+  markAgentEdits,
+  reviewStatus,
+  type ReviewTarget
+} from '@/lib/markAgentEdits'
 import { loadedResumeIdAtom } from '@/atoms/resume'
 import { browserStorage, clearDraft, writeDraft } from '@/lib/draftRecovery'
 import type { AutoSaver } from '@/lib/autoSaver'
@@ -43,6 +47,8 @@ export function useAutoSave(
   // The saver whose baseline was set. The baseline is the loaded resume, so
   // it must not replace a backup that the generator may still offer back.
   const startedRef = useRef<AutoSaver | null>(null)
+  // The review target whose mark request is running.
+  const markingRef = useRef<ReviewTarget | null>(null)
 
   useEffect(() => {
     const saver = saverRef.current
@@ -71,13 +77,15 @@ export function useAutoSave(
       clearDraft(browserStorage, resumeId)
       // Only a saved resume holds the decisions, so only now is the review done.
       // A result with no usable edits is done too, or it would never be marked.
-      if (reviewTarget?.resumeId === resumeId) {
-        void markAgentEdits(
-          reviewTarget.sessionId,
-          reviewTarget.replyId,
-          reviewStatus(edits)
-        )
-        setReviewTarget(null)
+      // The target stays set while the request runs, so it is sent once.
+      const target = reviewTarget
+      if (target?.resumeId === resumeId && markingRef.current !== target) {
+        markingRef.current = target
+        void markAgentEdits(target, reviewStatus(edits)).then(() => {
+          // Clear it even after a failure, so it cannot be retried forever.
+          setReviewTarget((current) => (current === target ? null : current))
+          if (markingRef.current === target) markingRef.current = null
+        })
       }
     }
   }, [
