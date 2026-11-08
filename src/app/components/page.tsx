@@ -142,11 +142,16 @@ function ComponentsContent() {
       toast.error('Unable to delete component.')
       return
     }
-    await client.cancelQueries({ queryKey: queryKeys.components(account) })
-    client.setQueryData<ResumeComponent[]>(
-      queryKeys.components(account),
-      (items) => items?.filter((item) => item._id !== deleting._id)
+    const queryKey = queryKeys.components(account)
+    const state = client.getQueryState(queryKey)
+    await client.cancelQueries({ queryKey })
+    client.setQueryData<ResumeComponent[]>(queryKey, (items) =>
+      items?.filter((item) => item._id !== deleting._id)
     )
+    // The cancelled refresh may have been fetching a confirmed save.
+    if (state && (state.fetchStatus !== 'idle' || state.isInvalidated)) {
+      await client.invalidateQueries({ queryKey })
+    }
     setDetails((current) => (current?._id === deleting._id ? null : current))
     setDeleting(null)
     toast.success('Component deleted.')
