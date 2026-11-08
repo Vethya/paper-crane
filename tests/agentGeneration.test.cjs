@@ -11,6 +11,8 @@ function route(kind, ai) {
     const native = createRequire(filename)
     const requireMock = (name) => {
       if (name === 'ai') return { Output: { object: () => ({}) }, NoObjectGeneratedError: { isInstance: (e) => e?.kind === 'schema' }, ...ai }
+      if (name === 'next/server') return { ...native(name), after: () => {} }
+      if (name.endsWith('/agentReplies')) return {}
       if (name === '@ai-sdk/google') return { google: () => ({}) }
       if (name.endsWith('/auth')) return { auth: { api: { getSession: async () => ({ user: { id: 'test-user' } }) } } }
       if (name.endsWith('/env')) return {}

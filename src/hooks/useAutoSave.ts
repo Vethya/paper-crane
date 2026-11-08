@@ -1,10 +1,19 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { useAtomValue } from 'jotai'
+import { useAtom, useAtomValue } from 'jotai'
 import { FormValues } from '@/types'
 import { saveStateAtom } from '@/atoms/saveState'
-import { agentPendingEditsAtom } from '@/atoms/agentEdits'
+import {
+  agentPendingEditsAtom,
+  agentReviewTargetAtom
+} from '@/atoms/agentEdits'
+import {
+  markAgentEdits,
+  reviewStatus,
+  sendAgentEditsMark,
+  type ReviewTarget
+} from '@/lib/markAgentEdits'
 import { loadedResumeIdAtom } from '@/atoms/resume'
 import { browserStorage, clearDraft, writeDraft } from '@/lib/draftRecovery'
 import type { AutoSaver } from '@/lib/autoSaver'
@@ -31,14 +40,16 @@ export function useAutoSave(
   formData: FormValues | null
 ) {
   const saveState = useAtomValue(saveStateAtom)
-  const paused = useAtomValue(agentPendingEditsAtom).some(
-    (e) => e.status === 'pending'
-  )
+  const edits = useAtomValue(agentPendingEditsAtom)
+  const [reviewTarget, setReviewTarget] = useAtom(agentReviewTargetAtom)
+  const paused = edits.some((e) => e.status === 'pending')
   const loadedResumeId = useAtomValue(loadedResumeIdAtom)
   const saverRef = useResumeSaver(resumeId, saveContent)
   // The saver whose baseline was set. The baseline is the loaded resume, so
   // it must not replace a backup that the generator may still offer back.
   const startedRef = useRef<AutoSaver | null>(null)
+  // The review target whose mark request is running.
+  const markingRef = useRef<ReviewTarget | null>(null)
 
   useEffect(() => {
     const saver = saverRef.current
@@ -63,8 +74,50 @@ export function useAutoSave(
     if (!started) return
     if (saver.hasUnsavedChanges())
       writeDraft(browserStorage, resumeId, snapshot)
-    else clearDraft(browserStorage, resumeId)
-  }, [saverRef, resumeId, loadedResumeId, formData, paused])
+    else {
+      clearDraft(browserStorage, resumeId)
+      // Only a saved resume holds the decisions, so only now is the review done.
+      // A result with no usable edits is done too, or it would never be marked.
+      // The target stays set while the request runs, so it is sent once.
+      const target = reviewTarget
+      if (target?.resumeId === resumeId && markingRef.current !== target) {
+        markingRef.current = target
+        void markAgentEdits(target, reviewStatus(edits)).then(() => {
+          // Clear it even after a failure, so it cannot be retried forever.
+          setReviewTarget((current) => (current === target ? null : current))
+          if (markingRef.current === target) markingRef.current = null
+        })
+      }
+    }
+  }, [
+    saverRef,
+    resumeId,
+    loadedResumeId,
+    formData,
+    paused,
+    saveState,
+    edits,
+    reviewTarget,
+    setReviewTarget
+  ])
+
+  // Leaving the page after deciding every edit must not leave the result
+  // offered for review again, so send its mark as the page goes away.
+  useEffect(() => {
+    if (paused || reviewTarget?.resumeId !== resumeId) return
+    const target = reviewTarget
+    const status = reviewStatus(edits)
+    const handlePageHide = () => sendAgentEditsMark(target, status)
+    window.addEventListener('pagehide', handlePageHide)
+    return () => window.removeEventListener('pagehide', handlePageHide)
+  }, [paused, reviewTarget, resumeId, edits])
+
+  // A result under review belongs to one resume. Another resume's saves
+  // must never mark it, so drop it once a different resume is open.
+  useEffect(() => {
+    if (reviewTarget && resumeId && reviewTarget.resumeId !== resumeId)
+      setReviewTarget(null)
+  }, [reviewTarget, resumeId, setReviewTarget])
 
   return saveState
 }

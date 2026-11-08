@@ -4,6 +4,7 @@ import { useHydrateAtoms } from 'jotai/utils'
 import { useForm } from 'react-hook-form'
 import type { FormValues } from '@/types'
 import {
+  agentConversationResumeIdAtom,
   agentModeAtom,
   agentIsStreamingAtom,
   agentOpenAtom,
@@ -17,7 +18,11 @@ import {
   agentEditSummaryAtom,
   type PendingEdit
 } from '@/atoms/agentEdits'
-import { isLoadingResumeAtom, resumeAtom } from '@/atoms/resume'
+import {
+  isLoadingResumeAtom,
+  loadedResumeIdAtom,
+  resumeAtom
+} from '@/atoms/resume'
 import { formDataAtom, formSetValueAtom } from '@/atoms/formData'
 import { resume } from './fixtures/resume'
 
@@ -41,6 +46,7 @@ function Seed({
 }) {
   const form = useForm<FormValues>({ defaultValues: state.form ?? resume })
   useHydrateAtoms([
+    [agentConversationResumeIdAtom, state.resumeId ?? null],
     [agentModeAtom, state.mode ?? 'Chat'],
     [agentIsStreamingAtom, !!state.streaming],
     [isLoadingResumeAtom, !!state.loading],
@@ -51,6 +57,8 @@ function Seed({
     [agentPendingEditsAtom, state.edits ?? []],
     [agentEditSummaryAtom, state.summary ?? ''],
     [agentResumeIdAtom, state.resumeId ?? null],
+    // The seeded form is this resume's loaded copy.
+    [loadedResumeIdAtom, state.resumeId ?? null],
     [
       resumeAtom,
       {
