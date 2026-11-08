@@ -94,7 +94,14 @@ export function AgentSavedEdits() {
 
   const dismiss = () => {
     setSaved(null)
-    void markAgentEdits(saved.id, saved.replyId ?? null, 'dismissed')
+    void markAgentEdits(
+      {
+        resumeId: resumeId!,
+        sessionId: saved.id,
+        replyId: saved.replyId ?? null
+      },
+      'dismissed'
+    )
   }
   const review = (edits: StoredEdit[]) => {
     const pending = applyAgentEdits(formData, edits, formSetValue)
@@ -102,7 +109,11 @@ export function AgentSavedEdits() {
     setSummary(saved.summary)
     setFocusedId(pending[0]?.id ?? null)
     // Marked reviewed once the resume holds the user's decisions.
-    setReviewTarget({ sessionId: saved.id, replyId: saved.replyId ?? null })
+    setReviewTarget({
+      resumeId: resumeId!,
+      sessionId: saved.id,
+      replyId: saved.replyId ?? null
+    })
     setSaved(null)
   }
   const startReview = () => {
