@@ -44,13 +44,31 @@ pnpm install
 pnpm dev
 ```
 
-**Environment**
+### Environment
 
-Copy `.env.local.example` to `.env.local` and fill in the authentication and database settings. No LaTeX API URL is required.
+Copy the example into a local environment file:
+
+```bash
+cp .env.local.example .env.local
+```
+
+The app requires these five values at startup:
+
+| Variable | Local value |
+| --- | --- |
+| `MONGODB_URI` | The connection string for your development database. Use a MongoDB replica set for tag rename and delete. |
+| `BETTER_AUTH_URL` | `http://localhost:3026` |
+| `BETTER_AUTH_SECRET` | Generate a value with `openssl rand -base64 32`. |
+| `GOOGLE_CLIENT_ID` | The client ID from your Google OAuth Web application. |
+| `GOOGLE_CLIENT_SECRET` | The client secret from the same OAuth client. |
+
+In [Google Auth Platform](https://console.cloud.google.com/auth/clients), create an OAuth client with application type **Web application**. Add `http://localhost:3026/api/auth/callback/google` to **Authorized redirect URIs**. If the app is in testing mode, add your Google account as a test user. Open the app using the same host and port as `BETTER_AUTH_URL` and check that **Continue with Google** takes you to **Resumes**.
+
+Keep credentials in `.env.local`. The example file is for placeholders. PDF compilation runs in the browser.
 
 **AI features**
 
-The Resume Agent is off by default, and the hosted site runs with it off. To turn it on when you self-host, set:
+`AI_FEATURES_ENABLED` defaults to `false`. The hosted site runs with the Resume Agent off. To enable it when you self-host, set both variables:
 
 ```bash
 AI_FEATURES_ENABLED=true
