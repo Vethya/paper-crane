@@ -30,6 +30,8 @@ The app runs as one Next.js service:
 
 The browser downloads the Siglum WebAssembly runtime and compiles generated `.tex` documents locally. The first compilation downloads the runtime bundles; subsequent compilations reuse the browser cache.
 
+For local development, [set up MongoDB](docs/local-mongodb.md) before starting the app.
+
 ## Getting Started
 
 **Install dependencies**
