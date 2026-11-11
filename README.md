@@ -43,7 +43,7 @@ The browser downloads the Siglum WebAssembly runtime and compiles generated `.te
 3. [Install pnpm](https://pnpm.io/10.x/installation). From the project directory, check that `pnpm --version` matches `packageManager` in [package.json](package.json). Install dependencies with `pnpm install --frozen-lockfile`.
 
 4. Follow the environment setup below, then run `pnpm dev`.
-5. Open [http://localhost:3026](http://localhost:3026), create a sample resume, and check that the PDF preview renders. The first preview downloads the browser's LaTeX runtime.
+5. Open the [local generator](http://localhost:3026/generator), enter a sample name, and select **Render**. Check that the PDF appears in **Preview**. The first preview downloads the browser's LaTeX runtime.
 
 **Environment**
 
