@@ -1,0 +1,21 @@
+name: Feature request
+description: Suggest a change to Resume Manager
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe your goal and where you get stuck today.
+    validations:
+      required: true
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: What behavior would help?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Workarounds or other context
+      description: Share what you do today or add a screenshot with sample data.
