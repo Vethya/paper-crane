@@ -1,0 +1,29 @@
+name: Bug report
+description: Report a problem with Resume Manager
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: What did you expect to happen, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Give the shortest steps that reproduce the problem. Use sample resume data if the issue depends on the resume content.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Include your browser and whether you used the hosted app or ran it locally. For a local checkout, include the commit if you know it.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or logs
+      description: Remove personal information and credentials before sharing.
