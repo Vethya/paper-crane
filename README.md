@@ -32,17 +32,18 @@ The browser downloads the Siglum WebAssembly runtime and compiles generated `.te
 
 ## Getting Started
 
-**Install dependencies**
+1. Install Node.js. CI uses Node 20, and the MongoDB driver needs at least Node 20.19 on that release line.
+2. Clone the development branch:
 
-```bash
-pnpm install
-```
+   ```bash
+   git clone --branch dev https://github.com/Vethya/resume-manager.git
+   cd resume-manager
+   ```
 
-**Run the frontend**
+3. [Install pnpm](https://pnpm.io/10.x/installation). From the project directory, check that `pnpm --version` matches `packageManager` in [package.json](package.json). Install dependencies with `pnpm install --frozen-lockfile`.
 
-```bash
-pnpm dev
-```
+4. Follow the environment setup below, then run `pnpm dev`.
+5. Open the [local generator](http://localhost:3026/generator), enter a sample name, and select **Render**. Check that the PDF appears in **Preview**. The first preview downloads the browser's LaTeX runtime.
 
 **Environment**
 
