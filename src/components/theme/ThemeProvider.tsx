@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 
-export const THEME_STORAGE_KEY = 'resume-manager-theme'
+export const THEME_STORAGE_KEY = 'paper-crane-theme'
 
 export type ThemeMode = 'light' | 'dark'
 

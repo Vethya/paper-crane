@@ -1,4 +1,4 @@
-# Contributing to Resume Manager
+# Contributing to Paper Crane
 
 Follow the [development setup](README.md#getting-started), then reproduce the behavior with a sample resume.
 
@@ -18,6 +18,6 @@ Follow the [development setup](README.md#getting-started), then reproduce the be
 
 ## Report a bug or suggest a feature
 
-Search [existing issues](https://github.com/Vethya/resume-manager/issues) before opening a new one. For bugs, describe the steps, the expected result, and what actually happened. For feature requests, describe the task you were trying to complete and where the app fell short.
+Search [existing issues](https://github.com/Vethya/paper-crane/issues) before opening a new one. For bugs, describe the steps, the expected result, and what actually happened. For feature requests, describe the task you were trying to complete and where the app fell short.
 
 Use sample resume data in reproductions, screenshots, and logs. Remove credentials and personal details before attaching files.

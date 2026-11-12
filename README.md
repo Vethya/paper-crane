@@ -1,14 +1,22 @@
-# Resume Manager
+# Paper Crane
 
-A resume builder for generating elegant LaTeX resumes without writing any TeX code yourself. Built with Next.js and client-side WebAssembly LaTeX compilation.
+[![CI](https://github.com/Vethya/paper-crane/actions/workflows/ci.yaml/badge.svg?branch=dev)](https://github.com/Vethya/paper-crane/actions/workflows/ci.yaml) [![License: MIT](https://img.shields.io/badge/app%20license-MIT-blue.svg)](LICENSE)
+
+A resume builder for generating elegant LaTeX resumes without writing any TeX code yourself.
+
+Use the hosted app for free at [papercrane.vethya.com](https://papercrane.vethya.com).
+
+https://github.com/user-attachments/assets/86d32a2a-a91f-4c2e-9335-c80e356958d6
 
 ## Features
 
-- **Visual template picker** — choose from 9 LaTeX templates with live previews
-- **Live PDF preview** — see your resume update in real time with zoom, pagination, and download controls
-- **Dynamic form sections** — add and remove entries for experience, education, projects, skills, and more
-- **LaTeX special character sanitization** — user input is automatically escaped before compilation
-- **Responsive layout** — tab-based UI on mobile/tablet, side-by-side on desktop
+- 🎨 **9 LaTeX templates:** Choose a design and build a polished resume.
+- 👀 **Automatic PDF preview:** See your resume update as you edit, without leaving the builder.
+- 📁 **Multiple resumes:** Keep different versions for different roles, and find them with search and tags.
+- 🧩 **Reusable components:** Save experience, education, and other entries to copy into your resumes.
+- 📥 **Take your work with you:** Download your resume as a PDF or export its LaTeX source for further editing.
+
+Sign in to save multiple resumes and reusable components.
 
 ## Tech Stack
 
@@ -38,8 +46,8 @@ For local development, [set up MongoDB](docs/local-mongodb.md) before starting t
 2. Clone the development branch:
 
    ```bash
-   git clone --branch dev https://github.com/Vethya/resume-manager.git
-   cd resume-manager
+   git clone --branch dev https://github.com/Vethya/paper-crane.git
+   cd paper-crane
    ```
 
 3. [Install pnpm](https://pnpm.io/10.x/installation). From the project directory, check that `pnpm --version` matches `packageManager` in [package.json](package.json). Install dependencies with `pnpm install --frozen-lockfile`.
@@ -78,15 +86,25 @@ AI_FEATURES_ENABLED=true
 GOOGLE_GENERATIVE_AI_API_KEY=your-gemini-key
 ```
 
-The server reads the flag at runtime, so with `next start` changing it takes a restart, not a rebuild. On Vercel, env changes apply only to new deployments, so redeploy after changing it. If the flag is on and the key is missing, the server fails at startup. When the flag is off, the agent UI is hidden and the agent API routes return 404. `/api/agent/status` reports whether the flag is on.
-
-When AI is enabled, resume data and conversation messages are sent to Google Gemini. Saved chat history is stored in MongoDB in `agentSession`. AI requests allow 64,000 characters of serialized resume JSON, 32,000 per message, and 128,000 across the resume and message content, counted as Unicode code points. Older complete exchanges are left out when necessary; saved history stays intact. Warnings appear at 80% of a limit. Oversized resumes and new messages must be shortened. A separate 768,000-byte transport cap protects the server before JSON parsing. Chat output is capped at 2,048 tokens; editing and its single repair attempt each allow 8,192. Incomplete edits are never applied.
-
-The generator route sends the headers required by WebAssembly threading (`Cross-Origin-Opener-Policy` and `Cross-Origin-Embedder-Policy`).
-
 ## Templates
 
 9 templates are included, each compiled with either `pdflatex` or `xelatex` depending on the template's requirements.
+
+## Hosted and self-hosted
+
+| | Hosted | Self-hosted |
+| --- | --- | --- |
+| **Best for** | Building a resume without managing infrastructure | Running your own instance and controlling its configuration |
+| **Setup** | Open the app and start building | Run the Next.js app and configure MongoDB and Google OAuth |
+| **Accounts and saved resumes** | Sign in with Google to save resumes | Configure your own Google OAuth client and MongoDB database |
+| **Data storage** | Saved data is stored in the hosted app's database | Saved data is stored in the MongoDB database you configure |
+| **PDF generation** | LaTeX compiles in your browser; the first preview downloads the runtime | Same browser-based compilation; no separate LaTeX server needed |
+| **Resume Agent** | Disabled on the hosted app | Optional; enable it with a Gemini API key |
+| **Maintenance** | No deployment or server maintenance required | You manage deployment, updates, database, and credentials |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for how to contribute and report issues.
 
 ## Credits
 

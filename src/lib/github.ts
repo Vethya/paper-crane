@@ -1,4 +1,4 @@
-export const GITHUB_REPO = 'Vethya/resume-manager'
+export const GITHUB_REPO = 'Vethya/paper-crane'
 export const GITHUB_REPO_URL = `https://github.com/${GITHUB_REPO}`
 
 const ONE_HOUR_IN_SECONDS = 60 * 60
