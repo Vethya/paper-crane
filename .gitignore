@@ -50,3 +50,6 @@ yarn-error.log*
 
 # local generated output
 /output/
+
+# local demo recording (hosted on GitHub instead)
+/demo.mp4
