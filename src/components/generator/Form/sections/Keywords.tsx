@@ -4,7 +4,7 @@ import { Fragment, useEffect, useRef } from 'react'
 import { useFieldArray, useFormContext } from 'react-hook-form'
 import { useAtom } from 'jotai'
 import { MdClose } from 'react-icons/md'
-import { Check, RotateCcw } from 'lucide-react'
+import { EditReviewActions } from '../../../core/EditReviewActions'
 import { IconButton } from '../../../core/Button'
 import { FormInput } from '../../../core/FormInput'
 import {
@@ -73,27 +73,28 @@ export default function Keywords({
 
   return (
     <div className={twMerge(clsx('min-w-0', className))} data-field-path={name}>
-      <label className="mb-2 inline-block text-white">{label}</label>
+      <label className="mb-1.5 inline-block text-[13px] font-medium text-slate-400">
+        {label}
+      </label>
       <FormInput onSubmit={append} />
       <div
         className={clsx(
-          'my-2 rounded transition-shadow',
+          'mt-2 rounded-app-button transition-shadow',
           fieldEdit && 'review-field-highlight p-2'
         )}
       >
-        <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-3 overflow-hidden">
+        <div className="flex w-full min-w-0 max-w-full flex-wrap items-start gap-1.5 overflow-hidden">
           {fields.map((field, i) => (
             <Fragment key={field.id}>
-              <div
-                className="inline-flex max-w-full min-w-0 items-center gap-1 rounded-app-button border border-app-controlBorder py-1 pl-2 pr-2"
-              >
+              <div className="inline-flex max-w-full min-w-0 items-center gap-0.5 rounded-app-button bg-app-control py-0.5 pl-2.5 pr-1 text-sm">
                 <span className="block min-w-0 max-w-full truncate">
                   {getValues(`${name}.${i}`)}
                 </span>
                 <IconButton
                   type="button"
                   onClick={() => remove(i)}
-                  className="shrink-0"
+                  className="shrink-0 p-0.5 text-slate-400 hover:text-white"
+                  aria-label={`Remove ${getValues(`${name}.${i}`)}`}
                 >
                   <MdClose />
                 </IconButton>
@@ -103,29 +104,11 @@ export default function Keywords({
         </div>
 
         {fieldEdit && (
-          <div className="mt-2 flex items-start gap-2">
-            <p className="review-reason flex-1 text-xs italic leading-snug">
-              {fieldEdit.reason}
-            </p>
-            <div className="flex shrink-0 gap-1">
-              <button
-                type="button"
-                onClick={handleApprove}
-                className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
-              >
-                <Check className="h-3 w-3" />
-                Keep
-              </button>
-              <button
-                type="button"
-                onClick={handleReject}
-                className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
-              >
-                <RotateCcw className="h-3 w-3" />
-                Restore
-              </button>
-            </div>
-          </div>
+          <EditReviewActions
+            reason={fieldEdit.reason}
+            onKeep={handleApprove}
+            onRestore={handleReject}
+          />
         )}
       </div>
     </div>

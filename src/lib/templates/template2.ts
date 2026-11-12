@@ -1,6 +1,7 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { href } from './escape'
 
 const generator: Generator = {
   profileSection(basics) {
@@ -27,14 +28,10 @@ const generator: Generator = {
       nameLine = `\\headerfirstnamestyle{${nameStart}} \\headerlastnamestyle{${nameEnd}} \\\\`
     }
 
-    const emailLine = email ? `{\\faEnvelope\\ ${email}}` : ''
-    const phoneLine = phone ? `{\\faMobile\\ ${phone}}` : ''
-    const addressLine = location.address
-      ? `{\\faMapMarker\\ ${location.address}}`
-      : ''
-    const websiteLine = website
-      ? `{\\faLink\\ \\href{${website}}{${website}}}`
-      : ''
+    const emailLine = email || ''
+    const phoneLine = phone || ''
+    const addressLine = location.address || ''
+    const websiteLine = website ? href(website) : ''
     const info = [emailLine, phoneLine, addressLine, websiteLine]
       .filter(Boolean)
       .join(' | ')
@@ -118,10 +115,11 @@ const generator: Generator = {
       \\cvsection{${heading || 'Experience'}}
       \\begin{cventries}
       ${work.map((job) => {
-        const { company, position, location, startDate, endDate, highlights } = job
+        const { company, position, location, startDate, endDate, highlights } =
+          job
 
         let dateRange
-        let dutyLines
+        let dutyLines = ''
 
         if (startDate && endDate) {
           dateRange = `${startDate} – ${endDate}`
@@ -131,7 +129,7 @@ const generator: Generator = {
           dateRange = endDate
         }
 
-        if (highlights) {
+        if (highlights?.some(Boolean)) {
           dutyLines = source`
             \\begin{cvitems}
               ${highlights.map((duty) => `\\item {${duty}}`)}
@@ -159,24 +157,13 @@ const generator: Generator = {
 
     return source`
       \\cvsection{${heading || 'Skills'}}
-      \\begin{cventries}
-      \\cventry
-      {}
-      {\\def\\arraystretch{1.15}{\\begin{tabular}{ l l }
+      \\begingroup\\raggedright
       ${skills.map((skill) => {
         const { name, keywords = [] } = skill
-        const nameLine = name ? `${name}: ` : ''
-        const detailsLine = `{\\skill{ ${keywords.join(', ') || ''}}}`
-
-        return `${nameLine} & ${detailsLine} \\\\`
+        const nameLine = name ? `\\entrytitlestyle{${name}:} ` : ''
+        return `${nameLine}\\skill{${keywords.join(', ')}}\\par`
       })}
-      \\end{tabular}}}
-      {}
-      {}
-      {}
-      \\end{cventries}
-
-      \\vspace{-7mm}
+      \\endgroup
     `
   },
 
@@ -190,17 +177,14 @@ const generator: Generator = {
       \\begin{cventries}
       ${projects.map((project) => {
         const { name, description, keywords = [], url } = project
-        const urlLine = url ? `\\href{${url}}{${url}}` : ''
+        const urlLine = url ? href(url) : ''
 
         return stripIndent`
-          \\cventry
-            {${description || ''}}
+          \\cvproject
             {${name || ''}}
-            {${keywords.join(', ') || ''}}
+            {${keywords.join(', ')}}
             {${urlLine}}
-            {}
-
-          \\vspace{-5mm}
+            {${description || ''}}
         `
       })}
       \\end{cventries}
@@ -245,6 +229,9 @@ const generator: Generator = {
     %
     % Template license:
     % CC BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
+    %
+    % Class license (awesome-cv.cls):
+    % LPPL v1.3c (http://www.latex-project.org/lppl)
     %
 
 

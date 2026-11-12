@@ -17,16 +17,18 @@ export function ComponentItemFields({
   invalidFieldName
 }: ComponentItemFieldsProps) {
   const fieldClassName = 'mb-0'
+  const wideClassName = 'col-span-2 mb-0'
+  const gridClassName = 'grid grid-cols-2 gap-x-3 gap-y-4'
   const isInvalid = (fieldName: string) => invalidFieldName === fieldName
 
   if (type === 'education') {
     return (
-      <div className="space-y-6">
+      <div className={gridClassName}>
         <LabeledInput
           name={`education.${index}.institution`}
           label="School name"
           placeholder="Rutgers University"
-          className={fieldClassName}
+          className={wideClassName}
           invalid={isInvalid('institution')}
         />
         <LabeledInput
@@ -71,12 +73,12 @@ export function ComponentItemFields({
 
   if (type === 'work') {
     return (
-      <div className="space-y-6">
+      <div className={gridClassName}>
         <LabeledInput
           name={`work.${index}.company`}
           label="Company name"
           placeholder="Netflix"
-          className={fieldClassName}
+          className={wideClassName}
           invalid={isInvalid('company')}
         />
         <LabeledInput
@@ -107,7 +109,7 @@ export function ComponentItemFields({
           label="Job Responsibilities"
           placeholder="Did cool stuff at company"
           name={`work.${index}.highlights`}
-          className={fieldClassName}
+          className={wideClassName}
         />
       </div>
     )
@@ -115,19 +117,19 @@ export function ComponentItemFields({
 
   if (type === 'skills') {
     return (
-      <div className="space-y-6">
+      <div className={gridClassName}>
         <LabeledInput
           name={`skills.${index}.name`}
           label="Skill name"
           placeholder="Programming Languages"
-          className={fieldClassName}
+          className={wideClassName}
           invalid={isInvalid('name')}
         />
         <Keywords
           label="Skill Details"
           placeholder="TypeScript"
           name={`skills.${index}.keywords`}
-          className={fieldClassName}
+          className={wideClassName}
         />
       </div>
     )
@@ -135,12 +137,12 @@ export function ComponentItemFields({
 
   if (type === 'projects') {
     return (
-      <div className="space-y-6">
+      <div className={gridClassName}>
         <LabeledInput
           name={`projects.${index}.name`}
           label="Project Name"
           placeholder="Piper Chat"
-          className={fieldClassName}
+          className={wideClassName}
           invalid={isInvalid('name')}
         />
         <LabeledInput
@@ -149,31 +151,31 @@ export function ComponentItemFields({
           placeholder="A video chat app with great picture quality."
           multiline
           textareaRows={4}
-          className={fieldClassName}
+          className={wideClassName}
         />
         <LabeledInput
           name={`projects.${index}.url`}
           label="Link to Project"
           placeholder="http://piperchat.com"
-          className={fieldClassName}
+          className={wideClassName}
         />
         <Keywords
           label="Tools Used"
           placeholder="TypeScript"
           name={`projects.${index}.keywords`}
-          className={fieldClassName}
+          className={wideClassName}
         />
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
+    <div className={gridClassName}>
       <LabeledInput
         name={`awards.${index}.title`}
         label="Award Name"
         placeholder="Supreme hacker"
-        className={fieldClassName}
+        className={wideClassName}
         invalid={isInvalid('title')}
       />
       <LabeledInput
@@ -194,7 +196,7 @@ export function ComponentItemFields({
         placeholder="Recognized for creating the most awesome project at a hackathon."
         multiline
         textareaRows={4}
-        className={fieldClassName}
+        className={wideClassName}
       />
     </div>
   )

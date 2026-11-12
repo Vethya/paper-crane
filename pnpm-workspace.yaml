@@ -1,0 +1,4 @@
+# Do not resolve package versions published less than a day ago (minutes).
+minimumReleaseAge: 1440
+patchedDependencies:
+  '@siglum/engine@0.1.4': patches/@siglum__engine@0.1.4.patch

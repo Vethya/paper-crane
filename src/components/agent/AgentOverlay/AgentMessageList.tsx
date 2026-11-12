@@ -32,9 +32,13 @@ export function AgentMessageList({
 
   if (messages.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center px-4">
-        <p className="text-center text-sm text-slate-500">
+      <div className="flex flex-1 flex-col items-center justify-center gap-1 px-4 text-center">
+        <p className="text-sm font-medium text-white">
           Ask anything about your resume
+        </p>
+        <p className="max-w-xs text-xs text-slate-400">
+          Pick a mode below. Chat and Feedback only talk; Tailoring suggests
+          edits you can keep or restore.
         </p>
       </div>
     )
@@ -42,17 +46,17 @@ export function AgentMessageList({
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-6">
         {messages.map((msg) => (
           <div
             key={msg.id}
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] rounded-app-card px-4 py-2.5 text-sm leading-relaxed ${
+              className={`text-sm leading-relaxed ${
                 msg.role === 'user'
-                  ? 'rounded-br-sm bg-white text-app-background whitespace-pre-wrap'
-                  : 'rounded-bl-sm border border-app-controlBorder bg-app-control text-slate-100'
+                  ? 'max-w-[85%] whitespace-pre-wrap rounded-app-card bg-app-control px-3.5 py-2 text-white'
+                  : 'w-full text-slate-200'
               }`}
             >
               {msg.role === 'assistant' ? (
@@ -96,12 +100,12 @@ export function AgentMessageList({
                         </h3>
                       ),
                       code: ({ children }) => (
-                        <code className="rounded bg-app-controlHover px-1 font-mono text-xs">
+                        <code className="rounded-app-small bg-app-controlHover px-1 font-mono text-xs">
                           {children}
                         </code>
                       ),
                       pre: ({ children }) => (
-                        <pre className="mb-2 overflow-x-auto rounded bg-app-controlHover p-2 font-mono text-xs">
+                        <pre className="mb-2 overflow-x-auto rounded-app-small bg-app-controlHover p-2 font-mono text-xs">
                           {children}
                         </pre>
                       )
@@ -125,7 +129,7 @@ export function AgentMessageList({
                   {msg.error && onRetry && (
                     <button
                       onClick={onRetry}
-                      className="mt-2 inline-flex items-center gap-1.5 rounded-app-button border border-app-controlBorder bg-app-control px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
+                      className="mt-2 inline-flex items-center gap-1.5 rounded-app-button bg-app-control px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
                     >
                       <RotateCw className="h-3 w-3" />
                       Retry

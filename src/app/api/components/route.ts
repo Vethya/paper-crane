@@ -7,6 +7,8 @@ import {
   isComponentType,
   validateComponentContent
 } from '@/lib/resumeComponents'
+import { parseBody } from '@/lib/apiValidation'
+import { ComponentBodySchema } from '@/lib/apiSchemas'
 
 export async function GET(request: NextRequest) {
   const session = await auth.api.getSession({ headers: request.headers })
@@ -40,7 +42,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { type, content } = await request.json()
+  const { data, error } = await parseBody(request, ComponentBodySchema)
+  if (error) return error
+  const { type, content } = data
   if (!isComponentType(type)) {
     return NextResponse.json(
       { error: 'Invalid component type' },

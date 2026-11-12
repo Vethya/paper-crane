@@ -1,6 +1,7 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { href } from './escape'
 
 const generator: Generator = {
   profileSection(basics) {
@@ -9,16 +10,15 @@ const generator: Generator = {
     }
 
     const { name, email, phone, location = {}, website } = basics
-    const websiteLine = website ? `\\href{${website}}{${website}}` : ''
+    const websiteLine = website ? href(website) : ''
 
     const info = [email, phone, location.address, websiteLine]
       .filter(Boolean)
       .join(' | ')
 
     return stripIndent`
-      \\begin{tabular*}{7in}{l@{\\extracolsep{\\fill}}r}
-      \\textbf{\\Large ${name}} & \\textit{${info}}
-      \\end{tabular*}
+      \\noindent\\parbox[t]{0.30\\textwidth}{\\textbf{\\Large ${name || ''}}}\\hfill
+      \\parbox[t]{0.67\\textwidth}{\\raggedleft\\textit{${info}}}\\par
     `
   },
 
@@ -97,10 +97,11 @@ const generator: Generator = {
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       \\begin{itemize}[leftmargin=*]
       ${work.map((job) => {
-        const { company, position, location, startDate, endDate, highlights } = job
+        const { company, position, location, startDate, endDate, highlights } =
+          job
 
         let dateRange
-        let dutyLines
+        let dutyLines = ''
 
         if (startDate && endDate) {
           dateRange = `${startDate} | ${endDate}`
@@ -110,7 +111,7 @@ const generator: Generator = {
           dateRange = endDate
         }
 
-        if (highlights) {
+        if (highlights?.some(Boolean)) {
           dutyLines = source`
             \\begin{itemize}
               ${highlights.map((duty) => `\\item ${duty}`)}
@@ -167,7 +168,7 @@ const generator: Generator = {
         const descriptionWithNewline = description
           ? `\\\\${description}`
           : description
-        const urlLine = url ? `\\href{${url}}{${url}}` : ''
+        const urlLine = url ? href(url) : ''
 
         return stripIndent`
           \\item[]

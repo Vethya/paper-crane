@@ -1,10 +1,14 @@
 'use client'
 
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { isCancelledError, useQueryClient } from '@tanstack/react-query'
+import { useQueryAccount } from '@/components/providers/QueryProvider'
+import { authClient } from '@/db/auth-client'
+import { loadResume } from '@/lib/resumeCache'
 import { FormProvider, useForm } from 'react-hook-form'
-import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { Loader2 } from 'lucide-react'
+import { useAtom, useAtomValue, useSetAtom, useStore } from 'jotai'
+import { FormSkeleton } from '@/components/ui/skeleton'
 import { TemplatesSection } from './sections/TemplatesSection'
 import { ProfileSection } from './sections/ProfileSection'
 import { EducationSection } from './sections/EducationSection'
@@ -12,103 +16,49 @@ import { WorkSection } from './sections/WorkSection'
 import { SkillsSection } from './sections/SkillsSection'
 import { AwardSection } from './sections/AwardsSection'
 import { ProjectsSection } from './sections/projectsSection'
-import { resumeAtom, isLoadingResumeAtom } from '../../../atoms/resume'
+import {
+  resumeAtom,
+  isLoadingResumeAtom,
+  markBuiltAtom,
+  autoRenderAtom,
+  resumeTitleAtom,
+  loadedResumeIdAtom,
+  resumeLoadErrorAtom
+} from '../../../atoms/resume'
 import { formDataAtom, formSetValueAtom } from '../../../atoms/formData'
 import { AgentFieldFocuser } from '../../agent/AgentFieldFocuser'
-import {
-  agentPendingEditsAtom,
-  type PendingEdit
-} from '../../../atoms/agentEdits'
+import { agentPendingEditsAtom } from '../../../atoms/agentEdits'
 import { resumeTagsAtom } from '../../../atoms/resumeTags'
 import { FormValues } from '../../../types'
+import {
+  browserStorage,
+  clearDraft,
+  findRecovery,
+  readDraft,
+  type Recovery
+} from '../../../lib/draftRecovery'
+import { RecoveryBanner } from '../RecoveryBanner'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
-import latex from '../../../lib/latex'
+import latex, { prewarm } from '../../../lib/latex'
 import getTemplateData from '../../../lib/templates'
-
-async function generateResume(formData: FormValues): Promise<string> {
-  const { texDoc, opts } = getTemplateData(formData)
-  return latex(texDoc, opts)
-}
-
-function setNestedValue(
-  obj: Record<string, unknown>,
-  path: string,
-  value: unknown
-) {
-  const parts = path.split('.')
-  let target: Record<string, unknown> = obj
-  for (let i = 0; i < parts.length - 1; i++) {
-    const key = parts[i]
-    const idx = Number(key)
-    const next =
-      !isNaN(idx) && Array.isArray(target) ? target[idx] : target[key]
-    target = next as Record<string, unknown>
-    if (target == null) return
-  }
-  target[parts[parts.length - 1]] = value
-}
-
-function applyPendingEdits(formValues: FormValues, edits: PendingEdit[]) {
-  const vals = formValues as Record<string, unknown>
-
-  for (const edit of edits) {
-    if (edit.status !== 'pending') continue
-
-    if (edit.type === 'set') {
-      setNestedValue(vals, edit.fieldPath, edit.newValue)
-    } else if (edit.type === 'append') {
-      const arr = (vals[edit.arrayPath] ?? []) as Record<string, unknown>[]
-      const existing = arr.find((e) => e._agentEditId === edit.id)
-      if (existing) {
-        Object.assign(existing, edit.entry)
-      } else {
-        arr.push(edit.entry)
-        vals[edit.arrayPath] = arr
-      }
-    }
-  }
-
-  // Apply removes last so indices stay valid during set/append passes
-  const removeMap = new Map<string, Set<number>>()
-  for (const edit of edits) {
-    if (edit.type === 'remove' && edit.status === 'pending') {
-      if (!removeMap.has(edit.arrayPath))
-        removeMap.set(edit.arrayPath, new Set())
-      removeMap.get(edit.arrayPath)!.add(edit.entryIndex)
-    }
-  }
-  for (const [arrayPath, indices] of removeMap) {
-    const current = (vals[arrayPath] ?? []) as unknown[]
-    vals[arrayPath] = current.filter((_, i) => !indices.has(i))
-  }
-}
-
-const ARRAY_PATHS = [
-  'work',
-  'education',
-  'skills',
-  'projects',
-  'awards'
-] as const
-
-function stripAgentMarkers(formValues: FormValues) {
-  const vals = formValues as Record<string, unknown>
-  for (const key of ARRAY_PATHS) {
-    const arr = vals[key]
-    if (!Array.isArray(arr)) continue
-    for (const entry of arr) {
-      if (entry && typeof entry === 'object')
-        delete (entry as Record<string, unknown>)._agentEditId
-    }
-  }
-}
+import { prepareResumeBuild } from '../../../lib/resumeBuild'
+import { createRenderScheduler } from '../../../lib/renderScheduler'
 
 const initialFormValues: FormValues = {
   headings: {},
   sections: ['profile', 'education', 'work', 'skills', 'projects', 'awards'],
   selectedTemplate: 1
+}
+
+function hasContent(value: unknown): boolean {
+  if (typeof value === 'string') return value.trim().length > 0
+  return (
+    !!value &&
+    typeof value === 'object' &&
+    Object.values(value).some(hasContent)
+  )
 }
 
 interface FormProps {
@@ -129,64 +79,154 @@ export function Form({
   const searchParams = useSearchParams()
   const currSection = activeSection
   const resumeId = searchParams.get('id')
+  const client = useQueryClient()
+  const account = useQueryAccount()
+  const { isPending: sessionPending } = authClient.useSession()
+  const [loadError, setLoadError] = useAtom(resumeLoadErrorAtom)
+  const [loadAttempt, setLoadAttempt] = useState(0)
 
+  const store = useStore()
   const [, setResume] = useAtom(resumeAtom)
   const [, setFormData] = useAtom(formDataAtom)
   const [, setResumeTags] = useAtom(resumeTagsAtom)
   const [isLoadingResume, setIsLoadingResume] = useAtom(isLoadingResumeAtom)
   const setFormSetValue = useSetAtom(formSetValueAtom)
+  const markBuilt = useSetAtom(markBuiltAtom)
+  const setResumeTitle = useSetAtom(resumeTitleAtom)
+  const [loadedResumeId, setLoadedResumeId] = useAtom(loadedResumeIdAtom)
   const pendingEdits = useAtomValue(agentPendingEditsAtom)
+  const autoRender = useAtomValue(autoRenderAtom)
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
+  const [recovery, setRecovery] = useState<Recovery | null>(null)
+  const scheduler = useMemo(() => createRenderScheduler({ compile: latex }), [])
+  const owner = useMemo(
+    () => ({ resumeId, active: true, ready: !resumeId, renders: 0 }),
+    [resumeId]
+  )
+
+  useEffect(() => {
+    owner.active = true
+    return () => {
+      owner.active = false
+      scheduler.invalidate()
+      setResume((current) => ({ ...current, isLoading: false }))
+    }
+  }, [owner, scheduler, setResume])
+
+  useEffect(() => {
+    if (typeof window.requestIdleCallback === 'function') {
+      const task = window.requestIdleCallback(() => void prewarm())
+      return () => window.cancelIdleCallback(task)
+    }
+    const task = setTimeout(() => void prewarm(), 0)
+    return () => clearTimeout(task)
+  }, [])
 
   const generateAndSetResume = useCallback(
     async (
       formValues: FormValues,
-      shouldCommit: () => boolean = () => true
+      shouldCommit: () => boolean = () => true,
+      force = false
     ) => {
+      const buildPayload = prepareResumeBuild(formValues)
+      owner.renders++
       setResume((current) => ({ ...current, isError: false, isLoading: true }))
       try {
-        const newResumeUrl = await generateResume(formValues)
-        if (!shouldCommit()) return
-        setResume({ url: newResumeUrl, isError: false, isLoading: false })
+        const result = await scheduler.request(
+          { ...getTemplateData(buildPayload), owner },
+          { force }
+        )
+        if (result.status === 'skipped') {
+          if (result.built && owner.active && shouldCommit())
+            markBuilt(buildPayload)
+          return
+        }
+        if (result.status !== 'done') return
+        if (!owner.active || !shouldCommit()) {
+          URL.revokeObjectURL(result.url)
+          return
+        }
+        markBuilt(buildPayload)
+        setResume({ url: result.url, isError: false, isLoading: false })
       } catch (error) {
-        if (!shouldCommit()) return
+        if (!owner.active || !shouldCommit()) return
         console.error(error)
         setResume((current) => ({
           ...current,
           isError: true,
           isLoading: false
         }))
+      } finally {
+        owner.renders--
+        if (owner.active)
+          setResume((current) => ({
+            ...current,
+            isLoading: owner.renders > 0
+          }))
       }
     },
-    [setResume]
+    [setResume, markBuilt, scheduler, owner]
   )
 
   useEffect(() => {
     let cancelled = false
+    let loaded: FormValues | undefined
+    const renderLoaded = () => {
+      if (cancelled || document.hidden || !loaded) return
+      void generateAndSetResume(loaded, () => !cancelled)
+      loaded = undefined
+    }
+    document.addEventListener('visibilitychange', renderLoaded)
 
     async function loadData() {
+      setRecovery(null)
+      setLoadError(null)
       if (resumeId) {
         setIsLoadingResume(true)
+        if (sessionPending) return
         try {
-          const res = await fetch(`/api/resumes/${resumeId}`)
-          if (!res.ok) return
-          const data = await res.json()
+          if (!account) return setLoadError('Sign in to open this resume.')
+          const data = await loadResume(
+            client,
+            account,
+            resumeId,
+            !!readDraft(browserStorage, resumeId)
+          )
           if (cancelled) return
           const content = data.content as FormValues
+          // Offer back edits the server never confirmed, else drop the backup.
+          const found = findRecovery(
+            readDraft(browserStorage, resumeId),
+            content,
+            data.updatedAt
+          )
+          if (found) setRecovery(found)
+          else clearDraft(browserStorage, resumeId)
           formContext.reset(content)
           setFormData(content)
+          setLoadedResumeId(resumeId)
           setResumeTags(data.tags ?? [])
-          void generateAndSetResume(content, () => !cancelled)
+          setResumeTitle(data.title ?? '')
+          owner.ready = true
+          loaded = content
+          renderLoaded()
+        } catch (error) {
+          if (cancelled) return
+          // A save or tag change cancels this read, so start it again.
+          if (isCancelledError(error)) setLoadAttempt((attempt) => attempt + 1)
+          else setLoadError('Unable to load resume.')
         } finally {
           if (!cancelled) setIsLoadingResume(false)
         }
       } else {
+        setIsLoadingResume(false)
         const lastSession = localStorage.getItem('jsonResume')
         if (lastSession) {
           const jsonResume = JSON.parse(lastSession) as FormValues
           formContext.reset(jsonResume)
           setFormData(jsonResume)
         } else {
+          formContext.reset(initialFormValues)
           setFormData(initialFormValues)
         }
       }
@@ -203,15 +243,84 @@ export function Form({
 
     return () => {
       cancelled = true
+      setLoadedResumeId(null)
+      setLoadError(null)
       subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', renderLoaded)
     }
   }, [
     resumeId,
     formContext,
     setFormData,
+    setLoadedResumeId,
     setResumeTags,
+    setResumeTitle,
     setIsLoadingResume,
-    generateAndSetResume
+    generateAndSetResume,
+    owner,
+    client,
+    account,
+    sessionPending,
+    loadAttempt,
+    setLoadError
+  ])
+
+  useEffect(() => {
+    let cancelled = false
+    let revision = 0
+    let timer: ReturnType<typeof setTimeout>
+    const enabled = () =>
+      !cancelled &&
+      owner.ready &&
+      !document.hidden &&
+      !isLoadingResume &&
+      autoRender
+    const changed = () => {
+      const version = ++revision
+      clearTimeout(timer)
+      if (!enabled()) return
+      timer = setTimeout(async () => {
+        if (!enabled()) return
+        const valid = await formContext.trigger()
+        if (!valid || !enabled() || version !== revision) return
+        const payload = prepareResumeBuild(
+          formContext.getValues(),
+          pendingEdits
+        )
+        if (
+          !resumeId &&
+          !store.get(resumeAtom).url &&
+          ![
+            payload.basics,
+            payload.work,
+            payload.education,
+            payload.skills,
+            payload.projects,
+            payload.awards
+          ].some(hasContent)
+        )
+          return
+        await generateAndSetResume(payload)
+      }, 700)
+    }
+    const subscription = formContext.watch(changed)
+    document.addEventListener('visibilitychange', changed)
+    changed()
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+      subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', changed)
+    }
+  }, [
+    formContext,
+    pendingEdits,
+    autoRender,
+    isLoadingResume,
+    generateAndSetResume,
+    resumeId,
+    owner,
+    store
   ])
 
   // Register setValue so the agent edit system can apply / restore values from outside the form
@@ -222,14 +331,27 @@ export function Form({
   }, [controlsExternalUpdates, setFormSetValue, formContext.setValue])
 
   const handleFormSubmit = useCallback(async () => {
+    if (!owner.ready) return
     onMake?.()
 
-    const formValues = structuredClone(formContext.getValues())
-    applyPendingEdits(formValues, pendingEdits)
-    stripAgentMarkers(formValues)
+    const formValues = prepareResumeBuild(formContext.getValues(), pendingEdits)
 
-    await generateAndSetResume(formValues)
-  }, [formContext, generateAndSetResume, onMake, pendingEdits])
+    await generateAndSetResume(formValues, undefined, true)
+  }, [formContext, generateAndSetResume, onMake, pendingEdits, owner])
+
+  // Restoring changes the form, so autosave saves the restored content.
+  function restoreDraft() {
+    if (!recovery) return
+    const content = JSON.parse(recovery.content) as FormValues
+    formContext.reset(content)
+    setFormData(content)
+    setRecovery(null)
+  }
+
+  function discardDraft() {
+    if (resumeId) clearDraft(browserStorage, resumeId)
+    setRecovery(null)
+  }
 
   return (
     <FormProvider {...formContext}>
@@ -239,14 +361,31 @@ export function Form({
         )}
         data-resume-form
         id={formId}
+        method="post"
         onSubmit={formContext.handleSubmit(handleFormSubmit)}
       >
-        {isLoadingResume ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        {loadError ? (
+          <div role="alert" className="p-6 text-sm text-red-400">
+            {loadError}{' '}
+            <button
+              type="button"
+              className="underline"
+              onClick={() => setLoadAttempt((attempt) => attempt + 1)}
+            >
+              Retry
+            </button>
           </div>
+        ) : resumeId && (isLoadingResume || loadedResumeId !== resumeId) ? (
+          <FormSkeleton />
         ) : (
           <>
+            {recovery && (
+              <RecoveryBanner
+                recovery={recovery}
+                onRestore={restoreDraft}
+                onDiscard={discardDraft}
+              />
+            )}
             <AgentFieldFocuser />
             {currSection === 'templates' && <TemplatesSection />}
             {currSection === 'basics' && <ProfileSection />}

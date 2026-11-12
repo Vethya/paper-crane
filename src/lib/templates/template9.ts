@@ -1,6 +1,7 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { href } from './escape'
 
 const generator: Generator = {
   profileSection(basics) {
@@ -9,7 +10,7 @@ const generator: Generator = {
     }
 
     const { name, email, phone, location = {}, website } = basics
-    const websiteLine = website ? `\\href{${website}}{${website}}` : ''
+    const websiteLine = website ? href(website) : ''
 
     const info = [email, phone, location.address, websiteLine]
       .filter(Boolean)
@@ -78,6 +79,7 @@ const generator: Generator = {
             {${degreeLine}}
             {${dateRange || ''}}
             {${nameLine}}
+            {}
             ${i < lastSchoolIndex ? '\\sepspace' : ''}
         `
       })}
@@ -169,7 +171,7 @@ const generator: Generator = {
 
       ${projects.map((project, i) => {
         const { name, description, keywords = [], url } = project
-        const urlLine = url ? `\\href{${url}}{${url}}` : ''
+        const urlLine = url ? href(url) : ''
 
         return stripIndent`
           \\ProjectEntry{${name || ''}}{${urlLine || ''}}
@@ -208,9 +210,16 @@ const generator: Generator = {
 
   resumeHeader() {
     return stripIndent`
+      % Your new CV
+      % Author: Frits Wenneker
+      % Source: http://www.howtotex.com/
+      % Feel free to distribute this template, but please keep the referral to HowToTeX.com.
       \\usepackage[english]{babel}
       \\usepackage[utf8]{inputenc}
       \\usepackage[T1]{fontenc}
+      % Map accented glyphs to precomposed Unicode characters for PDF text.
+      \\input{glyphtounicode}
+      \\pdfgentounicode=1
       \\usepackage{lmodern}
       \\usepackage[protrusion=true,expansion=true]{microtype}
       \\usepackage[svgnames]{xcolor}  % Colours by their 'svgnames'
@@ -238,24 +247,25 @@ const generator: Generator = {
       \\usepackage{sectsty}
 
       \\sectionfont{                 % Change font of \\section command
-        \\usefont{OT1}{phv}{b}{n}%   % bch-b-n: CharterBT-Bold font
+        \\usefont{T1}{phv}{b}{n}%   % Helvetica Bold font
         \\sectionrule{0pt}{0pt}{-5pt}{3pt}}
 
       %%% Macros
       %%% ------------------------------------------------------------
       \\newlength{\\spacebox}
+      \\newlength{\\datebox}
       \\settowidth{\\spacebox}{8888888888}      % Box to align text
       \\newcommand{\\sepspace}{\\vspace*{1em}}   % Vertical space macro
 
       \\newcommand{\\MyName}[1]{ % Name
-          \\Huge \\usefont{OT1}{phv}{b}{n} \\hfill #1
+          \\Huge \\usefont{T1}{phv}{b}{n} \\hfill #1
           \\par \\normalsize \\normalfont}
 
       \\newcommand{\\MySlogan}[1]{ % Slogan (optional)
           \\large \\usefont{OT1}{phv}{m}{n}\\hfill \\textit{#1}
           \\par \\normalsize \\normalfont}
 
-      \\newcommand{\\NewPart}[1]{\\section*{\\uppercase{#1}}}
+      \\newcommand{\\NewPart}[2]{\\section*{\\uppercase{#1}}}
 
       \\newcommand{\\PersonalEntry}[2]{
           \\noindent\\hangindent=2em\\hangafter=0 % Indentation
@@ -265,9 +275,7 @@ const generator: Generator = {
 
       \\newcommand{\\SkillsEntry}[2]{                % Same as \\PersonalEntry
           \\noindent\\hangindent=2em\\hangafter=0 % Indentation
-          \\parbox{\\spacebox}{                  % Box to align text
-          \\textit{#1}}                    % Entry name (birth, address, etc.)
-          \\hspace{1.5em} #2 \\par}              % Entry value
+          \\textit{#1}\\enspace #2 \\par}
 
       \\newcommand{\\AwardsEntry}[2]{                % Same as \\PersonalEntry
           \\noindent\\hangindent=2em\\hangafter=0 % Indentation
@@ -276,10 +284,9 @@ const generator: Generator = {
           \\hspace{1.5em} #2 \\par}              % Entry value
 
       \\newcommand{\\EducationEntry}[4]{
-          \\noindent \\textbf{#1} \\hfill      % Study
-          \\colorbox{Black}{
-            \\parbox{8.5em}{
-            \\hfill\\color{White}#2}} \\par  % Duration
+          \\settowidth{\\datebox}{#2}
+          \\noindent \\parbox[t]{\\dimexpr\\linewidth-\\datebox-2\\fboxsep-1em\\relax}{\\textbf{#1}} \\hfill
+          \\colorbox{Black}{\\mbox{\\color{White}#2}} \\par  % Duration
           \\noindent \\textit{#3} \\par        % School
           \\noindent\\hangindent=2em\\hangafter=0 \\small #4 % Description
           \\normalsize \\par}

@@ -1,6 +1,17 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { href } from './escape'
+
+// moderncv's \httplink always adds http:// and reuses its text as the link
+// target. The preamble makes \httplink print its argument as is, so the
+// homepage is passed as a finished link instead.
+function homepageLink(website: string) {
+  const url = /^[a-z][a-z0-9+.-]*:/i.test(website)
+    ? website
+    : `http://${website}`
+  return href(url, website)
+}
 
 const generator: Generator = {
   profileSection(basics = {}) {
@@ -12,7 +23,7 @@ const generator: Generator = {
     \\address{${location.address || ''}}
     ${phone ? `\\phone[mobile]{${phone}}` : ''}
     ${email ? `\\email{${email || ''}}` : ''}
-    ${website ? `\\homepage{${website || ''}}` : ''}
+    ${website ? `\\homepage{${homepageLink(website)}}` : ''}
   `
   },
 
@@ -93,7 +104,7 @@ const generator: Generator = {
           dateRange = endDate
         }
 
-        if (highlights) {
+        if (highlights?.some(Boolean)) {
           highlightLines = source`
             \\begin{itemize}%
               ${highlights.map((highlight) => `\\item ${highlight}`)}
@@ -145,7 +156,7 @@ const generator: Generator = {
         }
 
         if (url) {
-          detailsLine += url
+          detailsLine += href(url)
         }
 
         return stripIndent`
@@ -210,6 +221,14 @@ const generator: Generator = {
       \\usepackage{textcomp}
       % moderncv themes
       \\moderncvstyle{classic}                             % style options are 'casual' (default), 'classic', 'oldstyle' and 'banking'
+      \\renewcommand*{\\labelitemi}{\\textcolor{color1}{\\textbullet}}
+      \\renewcommand*{\\mobilephonesymbol}{Phone:~}
+      \\renewcommand*{\\emailsymbol}{Email:~}
+      \\renewcommand*{\\homepagesymbol}{Website:~}
+      \\renewcommand*{\\httplink}[2][]{#2}
+      \\hyphenpenalty=10000
+      \\exhyphenpenalty=10000
+      \\emergencystretch=2em
       \\moderncvcolor{blue}                               % color options 'blue' (default), 'orange', 'green', 'red', 'purple', 'grey' and 'black'
       %\\renewcommand{\\familydefault}{\\sfdefault}         % to set the default font; use '\\sfdefault' for the default sans serif font, '\\rmdefault' for the default roman one, or any tex font name
       %\\nopagenumbers{}                                  % uncomment to suppress automatic page numbering for CVs longer than one page
@@ -220,7 +239,7 @@ const generator: Generator = {
 
       % adjust the page margins
       \\usepackage[scale=0.75]{geometry}
-      %\\setlength{\\hintscolumnwidth}{3cm}                % if you want to change the width of the column with the dates
+      \\setlength{\\hintscolumnwidth}{3.6cm}                % if you want to change the width of the column with the dates
       %\\setlength{\\makecvtitlenamewidth}{10cm}           % for the 'classic' style, if you want to force the width allocated to your name and avoid line breaks. be careful though, the length is normally calculated to avoid any overlap with your personal info; use this at your own typographical risks...
     `
   }

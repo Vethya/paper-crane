@@ -1,6 +1,9 @@
 import { useCallback } from 'react'
 import { useAtom } from 'jotai'
-import { agentPendingEditsAtom, agentFocusedEditIdAtom } from '../atoms/agentEdits'
+import {
+  agentPendingEditsAtom,
+  agentFocusedEditIdAtom
+} from '../atoms/agentEdits'
 
 /**
  * Returns a function that advances the focused edit to the next pending one
@@ -23,6 +26,6 @@ export function useAdvanceFocusedEdit() {
       const next = nextAfter ?? fallback ?? null
       setFocusedId(next?.id ?? null)
     },
-    [pendingEdits, setFocusedId],
+    [pendingEdits, setFocusedId]
   )
 }

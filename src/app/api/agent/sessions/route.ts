@@ -3,9 +3,14 @@ import { auth } from '@/lib/auth'
 import { connectDB } from '@/db'
 import { AgentSession } from '@/db/models/agentSession'
 import { Resume } from '@/db/models/resume'
-import type { AgentMode, AgentMessage } from '@/atoms/agentAtom'
+import { aiDisabledResponse } from '@/lib/aiFeatures'
+import { invalidId, parseBody } from '@/lib/apiValidation'
+import { SaveAgentSessionSchema } from '@/lib/apiSchemas'
 
 export async function GET(request: NextRequest) {
+  const disabled = aiDisabledResponse()
+  if (disabled) return disabled
+
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -15,10 +20,15 @@ export async function GET(request: NextRequest) {
   if (!resumeId) {
     return NextResponse.json({ error: 'resumeId is required' }, { status: 400 })
   }
+  const badId = invalidId(resumeId)
+  if (badId) return badId
 
   await connectDB()
 
-  const resume = await Resume.findOne({ _id: resumeId, userId: session.user.id }).lean()
+  const resume = await Resume.findOne({
+    _id: resumeId,
+    userId: session.user.id
+  }).lean()
   if (!resume) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
@@ -39,30 +49,34 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const disabled = aiDisabledResponse()
+  if (disabled) return disabled
+
   const session = await auth.api.getSession({ headers: request.headers })
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { resumeId, sessionId, mode, messages } = (await request.json()) as {
-    resumeId: string
-    sessionId: string | null
-    mode: AgentMode
-    messages: AgentMessage[]
-  }
-
-  if (!resumeId) {
-    return NextResponse.json({ error: 'resumeId is required' }, { status: 400 })
-  }
+  const { data, error } = await parseBody(request, SaveAgentSessionSchema)
+  if (error) return error
+  const { resumeId, sessionId, mode, messages } = data
 
   await connectDB()
 
-  const resume = await Resume.findOne({ _id: resumeId, userId: session.user.id }).lean()
+  const resume = await Resume.findOne({
+    _id: resumeId,
+    userId: session.user.id
+  }).lean()
   if (!resume) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
-  const visibleMessages = messages.map(({ id, role, content }) => ({ id, role, content }))
+  const visibleMessages = messages.map(({ id, role, content, error }) => ({
+    id,
+    role,
+    content,
+    ...(error && { error })
+  }))
 
   if (sessionId) {
     await AgentSession.updateOne(
@@ -76,7 +90,7 @@ export async function POST(request: NextRequest) {
     resumeId,
     userId: session.user.id,
     mode,
-    messages: visibleMessages,
+    messages: visibleMessages
   })
 
   return NextResponse.json({ sessionId: String(created._id) }, { status: 201 })

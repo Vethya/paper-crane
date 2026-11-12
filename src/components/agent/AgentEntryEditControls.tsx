@@ -102,15 +102,13 @@ export function AgentEntryEditControls({ edit }: Props) {
   if (edit.type === 'remove') {
     return (
       <div className="mt-1.5 flex items-start gap-2">
-        <p className="flex-1 text-xs text-rose-300/80 italic leading-snug">
-          {edit.reason}
-        </p>
+        <p className="flex-1 text-xs leading-5 text-red-400">{edit.reason}</p>
         <div className="flex shrink-0 gap-1">
           <button
             type="button"
             onClick={handleRemoveKeep}
             title="Keep this entry"
-            className="flex items-center gap-1 rounded bg-app-control px-2 py-0.5 text-xs font-medium text-white ring-1 ring-app-controlBorder transition-colors hover:bg-app-controlHover"
+            className="flex h-7 items-center gap-1 rounded-app-button bg-app-control px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
           >
             <Check className="h-3 w-3" />
             Keep
@@ -119,7 +117,7 @@ export function AgentEntryEditControls({ edit }: Props) {
             type="button"
             onClick={handleRemoveConfirm}
             title="Confirm removal of this entry"
-            className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
+            className="flex h-7 items-center gap-1 rounded-app-button px-2.5 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10"
           >
             <Trash2 className="h-3 w-3" />
             Remove
@@ -131,15 +129,13 @@ export function AgentEntryEditControls({ edit }: Props) {
 
   return (
     <div className="mt-1.5 flex items-start gap-2">
-      <p className="review-reason flex-1 text-xs italic leading-snug">
-        {edit.reason}
-      </p>
+      <p className="review-reason flex-1 text-xs leading-5">{edit.reason}</p>
       <div className="flex shrink-0 gap-1">
         <button
           type="button"
           onClick={handleAppendKeep}
           title="Keep this entry"
-          className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
+          className="flex h-7 items-center gap-1 rounded-app-button bg-app-control px-2.5 text-xs font-medium text-white transition-colors hover:bg-app-controlHover"
         >
           <Check className="h-3 w-3" />
           Keep
@@ -148,7 +144,7 @@ export function AgentEntryEditControls({ edit }: Props) {
           type="button"
           onClick={handleAppendRemove}
           title="Remove this entry"
-          className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
+          className="flex h-7 items-center gap-1 rounded-app-button px-2.5 text-xs font-medium text-slate-400 transition-colors hover:bg-app-control hover:text-white"
         >
           <RotateCcw className="h-3 w-3" />
           Remove

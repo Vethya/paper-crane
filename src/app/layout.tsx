@@ -3,12 +3,13 @@ import './globals.css'
 import { Geist } from 'next/font/google'
 import { cn } from '@/lib/utils'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { QueryProvider } from '@/components/providers/QueryProvider'
 import { Toaster } from '@/components/ui/sonner'
 
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' })
 
 export const metadata: Metadata = {
-  title: 'Resume Manager',
+  title: 'Paper Crane',
   description: 'Create beautiful resumes with ease'
 }
 
@@ -25,7 +26,7 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          {children}
+          <QueryProvider>{children}</QueryProvider>
           <Toaster />
         </ThemeProvider>
       </body>

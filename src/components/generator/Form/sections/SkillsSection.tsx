@@ -1,4 +1,5 @@
 import { DragEvent, Fragment, useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { useWatch } from 'react-hook-form'
 import { useAtomValue, useSetAtom } from 'jotai'
 
@@ -59,9 +60,10 @@ export function SkillsSection() {
     <FormSection title="Your Skills">
       {fields.length === 0 && (
         <Fragment>
-          <p className="text-gray-400">No skills added yet.</p>
+          <p className="mb-2 text-sm text-slate-400">No skills added yet.</p>
           <AddButton type="button" onClick={handleAdd}>
-            + Add Skill
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add Skill
           </AddButton>
         </Fragment>
       )}
@@ -185,7 +187,8 @@ export function SkillsSection() {
         />
       )}
       <AddButton type="button" onClick={handleAdd}>
-        + Add Skill
+        <Plus className="h-4 w-4" aria-hidden="true" />
+        Add Skill
       </AddButton>
     </FormSection>
   )

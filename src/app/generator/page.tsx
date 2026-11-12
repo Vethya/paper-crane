@@ -3,28 +3,55 @@
 import dynamic from 'next/dynamic'
 import { useRef, useState, Suspense, useEffect, useCallback } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
-import { useSetAtom } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import { Form } from '../../components/generator/Form'
 import { Header } from '../../components/generator/Header'
 import {
   MobileNav,
+  RenderBadge,
   Sidebar,
   sectionLinks
 } from '../../components/generator/Sidebar'
 import { PrimaryButton } from '../../components/core/Button'
 import { ResumesRedirectDialog } from '../../components/generator/ResumesRedirectDialog'
 import { ComponentsPanel } from '../../components/generator/ComponentsPanel'
-import { AgentTriggerButton } from '../../components/agent/AgentTriggerButton'
-import { AgentOverlay } from '../../components/agent/AgentOverlay/index'
-import { AgentEditReviewBar } from '../../components/agent/AgentEditReviewBar'
 import { authClient } from '../../db/auth-client'
 import { agentResumeIdAtom } from '../../atoms/agentAtom'
 import { activeSectionSetterAtom } from '../../atoms/activeSection'
 import { Blocks } from 'lucide-react'
 import type { ResumeComponentType } from '@/lib/resumeComponents'
+import { useIsHydrated } from '@/hooks/useIsHydrated'
+import { useAiFeaturesEnabled } from '@/hooks/useAiFeaturesEnabled'
+import { resumeAtom, loadedResumeIdAtom } from '../../atoms/resume'
+import { FormSkeleton, PreviewSkeleton } from '@/components/ui/skeleton'
+import { hasPdfUrlViewers } from '../../lib/pdfBuffer'
 
 const Preview = dynamic(
   async () => (await import('../../components/generator/Preview')).Preview,
+  { ssr: false, loading: () => <PreviewSkeleton /> }
+)
+
+// Loaded only when AI is on, so the hosted bundle skips the agent code.
+const AgentTriggerButton = dynamic(
+  async () =>
+    (await import('../../components/agent/AgentTriggerButton'))
+      .AgentTriggerButton,
+  { ssr: false }
+)
+const AgentSavedEdits = dynamic(
+  async () =>
+    (await import('../../components/agent/AgentSavedEdits')).AgentSavedEdits,
+  { ssr: false }
+)
+const AgentOverlay = dynamic(
+  async () =>
+    (await import('../../components/agent/AgentOverlay/index')).AgentOverlay,
+  { ssr: false }
+)
+const AgentEditReviewBar = dynamic(
+  async () =>
+    (await import('../../components/agent/AgentEditReviewBar'))
+      .AgentEditReviewBar,
   { ssr: false }
 )
 
@@ -44,7 +71,7 @@ function getValidSection(section: string | null) {
 
 export default function GeneratorPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<FormSkeleton />}>
       <GeneratorContent />
     </Suspense>
   )
@@ -54,6 +81,7 @@ function GeneratorContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
+  const isHydrated = useIsHydrated()
   const urlSection = getValidSection(searchParams.get('section'))
   const [activeSection, setActiveSection] = useState(urlSection)
   const [componentsOpen, setComponentsOpen] = useState(false)
@@ -62,10 +90,27 @@ function GeneratorContent() {
   const [isDesktopLayout, setIsDesktopLayout] = useState(false)
   const previewRef = useRef<HTMLDivElement>(null)
   const resumeId = searchParams.get('id')
+  const loadedResumeId = useAtomValue(loadedResumeIdAtom)
   const { data: session, isPending } = authClient.useSession()
   const showRedirectDialog = !isPending && !!session && !resumeId
   const setAgentResumeId = useSetAtom(agentResumeIdAtom)
+  const aiEnabled = useAiFeaturesEnabled()
   const setActiveSectionSetter = useSetAtom(activeSectionSetterAtom)
+  const setResume = useSetAtom(resumeAtom)
+  const mounted = useRef(false)
+
+  useEffect(() => {
+    mounted.current = true
+    return () => {
+      mounted.current = false
+      queueMicrotask(() => {
+        if (mounted.current) return
+        setResume((current) =>
+          hasPdfUrlViewers(current.url) ? current : { ...current, url: '' }
+        )
+      })
+    }
+  }, [setResume])
 
   const changeActiveSection = useCallback(
     (section: string) => {
@@ -129,83 +174,75 @@ function GeneratorContent() {
       <div className="relative z-10 flex flex-1 flex-col xl:min-h-0">
         <Header className="z-10 border-b border-app-border bg-app-background/90 backdrop-blur" />
 
-        {/* Mobile layout (below xl) */}
-        <div className="flex flex-col gap-4 px-4 py-6 xl:hidden">
-          <MobileNav
-            activeSection={activeSection}
-            onSectionChange={changeActiveSection}
-          />
+        {/* Keep the form mounted when the layout changes to preserve drafts. */}
+        <div
+          className={
+            isDesktopLayout
+              ? 'grid flex-1 auto-rows-[minmax(0,1fr)] grid-cols-[minmax(13rem,14%)_minmax(0,1fr)_minmax(0,50%)] gap-4 overflow-hidden px-6 py-5'
+              : 'flex flex-col gap-4 px-4 py-6'
+          }
+        >
+          {isDesktopLayout ? (
+            <div className="min-w-0 rounded-app-panel border border-app-border bg-app-surface p-3">
+              <Sidebar
+                activeSection={activeSection}
+                componentsOpen={componentsOpen}
+                onComponentsToggle={toggleComponents}
+                onSectionChange={changeActiveSection}
+                showComponents={!!resumeId && !!session}
+                formId="resume-form-desktop"
+              />
+            </div>
+          ) : (
+            <MobileNav
+              activeSection={activeSection}
+              onSectionChange={changeActiveSection}
+            />
+          )}
 
-          {resumeId && (
+          {!isDesktopLayout && resumeId && session && (
             <button
               type="button"
               onClick={toggleComponents}
-              className="inline-flex items-center justify-center gap-2 rounded-app-button border border-app-controlBorder bg-app-control px-4 py-2 text-sm font-medium text-white transition hover:bg-app-controlHover"
+              className="inline-flex items-center justify-center gap-2 rounded-app-button border border-app-border bg-app-surface px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-app-control hover:text-white"
             >
               <Blocks className="h-4 w-4" />
               Components
             </button>
           )}
 
-          <div className="rounded-app-panel border border-app-border bg-app-surface">
-            <Form
-              activeSection={activeSection}
-              formId="resume-form-mobile"
-              onMake={closeComponents}
-              controlsExternalUpdates={!isDesktopLayout}
-            />
-          </div>
-
-          <div className="flex justify-center">
-            <PrimaryButton
-              type="submit"
-              form="resume-form-mobile"
-              className="w-full"
-              onClick={() =>
-                previewRef.current?.scrollIntoView({ behavior: 'smooth' })
-              }
-            >
-              MAKE
-            </PrimaryButton>
-          </div>
-
-          <div
-            ref={previewRef}
-            className="flex min-h-[70svh] flex-col rounded-app-panel border border-app-border bg-app-surface"
-          >
-            <div className="border-b border-app-border px-6 py-4 text-md font-medium tracking-wide text-slate-400">
-              Live Preview
-            </div>
-            <div className="flex flex-1 overflow-hidden">
-              <Preview />
-            </div>
-          </div>
-        </div>
-
-        {/* Desktop layout (xl+) */}
-        <div className="hidden xl:grid xl:flex-1 xl:auto-rows-[minmax(0,1fr)] xl:grid-cols-[minmax(14rem,15%)_minmax(0,1fr)_minmax(0,51%)] xl:gap-6 xl:overflow-hidden xl:px-8 xl:py-8">
-          <div className="min-w-0 rounded-app-panel border border-app-border bg-app-surface p-6">
-            <Sidebar
-              activeSection={activeSection}
-              componentsOpen={componentsOpen}
-              onComponentsToggle={toggleComponents}
-              onSectionChange={changeActiveSection}
-              showComponents={!!resumeId}
-              formId="resume-form-desktop"
-            />
-          </div>
-
           <div className="rounded-app-panel border border-app-border bg-app-surface xl:overflow-hidden">
             <Form
               activeSection={activeSection}
-              formId="resume-form-desktop"
+              formId={isDesktopLayout ? 'resume-form-desktop' : 'resume-form'}
               onMake={closeComponents}
-              controlsExternalUpdates={isDesktopLayout}
             />
           </div>
 
-          <div className="flex min-h-0 flex-col rounded-app-panel border border-app-border bg-app-surface">
-            {componentsOpen && resumeId ? (
+          {!isDesktopLayout && (
+            <div className="flex justify-center">
+              <PrimaryButton
+                type="submit"
+                form="resume-form"
+                disabled={
+                  !isHydrated || (!!resumeId && loadedResumeId !== resumeId)
+                }
+                className="w-full"
+                onClick={() =>
+                  previewRef.current?.scrollIntoView({ behavior: 'smooth' })
+                }
+              >
+                Render
+                <RenderBadge />
+              </PrimaryButton>
+            </div>
+          )}
+
+          <div
+            ref={previewRef}
+            className={`flex flex-col rounded-app-panel border border-app-border bg-app-surface ${isDesktopLayout ? 'min-h-0' : 'min-h-[70svh]'}`}
+          >
+            {isDesktopLayout && componentsOpen && resumeId ? (
               <ComponentsPanel
                 activeType={componentsType}
                 onActiveTypeChange={setComponentsType}
@@ -213,11 +250,12 @@ function GeneratorContent() {
               />
             ) : (
               <>
-                <div className="border-b border-app-border px-6 py-4 text-md font-medium tracking-wide text-slate-400">
-                  Live Preview
-                </div>
-                <div className="flex flex-1 overflow-hidden">
-                  <Preview />
+                <div className="flex flex-1 overflow-hidden rounded-app-panel">
+                  <Preview
+                    formId={
+                      isDesktopLayout ? 'resume-form-desktop' : 'resume-form'
+                    }
+                  />
                 </div>
               </>
             )}
@@ -225,7 +263,7 @@ function GeneratorContent() {
         </div>
       </div>
 
-      {componentsOpen && resumeId && (
+      {!isDesktopLayout && componentsOpen && resumeId && (
         <ComponentsPanel
           activeType={componentsType}
           onActiveTypeChange={setComponentsType}
@@ -235,9 +273,14 @@ function GeneratorContent() {
       )}
 
       <ResumesRedirectDialog open={showRedirectDialog} />
-      <AgentTriggerButton />
-      <AgentOverlay />
-      <AgentEditReviewBar />
+      {aiEnabled && (
+        <>
+          <AgentTriggerButton />
+          <AgentOverlay />
+          <AgentEditReviewBar />
+          <AgentSavedEdits />
+        </>
+      )}
     </main>
   )
 }

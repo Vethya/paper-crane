@@ -1,12 +1,12 @@
 'use client'
 
 import { useAtom, useAtomValue } from 'jotai'
-import { Check, RotateCcw } from 'lucide-react'
 import type { FieldPath, Path } from 'react-hook-form'
 import { agentPendingEditsAtom, type FieldEdit } from '../../atoms/agentEdits'
 import { formSetValueAtom } from '../../atoms/formData'
 import { useAdvanceFocusedEdit } from '../../hooks/useAdvanceFocusedEdit'
 import { Input, Textarea } from './Input'
+import { EditReviewActions } from './EditReviewActions'
 import type { FormValues } from '../../types'
 import clsx from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -75,15 +75,17 @@ export function LabeledInput({
   return (
     <div
       className={twMerge(
-        clsx('flex flex-col mb-8 text-white last:mb-0', className)
+        clsx('mb-4 flex flex-col text-white last:mb-0', className)
       )}
       data-field-path={inputProps.name}
     >
-      <label className="text-white mb-2">{label}</label>
+      <label className="mb-1.5 text-[13px] font-medium text-slate-400">
+        {label}
+      </label>
 
       <div
         className={clsx(
-          'rounded transition-shadow',
+          'rounded-app-button transition-shadow',
           invalid &&
             'ring-1 ring-red-400/80 shadow-[0_0_0_3px_rgba(248,113,113,0.14)]',
           fieldEdit && 'review-field-highlight'
@@ -97,31 +99,11 @@ export function LabeledInput({
       </div>
 
       {fieldEdit && (
-        <div className="mt-1.5 flex items-start gap-2">
-          <p className="review-reason flex-1 text-xs italic leading-snug">
-            {fieldEdit.reason}
-          </p>
-          <div className="flex shrink-0 gap-1">
-            <button
-              type="button"
-              onClick={handleApprove}
-              title="Keep this change"
-              className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-emerald-400 ring-1 ring-emerald-400/40 hover:bg-emerald-400/10 transition-colors"
-            >
-              <Check className="h-3 w-3" />
-              Keep
-            </button>
-            <button
-              type="button"
-              onClick={handleReject}
-              title="Restore original value"
-              className="flex items-center gap-1 rounded px-2 py-0.5 text-xs font-medium text-rose-400 ring-1 ring-rose-400/40 hover:bg-rose-400/10 transition-colors"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Restore
-            </button>
-          </div>
-        </div>
+        <EditReviewActions
+          reason={fieldEdit.reason}
+          onKeep={handleApprove}
+          onRestore={handleReject}
+        />
       )}
     </div>
   )

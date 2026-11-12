@@ -19,22 +19,17 @@ import {
   TEMPLATE9
 } from './constants'
 import { FormValues, TemplateData } from '../../types'
-
-// Escape LaTeX special characters in user-provided text.
-// URL fields (website, url) are intentionally excluded.
-function esc(str: string | undefined): string | undefined {
-  return str
-    ?.replace(/&/g, '\\&')
-    .replace(/%/g, '\\%')
-    .replace(/\$/g, '\\$')
-    .replace(/#/g, '\\#')
-    .replace(/_/g, '\\_')
-}
+import { esc } from './escape'
 
 function sanitizeFormValues(data: FormValues): FormValues {
   return {
     ...data,
-    headings: data.headings ?? {},
+    headings: Object.fromEntries(
+      Object.entries(data.headings ?? {}).map(([key, value]) => [
+        key,
+        esc(value)
+      ])
+    ),
     basics: data.basics
       ? {
           ...data.basics,
@@ -47,78 +42,89 @@ function sanitizeFormValues(data: FormValues): FormValues {
                 address: esc(data.basics.location.address)
               }
             : undefined
-          // website intentionally not escaped (used in \href{})
+          // website is escaped where it is used, by href()
         }
       : undefined,
     work: (() => {
-      const arr = data.work?.map((job) => ({
-        ...job,
-        company: esc(job.company),
-        position: esc(job.position),
-        location: esc(job.location),
-        highlights: job.highlights.map((h) => esc(h) as string)
-      })).filter(
-        (j) =>
-          j.company ||
-          j.position ||
-          j.startDate ||
-          j.endDate ||
-          j.location ||
-          j.highlights.some(Boolean)
-      )
+      const arr = data.work
+        ?.map((job) => ({
+          ...job,
+          company: esc(job.company),
+          position: esc(job.position),
+          location: esc(job.location),
+          startDate: esc(job.startDate),
+          endDate: esc(job.endDate),
+          highlights: job.highlights.map((h) => esc(h) as string)
+        }))
+        .filter(
+          (j) =>
+            j.company ||
+            j.position ||
+            j.startDate ||
+            j.endDate ||
+            j.location ||
+            j.highlights.some(Boolean)
+        )
       return arr?.length ? arr : undefined
     })(),
     education: (() => {
-      const arr = data.education?.map((edu) => ({
-        ...edu,
-        institution: esc(edu.institution),
-        area: esc(edu.area),
-        studyType: esc(edu.studyType),
-        score: esc(edu.score),
-        location: esc(edu.location)
-      })).filter(
-        (e) =>
-          e.institution ||
-          e.area ||
-          e.studyType ||
-          e.startDate ||
-          e.endDate ||
-          e.score ||
-          e.location
-      )
+      const arr = data.education
+        ?.map((edu) => ({
+          ...edu,
+          institution: esc(edu.institution),
+          area: esc(edu.area),
+          studyType: esc(edu.studyType),
+          score: esc(edu.score),
+          startDate: esc(edu.startDate),
+          endDate: esc(edu.endDate),
+          location: esc(edu.location)
+        }))
+        .filter(
+          (e) =>
+            e.institution ||
+            e.area ||
+            e.studyType ||
+            e.startDate ||
+            e.endDate ||
+            e.score ||
+            e.location
+        )
       return arr?.length ? arr : undefined
     })(),
     awards: (() => {
-      const arr = data.awards?.map((award) => ({
-        ...award,
-        title: esc(award.title),
-        awarder: esc(award.awarder),
-        summary: esc(award.summary)
-      })).filter((a) => a.title || a.date || a.awarder || a.summary)
+      const arr = data.awards
+        ?.map((award) => ({
+          ...award,
+          title: esc(award.title),
+          date: esc(award.date),
+          awarder: esc(award.awarder),
+          summary: esc(award.summary)
+        }))
+        .filter((a) => a.title || a.date || a.awarder || a.summary)
       return arr?.length ? arr : undefined
     })(),
     skills: (() => {
-      const arr = data.skills?.map((skill) => ({
-        ...skill,
-        name: esc(skill.name),
-        keywords: skill.keywords?.map((k) => esc(k) as string)
-      })).filter((s) => s.name || s.keywords?.some(Boolean))
+      const arr = data.skills
+        ?.map((skill) => ({
+          ...skill,
+          name: esc(skill.name),
+          keywords: skill.keywords?.map((k) => esc(k) as string)
+        }))
+        .filter((s) => s.name || s.keywords?.some(Boolean))
       return arr?.length ? arr : undefined
     })(),
     projects: (() => {
-      const arr = data.projects?.map((project) => ({
-        ...project,
-        name: esc(project.name),
-        description: esc(project.description),
-        keywords: project.keywords?.map((k) => esc(k) as string)
-        // url intentionally not escaped (used in \href{})
-      })).filter(
-        (p) =>
-          p.name ||
-          p.description ||
-          p.url ||
-          p.keywords?.some(Boolean)
-      )
+      const arr = data.projects
+        ?.map((project) => ({
+          ...project,
+          name: esc(project.name),
+          description: esc(project.description),
+          keywords: project.keywords?.map((k) => esc(k) as string)
+          // url is escaped where it is used, by href()
+        }))
+        .filter(
+          (p) => p.name || p.description || p.url || p.keywords?.some(Boolean)
+        )
       return arr?.length ? arr : undefined
     })()
   }
@@ -149,9 +155,22 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template2(data),
         opts: {
           cmd: 'xelatex',
+          bundles: [
+            'tex-latex-misc',
+            'graphics',
+            'xcolor',
+            'utils',
+            'typography',
+            'amsmath',
+            'hyperref',
+            'tex-generic'
+          ],
+          packages: ['enumitem', 'ragged2e', 'xifthen', 'setspace', 'parskip'],
           inputs: [
             '/templates/template2/awesome-cv.cls',
-            '/templates/template2/fontawesome.sty'
+            '/templates/template2/fontawesome.sty',
+            // Default unicode-math font, not in Siglum's bundles
+            '/templates/template2/latinmodern-math.otf'
           ],
           fonts: [
             '/templates/template2/fonts/FontAwesome.otf',
@@ -181,7 +200,8 @@ export default function getTemplateData(data: FormValues): TemplateData {
       return {
         texDoc: template3(data),
         opts: {
-          cmd: 'pdflatex'
+          cmd: 'pdflatex',
+          packages: ['enumitem', 'framed', 'tocloft', 'xcolor']
         }
       }
 
@@ -190,6 +210,23 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template4(data),
         opts: {
           cmd: 'xelatex',
+          bundles: [
+            'tex-latex-misc',
+            'graphics',
+            'xcolor',
+            'hyperref',
+            'tex-generic',
+            'babel',
+            'typography'
+          ],
+          packages: [
+            'titlesec',
+            'textpos',
+            'isodate',
+            'xltxtra',
+            'xunicode',
+            'tipa'
+          ],
           inputs: ['/templates/template4/deedy-resume-openfont.cls'],
           fonts: [
             '/templates/template4/fonts/Raleway-Bold.otf',
@@ -210,6 +247,8 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template5(data),
         opts: {
           cmd: 'xelatex',
+          bundles: ['fonts-lm-type1'],
+          packages: ['hyphenat'],
           inputs: [
             '/templates/template5/helvetica.sty',
             '/templates/template5/res.cls'
@@ -222,6 +261,8 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template6(data),
         opts: {
           cmd: 'xelatex',
+          bundles: ['typography', 'utils'],
+          packages: ['koma-script', 'enumitem'],
           inputs: [
             '/templates/template6/custom-command.tex',
             '/templates/template6/minimal-resume-config.tex',
@@ -247,6 +288,8 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template7(data),
         opts: {
           cmd: 'pdflatex',
+          bundles: ['xcolor', 'utils', 'typography', 'tex-generic'],
+          packages: ['marvosym'],
           inputs: [
             '/templates/template7/collection.sty',
             '/templates/template7/moderncv.cls',
@@ -265,6 +308,8 @@ export default function getTemplateData(data: FormValues): TemplateData {
         texDoc: template8(data),
         opts: {
           cmd: 'xelatex',
+          bundles: ['typography', 'utils'],
+          packages: ['parskip', 'tabu', 'changepage', 'enumitem'],
           inputs: ['/templates/template8/mcdowellcv.cls']
         }
       }
@@ -273,7 +318,8 @@ export default function getTemplateData(data: FormValues): TemplateData {
       return {
         texDoc: template9(data),
         opts: {
-          cmd: 'pdflatex'
+          cmd: 'pdflatex',
+          packages: ['sectsty', 'xcolor', 'helvetic']
         }
       }
 

@@ -1,4 +1,5 @@
 import { DragEvent, Fragment, useEffect, useState } from 'react'
+import { Plus } from 'lucide-react'
 import { useWatch } from 'react-hook-form'
 import { useAtomValue, useSetAtom } from 'jotai'
 
@@ -63,9 +64,12 @@ export function WorkSection() {
     <FormSection title="Your Work Experience">
       {fields.length === 0 && (
         <Fragment>
-          <p className="text-gray-400">No work experience added yet.</p>
+          <p className="mb-2 text-sm text-slate-400">
+            No work experience added yet.
+          </p>
           <AddButton type="button" onClick={handleAdd}>
-            + Add Work Experience
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add Work Experience
           </AddButton>
         </Fragment>
       )}
@@ -189,7 +193,8 @@ export function WorkSection() {
         />
       )}
       <AddButton type="button" onClick={handleAdd}>
-        + Add Work Experience
+        <Plus className="h-4 w-4" aria-hidden="true" />
+        Add Work Experience
       </AddButton>
     </FormSection>
   )

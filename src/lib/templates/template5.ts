@@ -1,6 +1,7 @@
 import { stripIndent, source } from 'common-tags'
 import { WHITESPACE } from './constants'
 import type { FormValues, Generator } from '../../types'
+import { href } from './escape'
 
 const generator: Omit<Generator, 'resumeHeader'> = {
   profileSection(basics) {
@@ -9,7 +10,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
     }
 
     const { name, email, phone, location = {}, website } = basics
-    const websiteLine = website ? `\\href{${website}}{${website}}` : ''
+    const websiteLine = website ? href(website) : ''
 
     const info = [email, phone, location.address, websiteLine]
       .filter(Boolean)
@@ -160,13 +161,15 @@ const generator: Omit<Generator, 'resumeHeader'> = {
     }
 
     return source`
+      \\par
+      \\begingroup
+      \\setlength{\\parskip}{0pt}
       \\section{${heading || 'SKILLS'}}
-      \\begin{tabular}{@{}ll}
       ${skills.map((skill) => {
         const { name, keywords = [] } = skill
-        return `\\textbf{${name || ''}}: & ${keywords.join(', ') || ''}\\\\`
+        return `\\noindent \\textbf{${name || ''}}: ${keywords.join(', ') || ''}\\par`
       })}
-      \\end{tabular}
+      \\endgroup
     `
   },
 
@@ -195,7 +198,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
         }
 
         if (url) {
-          const urlLine = url ? `\\href{${url}}{${url}}` : ''
+          const urlLine = url ? href(url) : ''
           projectLine += projectLine ? `\\\\ ${urlLine}` : urlLine
         }
 
@@ -220,8 +223,8 @@ const generator: Omit<Generator, 'resumeHeader'> = {
 
         return stripIndent`
             \\textbf{${title || ''}}, {\\sl ${awarder || ''}} \\hfill ${
-          date || ''
-        } \\\\
+              date || ''
+            } \\\\
             ${summary || ''} \\\\\\\\
         `
       })}
