@@ -6,7 +6,7 @@ A resume builder for generating elegant LaTeX resumes without writing any TeX co
 
 Use the hosted app for free at [papercrane.vethya.com](https://papercrane.vethya.com).
 
-https://github.com/user-attachments/assets/86d32a2a-a91f-4c2e-9335-c80e356958d6
+https://github.com/user-attachments/assets/26929754-fcb4-4d67-be22-c3409da4b1d3
 
 ## Features
 
