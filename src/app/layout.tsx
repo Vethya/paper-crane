@@ -9,7 +9,7 @@ import { Toaster } from '@/components/ui/sonner'
 const geist = Geist({ subsets: ['latin'], variable: '--font-sans' })
 
 export const metadata: Metadata = {
-  title: 'Resume Manager',
+  title: 'Paper Crane',
   description: 'Create beautiful resumes with ease'
 }
 

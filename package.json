@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "resume-manager",
+  "name": "paper-crane",
   "version": "0.1.0",
   "packageManager": "pnpm@10.34.9",
   "engines": {

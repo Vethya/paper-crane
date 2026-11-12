@@ -164,7 +164,7 @@ function LandingHeader({
   return (
     <header className="sticky top-0 z-30 border-b border-[#e4e4e0] bg-[#fafaf8]/95 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-8">
-        <Link href="/" aria-label="Resume Manager home" className="flex-none">
+        <Link href="/" aria-label="Paper Crane home" className="flex-none">
           <Logo scale={0.85} />
         </Link>
 
@@ -207,7 +207,7 @@ function GithubBadge({ stars }: { stars: number | null }) {
       href={GITHUB_REPO_URL}
       target="_blank"
       rel="noreferrer"
-      aria-label={`Resume Manager on GitHub${starLabel}`}
+      aria-label={`Paper Crane on GitHub${starLabel}`}
       className="inline-flex h-10 items-center gap-2 rounded-app-button border border-[#e4e4e0] px-3 text-sm font-medium text-[#18181b] transition hover:border-[#a1a1aa]"
     >
       <GithubMark />
@@ -272,7 +272,7 @@ function HeroSection({
 
         <Screenshot
           src="/landing/hero-builder.png"
-          alt="The Resume Manager builder with the form beside a rendered PDF preview"
+          alt="The Paper Crane builder with the form beside a rendered PDF preview"
           width={1600}
           height={1000}
           className="mt-14"
@@ -415,7 +415,7 @@ function LandingFooter() {
   return (
     <footer className="border-t border-[#e4e4e0]">
       <div className="mx-auto flex max-w-6xl flex-col justify-between gap-4 px-4 py-8 text-sm text-[#71717a] sm:flex-row sm:px-8">
-        <span>© {new Date().getFullYear()} Resume Manager</span>
+        <span>© {new Date().getFullYear()} Paper Crane</span>
         <div className="flex flex-wrap gap-5">
           <Link href="/generator" className="transition hover:text-[#18181b]">
             Resume builder

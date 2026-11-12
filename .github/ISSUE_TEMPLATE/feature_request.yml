@@ -1,5 +1,5 @@
 name: Feature request
-description: Suggest a change to Resume Manager
+description: Suggest a change to Paper Crane
 body:
   - type: textarea
     id: problem
