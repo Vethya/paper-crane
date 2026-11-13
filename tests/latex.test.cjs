@@ -519,3 +519,23 @@ test('a failed compile carries the engine log', async () => {
     return true
   })
 })
+
+test('a compiler rebuilt after a failed init loads bundles itself', async () => {
+  let inits = 0
+  const { latex, bundleFetches, blobs } = harness({
+    initPreload: true,
+    init: () => {
+      if (++inits === 1) {
+        // Fail after init's own preload has started
+        return new Promise((_, reject) =>
+          setImmediate(() => reject(new Error('Expected failure')))
+        )
+      }
+    },
+    compile: (texDoc) => pdf(texDoc)
+  })
+
+  await assert.rejects(latex('first', opts), /Expected failure/)
+  assert.equal(await blobs.get(await latex('second', opts)).text(), 'second')
+  assert.equal(count(bundleFetches, 'pdftex'), 2)
+})

@@ -14,9 +14,6 @@ const assetCache = new Map<string, Promise<Uint8Array>>()
 // tuned so its share of the bar matches its share of the download time.
 const WASM = 'wasm'
 const WASM_WEIGHT = 24_000_000
-// In-flight and finished bundle loads. Siglum's loadBundle doesn't share
-// in-flight downloads, so concurrent callers would fetch a bundle twice.
-const bundleLoads = new Map<string, Promise<ArrayBuffer | SharedArrayBuffer>>()
 const loaded = new Set<string>()
 let weights: Record<string, number> = {}
 let compilerReady = false
@@ -110,6 +107,13 @@ function getCompiler(): Promise<SiglumCompiler> {
 function shareBundleLoads(compiler: SiglumCompiler) {
   const manager = compiler.bundleManager
   const load = manager.loadBundle.bind(manager)
+  // In-flight and finished loads for this compiler only. Siglum's loadBundle
+  // doesn't share in-flight downloads, so concurrent callers would fetch a
+  // bundle twice. A compiler rebuilt after a failed init starts empty.
+  const bundleLoads = new Map<
+    string,
+    Promise<ArrayBuffer | SharedArrayBuffer>
+  >()
   manager.loadBundle = (name: string) => {
     let pending = bundleLoads.get(name)
     if (!pending) {
