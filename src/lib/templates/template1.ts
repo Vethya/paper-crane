@@ -325,6 +325,7 @@ function template1(values: FormValues) {
     \\usepackage{textcomp}
     \\usepackage[utf8]{inputenc}
     \\usepackage[T1]{fontenc}
+    \\usepackage{lmodern}
     \\textheight=10in
     \\pagestyle{empty}
     \\raggedright
