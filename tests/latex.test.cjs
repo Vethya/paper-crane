@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-require-imports -- This test runs as CommonJS. */
 const assert = require('node:assert/strict')
 const { readFileSync } = require('node:fs')
-const { join } = require('node:path')
+const { dirname, join } = require('node:path')
 const { test } = require('node:test')
 const vm = require('node:vm')
 const ts = require('typescript')
@@ -17,18 +17,18 @@ const source = ts.transpileModule(
   }
 ).outputText
 
-function loadLatexAssets() {
+function loadModule(file) {
   const exports = {}
-  const assetsSource = ts.transpileModule(
-    readFileSync(join(__dirname, '../src/lib/latexAssets.ts'), 'utf8'),
-    {
-      compilerOptions: {
-        module: ts.ModuleKind.CommonJS,
-        target: ts.ScriptTarget.ES2020
-      }
+  const moduleSource = ts.transpileModule(readFileSync(file, 'utf8'), {
+    compilerOptions: {
+      module: ts.ModuleKind.CommonJS,
+      target: ts.ScriptTarget.ES2020
     }
-  ).outputText
-  vm.runInNewContext(assetsSource, { exports })
+  }).outputText
+  vm.runInNewContext(moduleSource, {
+    exports,
+    require: (name) => loadModule(join(dirname(file), `${name}.ts`))
+  })
   return exports
 }
 
@@ -53,19 +53,44 @@ function harness({
   compile,
   fetchAsset = async () => 'asset',
   fetchResponse,
-  init
+  init,
+  loadBundle = async () => {},
+  navigator = {},
+  initPreload = false
 } = {}) {
   const calls = []
+  const bundleFetches = []
   const blobs = new Map()
   const exports = {}
 
   class Compiler {
     constructor(options) {
       this.options = options
+      this.bundleManager = {
+        fileManifest: {
+          'pdftex.fmt': { bundle: 'pdftex', end: 10 },
+          'xetex.fmt': { bundle: 'xetex', end: 30 },
+          'fontspec.sty': { bundle: 'typography', end: 20 }
+        },
+        bundleDeps: {
+          engines: {
+            pdflatex: { required: ['pdftex'] },
+            xelatex: { required: ['xetex'] }
+          },
+          bundles: { typography: { requires: ['fonts'] } }
+        },
+        bundleExists: (name) => name !== 'babel',
+        async loadBundle(name) {
+          bundleFetches.push(name)
+          return loadBundle(name)
+        }
+      }
     }
 
     async init() {
+      this.options.onLog('Manifests saved to cache')
       await init?.()
+      if (initPreload) await this.bundleManager.loadBundle('pdftex')
     }
 
     async compile(texDoc, options) {
@@ -77,10 +102,13 @@ function harness({
   vm.runInNewContext(source, {
     exports,
     require(name) {
-      if (name === './latexAssets') return loadLatexAssets()
+      if (name.startsWith('./')) {
+        return loadModule(join(__dirname, '../src/lib', `${name}.ts`))
+      }
       assert.equal(name, '@siglum/engine')
       return { SiglumCompiler: Compiler }
     },
+    navigator,
     Uint8Array,
     ArrayBuffer,
     Blob,
@@ -101,7 +129,7 @@ function harness({
     }
   })
 
-  return { latex: exports.default, prewarm: exports.prewarm, calls, blobs }
+  return { ...exports, latex: exports.default, calls, blobs, bundleFetches }
 }
 
 const pdf = (text) => ({
@@ -336,4 +364,178 @@ test('changed template assets produce a new PDF across page loads', async () => 
     const url = await latex('same document', opts)
     assert.equal(await blobs.get(url).text(), asset)
   }
+})
+
+const plain = (value) => JSON.parse(JSON.stringify(value))
+const count = (names, name) => names.filter((item) => item === name).length
+const WASM_WEIGHT = 24_000_000
+
+test('prewarm loads the first engine before the other, one bundle at a time', async () => {
+  const xetex = deferred()
+  const { prewarm, bundleFetches } = harness({
+    loadBundle: (name) => name === 'xetex' && xetex.promise
+  })
+
+  const warmup = prewarm('xelatex')
+  await waitFor(() => bundleFetches.length > 0)
+  assert.deepEqual(bundleFetches, ['xetex'])
+
+  xetex.resolve()
+  await warmup
+  assert.ok(
+    bundleFetches.indexOf('typography') < bundleFetches.indexOf('pdftex')
+  )
+  assert.ok(bundleFetches.includes('fonts'))
+  assert.ok(!bundleFetches.includes('babel'))
+  assert.equal(new Set(bundleFetches).size, bundleFetches.length)
+})
+
+test('bundles start downloading before initialization finishes', async () => {
+  const initialized = deferred()
+  const { prewarm, bundleFetches } = harness({
+    init: () => initialized.promise,
+    initPreload: true
+  })
+
+  const warmup = prewarm()
+  await waitFor(() => bundleFetches.includes('typography'))
+  initialized.resolve()
+  await warmup
+  // Siglum's own preload during init shares the download
+  assert.equal(count(bundleFetches, 'pdftex'), 1)
+})
+
+test('a compile during the preload shares its bundle downloads', async () => {
+  const typography = deferred()
+  const { latex, prewarm, bundleFetches, blobs } = harness({
+    loadBundle: (name) => name === 'typography' && typography.promise,
+    compile: (texDoc) => pdf(texDoc)
+  })
+
+  const warmup = prewarm()
+  await waitFor(() => bundleFetches.includes('typography'))
+  const compilation = latex('document', { ...opts, bundles: ['typography'] })
+  typography.resolve()
+  await warmup
+  assert.equal(await blobs.get(await compilation).text(), 'document')
+  assert.equal(count(bundleFetches, 'typography'), 1)
+  assert.equal(count(bundleFetches, 'fonts'), 1)
+})
+
+test('a compile waits for its own bundles only', async () => {
+  const typography = deferred()
+  const xetex = deferred()
+  const { latex, prewarm, calls, getEngineDownload } = harness({
+    loadBundle: (name) =>
+      (name === 'typography' && typography.promise) ||
+      (name === 'xetex' && xetex.promise),
+    compile: (texDoc) => pdf(texDoc)
+  })
+
+  // The pdfLaTeX preload is stuck on a bundle this template doesn't list
+  void prewarm()
+  await latex('pdf', opts)
+  assert.equal(calls.length, 1)
+
+  const compilation = latex('xe', { ...opts, cmd: 'xelatex' })
+  await waitFor(() => getEngineDownload())
+  assert.deepEqual(plain(getEngineDownload()), {
+    loaded: WASM_WEIGHT,
+    total: WASM_WEIGHT + 30
+  })
+  assert.equal(calls.length, 1)
+  xetex.resolve()
+  await compilation
+  assert.equal(calls.length, 2)
+  assert.equal(getEngineDownload(), null)
+  typography.resolve()
+})
+
+test('a compile reports size-weighted download progress', async () => {
+  const initialized = deferred()
+  const { latex, bundleFetches, getEngineDownload, subscribeEngineDownload } =
+    harness({
+      init: () => initialized.promise,
+      compile: (texDoc) => pdf(texDoc)
+    })
+  const states = []
+  subscribeEngineDownload(() => states.push(plain(getEngineDownload())))
+
+  const first = latex('first', { ...opts, bundles: ['typography', 'babel'] })
+  await waitFor(() => bundleFetches.length === 3 && states.length === 5)
+  // pdftex is 10, typography 20, and fonts has no manifest entry
+  const total = WASM_WEIGHT + 31
+  assert.deepEqual(states, [
+    { loaded: 0, total: 0 },
+    ...[0, 10, 30, 31].map((loaded) => ({ loaded, total }))
+  ])
+
+  initialized.resolve()
+  await first
+  assert.deepEqual(states.slice(5), [{ loaded: total, total }, null])
+
+  await latex('second', { ...opts, bundles: ['typography'] })
+  assert.equal(states.length, 7)
+})
+
+test('prewarm skips the other engine when saving data', async () => {
+  const { prewarm, bundleFetches } = harness({
+    navigator: { connection: { saveData: true } }
+  })
+
+  await prewarm()
+  assert.ok(bundleFetches.includes('pdftex'))
+  assert.ok(!bundleFetches.includes('xetex'))
+})
+
+test('a failed bundle download is retried by the next compile', async () => {
+  let failures = 0
+  const { latex, prewarm, bundleFetches, blobs } = harness({
+    loadBundle: (name) => {
+      if (name === 'typography' && ++failures === 1) {
+        throw new Error('Expected failure')
+      }
+    },
+    compile: (texDoc) => pdf(texDoc)
+  })
+
+  await prewarm()
+  const url = await latex('document', { ...opts, bundles: ['typography'] })
+  assert.equal(await blobs.get(url).text(), 'document')
+  assert.equal(count(bundleFetches, 'typography'), 2)
+})
+
+test('a failed compile carries the engine log', async () => {
+  const { latex } = harness({
+    compile() {
+      this.options.onLog('! Undefined control sequence.')
+      return { success: false }
+    }
+  })
+
+  await assert.rejects(latex('document', opts), (error) => {
+    assert.match(error.message, /Unknown compilation error/)
+    assert.match(error.cause, /Undefined control sequence/)
+    return true
+  })
+})
+
+test('a compiler rebuilt after a failed init loads bundles itself', async () => {
+  let inits = 0
+  const { latex, bundleFetches, blobs } = harness({
+    initPreload: true,
+    init: () => {
+      if (++inits === 1) {
+        // Fail after init's own preload has started
+        return new Promise((_, reject) =>
+          setImmediate(() => reject(new Error('Expected failure')))
+        )
+      }
+    },
+    compile: (texDoc) => pdf(texDoc)
+  })
+
+  await assert.rejects(latex('first', opts), /Expected failure/)
+  assert.equal(await blobs.get(await latex('second', opts)).text(), 'second')
+  assert.equal(count(bundleFetches, 'pdftex'), 2)
 })

@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite'
-import { expect, waitFor } from 'storybook/test'
+import { expect, mocked, waitFor } from 'storybook/test'
+import { getEngineDownload } from '@/lib/latex'
 import { seeded } from '@/stories/seed'
 import { Preview } from './Preview'
 
@@ -15,6 +16,15 @@ type Story = StoryObj<typeof meta>
 export const Populated: Story = {}
 export const Empty: Story = { parameters: { state: { pdf: false } } }
 export const Loading: Story = { parameters: { state: { loading: true } } }
+export const DownloadingEngine: Story = {
+  beforeEach: () => {
+    mocked(getEngineDownload).mockReturnValue({ loaded: 42, total: 100 })
+  },
+  play: async ({ canvas }) => {
+    await expect(canvas.findByText('Hang tight!')).resolves.toBeVisible()
+    await expect(canvas.getByText('42%')).toBeVisible()
+  }
+}
 export const NextPage: Story = {
   play: async ({ canvas, userEvent }) => {
     await waitFor(() => expect(canvas.getByTitle('Next page')).toBeEnabled())
