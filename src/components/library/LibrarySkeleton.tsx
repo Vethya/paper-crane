@@ -1,3 +1,4 @@
+import { Logo } from '@/components/core/Logo'
 import { Skeleton } from '@/components/ui/skeleton'
 
 export function CardSkeletons({
@@ -32,8 +33,8 @@ export function CardSkeletons({
 export function LibrarySkeleton({ title }: { title: string }) {
   return (
     <div className="min-h-screen bg-app-background text-slate-100">
-      <div className="flex h-14 items-center border-b border-app-border px-6">
-        <Skeleton className="h-6 w-32" />
+      <div className="flex h-14 items-center border-b border-app-border px-3 sm:px-6">
+        <Logo />
       </div>
       <main className="mx-auto max-w-5xl px-6 py-10">
         <h1 className="mb-6 text-2xl font-semibold">{title}</h1>
