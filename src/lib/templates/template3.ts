@@ -233,6 +233,7 @@ const generator: Generator = {
       \\usepackage{textcomp}
       \\usepackage[utf8]{inputenc}
       \\usepackage[T1]{fontenc}
+      \\usepackage{lmodern}
       \\usepackage[hidelinks]{hyperref}
 
 

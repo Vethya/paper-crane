@@ -37,3 +37,4 @@ function load(filename) {
 }
 
 module.exports = load(path.join(directory, 'index.ts')).default
+module.exports.loadModule = (name) => load(path.join(directory, `${name}.ts`))

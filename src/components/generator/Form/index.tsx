@@ -43,6 +43,7 @@ import { twMerge } from 'tailwind-merge'
 
 import latex, { prewarm } from '../../../lib/latex'
 import getTemplateData from '../../../lib/templates'
+import { templateEngine } from '../../../lib/templates/engines'
 import { prepareResumeBuild } from '../../../lib/resumeBuild'
 import { createRenderScheduler } from '../../../lib/renderScheduler'
 
@@ -114,13 +115,16 @@ export function Form({
   }, [owner, scheduler, setResume])
 
   useEffect(() => {
+    // A resume still loading reads as the default template, so pdfLaTeX.
+    const warm = () =>
+      void prewarm(templateEngine(formContext.getValues('selectedTemplate')))
     if (typeof window.requestIdleCallback === 'function') {
-      const task = window.requestIdleCallback(() => void prewarm())
+      const task = window.requestIdleCallback(warm)
       return () => window.cancelIdleCallback(task)
     }
-    const task = setTimeout(() => void prewarm(), 0)
+    const task = setTimeout(warm, 0)
     return () => clearTimeout(task)
-  }, [])
+  }, [formContext])
 
   const generateAndSetResume = useCallback(
     async (

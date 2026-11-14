@@ -7,7 +7,8 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useRef
+  useRef,
+  useSyncExternalStore
 } from 'react'
 import {
   DropdownMenu,
@@ -27,6 +28,7 @@ import { useRenderIndicator } from '@/hooks/useRenderIndicator'
 import { toast } from '@/components/ui/sonner'
 import { formDataAtom } from '../../atoms/formData'
 import { clampPdfPage, retainPdfUrl, releasePdfUrl } from '../../lib/pdfBuffer'
+import { getEngineDownload, subscribeEngineDownload } from '../../lib/latex'
 
 // Configure PDF.js before either component is rendered. If the worker is
 // configured in an effect, Document can start loading the PDF first and leave
@@ -343,6 +345,22 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
     resume.isError
   )
   const isNarrow = containerWidth > 0 && containerWidth < 520
+  const download = useSyncExternalStore(
+    subscribeEngineDownload,
+    getEngineDownload,
+    getEngineDownload
+  )
+  const downloadPercent = download?.total
+    ? Math.round((download.loaded / download.total) * 100)
+    : null
+  // Cached engine files load in a moment; only a real download shows the card
+  const downloading = !!download
+  const [showDownload, setShowDownload] = useState(false)
+  useEffect(() => {
+    if (!downloading) return setShowDownload(false)
+    const timer = setTimeout(() => setShowDownload(true), 400)
+    return () => clearTimeout(timer)
+  }, [downloading])
 
   const toolButton =
     'flex h-8 min-w-8 items-center justify-center rounded-app-button px-1.5 text-slate-400 transition-colors hover:bg-app-control hover:text-white disabled:pointer-events-none disabled:opacity-40'
@@ -353,7 +371,7 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
     <output
       ref={containerRef}
       className={twMerge(
-        clsx('flex w-full flex-1 flex-col bg-app-surface', className)
+        clsx('relative flex w-full flex-1 flex-col bg-app-surface', className)
       )}
     >
       {/* Toolbar */}
@@ -551,7 +569,7 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
             </p>
           </div>
         )}
-        {indicator === 'loading-engine' && (
+        {indicator === 'loading-engine' && !showDownload && (
           <div
             aria-live="polite"
             className="flex h-full items-center justify-center text-sm text-slate-400"
@@ -560,6 +578,38 @@ export function Preview({ className, formId = 'resume-form' }: PreviewProps) {
           </div>
         )}
       </article>
+
+      {/* Over the preview only, so the form stays usable while it downloads */}
+      {download && showDownload && (
+        <div
+          aria-live="polite"
+          className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center p-4"
+        >
+          <div className="w-full max-w-xs rounded-app-card border border-app-border bg-app-surfaceElevated p-4 shadow-lg">
+            <p className="text-sm font-medium text-white">Hang tight!</p>
+            <p className="mt-1 text-xs text-slate-400">
+              We&apos;re downloading the preview engine. This only happens on
+              your first visit.
+            </p>
+            <div className="mt-3 flex items-center gap-2">
+              <div className="h-1 flex-1 overflow-hidden rounded-full bg-app-control">
+                <div
+                  className={clsx(
+                    'h-full bg-slate-300 transition-[width]',
+                    !download.total && 'animate-pulse'
+                  )}
+                  style={{ width: `${downloadPercent ?? 100}%` }}
+                />
+              </div>
+              {downloadPercent !== null && (
+                <span className="w-8 text-right text-xs tabular-nums text-slate-400">
+                  {downloadPercent}%
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </output>
   )
 }
