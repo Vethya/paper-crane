@@ -20,7 +20,8 @@ import {
 
 // Writes through the form's setValue, so autosave and auto-render see it.
 export function useSectionOrder() {
-  const order = useAtomValue(formDataAtom)?.sections
+  const formData = useAtomValue(formDataAtom)
+  const order = formData?.sections
   const setValue = useAtomValue(formSetValueAtom)
   const move = useCallback(
     (section: SectionId, toIndex: number) =>
@@ -32,7 +33,8 @@ export function useSectionOrder() {
   return {
     sections: movableSections(order),
     move,
-    canReorder: !!order && !!setValue
+    // A resume may have no saved order; moveSection falls back to the default.
+    canReorder: !!formData && !!setValue
   }
 }
 
