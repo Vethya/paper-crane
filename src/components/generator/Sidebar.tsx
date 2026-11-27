@@ -86,6 +86,7 @@ export function Sidebar({
         ))}
         {sections.map((section, index) => {
           const label = SECTION_LABELS[section]
+          const active = activeSection === navSection(section)
           return (
             <div
               key={section}
@@ -116,20 +117,31 @@ export function Sidebar({
               )}
             >
               <GripVertical
-                className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500 opacity-0 transition group-hover:opacity-100"
+                className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500 opacity-0 transition group-hover:opacity-100"
                 aria-hidden="true"
               />
               <button
                 type="button"
                 onClick={() => onSectionChange(navSection(section))}
                 className={twMerge(
-                  navButtonClass(activeSection === navSection(section)),
-                  'pr-14'
+                  navButtonClass(active),
+                  !active && 'group-hover:bg-app-hover group-hover:text-white'
                 )}
               >
                 {label}
               </button>
-              <div className="absolute right-1 top-1/2 flex -translate-y-1/2 opacity-0 transition focus-within:opacity-100 group-hover:opacity-100">
+              {/* Overlays the label's end on hover, so the label keeps its full width. */}
+              <div
+                className={clsx(
+                  'absolute right-1 top-1/2 flex -translate-y-1/2 rounded-app-button opacity-0 transition focus-within:opacity-100 group-hover:opacity-100',
+                  // The row colors are see-through, so paint them over the
+                  // opaque panel color or the label would show beneath.
+                  'bg-app-surface',
+                  active
+                    ? 'bg-[linear-gradient(rgb(var(--app-control)),rgb(var(--app-control)))]'
+                    : 'bg-[linear-gradient(rgb(var(--app-hover)),rgb(var(--app-hover)))]'
+                )}
+              >
                 <MoveButton
                   direction="up"
                   label={label}
@@ -187,7 +199,7 @@ function dropTarget(event: DragEvent<HTMLElement>, index: number) {
 function navButtonClass(active: boolean) {
   return twMerge(
     clsx(
-      'w-full max-w-full rounded-app-button px-3 py-2 text-left text-sm font-medium leading-snug transition-colors',
+      'w-full max-w-full rounded-app-button py-2 pl-7 pr-3 text-left text-sm font-medium leading-snug transition-colors',
       active
         ? 'bg-app-control text-white'
         : 'text-slate-400 hover:bg-app-hover hover:text-white'
