@@ -20,10 +20,12 @@ import {
 } from './constants'
 import { FormValues, TemplateData } from '../../types'
 import { esc } from './escape'
+import { normalizeSections } from '../sectionOrder'
 
 function sanitizeFormValues(data: FormValues): FormValues {
   return {
     ...data,
+    sections: normalizeSections(data.sections),
     headings: Object.fromEntries(
       Object.entries(data.headings ?? {}).map(([key, value]) => [
         key,
